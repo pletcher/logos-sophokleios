@@ -1,0 +1,56 @@
+<h1>Show Refs decl</h1>
+
+<%= if @live_action in [:edit] do %>
+  <.modal return_to={Routes.refs_decl_show_path(@socket, :show, @refs_decl)}>
+    <.live_component
+      module={TextServerWeb.RefsDeclLive.FormComponent}
+      id={@refs_decl.id}
+      title={@page_title}
+      action={@live_action}
+      refs_decl={@refs_decl}
+      return_to={Routes.refs_decl_show_path(@socket, :show, @refs_decl)}
+    />
+  </.modal>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>Description:</strong>
+    <%= @refs_decl.description %>
+  </li>
+
+  <li>
+    <strong>Label:</strong>
+    <%= @refs_decl.label %>
+  </li>
+
+  <li>
+    <strong>Match pattern:</strong>
+    <%= @refs_decl.match_pattern %>
+  </li>
+
+  <li>
+    <strong>Replacement pattern:</strong>
+    <%= @refs_decl.replacement_pattern %>
+  </li>
+
+  <li>
+    <strong>Slug:</strong>
+    <%= @refs_decl.slug %>
+  </li>
+
+  <li>
+    <strong>Structure index:</strong>
+    <%= @refs_decl.structure_index %>
+  </li>
+
+  <li>
+    <strong>Urn:</strong>
+    <%= @refs_decl.urn %>
+  </li>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.refs_decl_show_path(@socket, :edit, @refs_decl), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.refs_decl_index_path(@socket, :index) %></span>

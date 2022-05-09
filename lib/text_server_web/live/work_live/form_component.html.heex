@@ -1,0 +1,64 @@
+<div>
+  <h2><%= @title %></h2>
+
+  <.form
+    let={f}
+    for={@changeset}
+    id="work-form"
+    phx-target={@myself}
+    phx-change="validate"
+    phx-submit="save">
+  
+    <%= label f, :description %>
+    <%= text_input f, :description %>
+    <%= error_tag f, :description %>
+  
+    <%= label f, :english_title %>
+    <%= text_input f, :english_title %>
+    <%= error_tag f, :english_title %>
+  
+    <%= label f, :filemd5hash %>
+    <%= text_input f, :filemd5hash %>
+    <%= error_tag f, :filemd5hash %>
+  
+    <%= label f, :filename %>
+    <%= text_input f, :filename %>
+    <%= error_tag f, :filename %>
+  
+    <%= label f, :form %>
+    <%= text_input f, :form %>
+    <%= error_tag f, :form %>
+  
+    <%= label f, :full_urn %>
+    <%= text_input f, :full_urn %>
+    <%= error_tag f, :full_urn %>
+  
+    <%= label f, :label %>
+    <%= text_input f, :label %>
+    <%= error_tag f, :label %>
+  
+    <%= label f, :original_title %>
+    <%= text_input f, :original_title %>
+    <%= error_tag f, :original_title %>
+  
+    <%= label f, :slug %>
+    <%= text_input f, :slug %>
+    <%= error_tag f, :slug %>
+  
+    <%= label f, :structure %>
+    <%= text_input f, :structure %>
+    <%= error_tag f, :structure %>
+  
+    <%= label f, :urn %>
+    <%= text_input f, :urn %>
+    <%= error_tag f, :urn %>
+  
+    <%= label f, :work_type %>
+    <%= text_input f, :work_type %>
+    <%= error_tag f, :work_type %>
+  
+    <div>
+      <%= submit "Save", phx_disable_with: "Saving..." %>
+    </div>
+  </.form>
+</div>

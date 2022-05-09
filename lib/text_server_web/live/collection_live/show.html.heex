@@ -1,0 +1,21 @@
+<h1>Show Collection</h1>
+
+<%= if @live_action in [:edit] do %>
+  <.modal return_to={Routes.collection_show_path(@socket, :show, @collection)}>
+    <.live_component
+      module={TextServerWeb.CollectionLive.FormComponent}
+      id={@collection.id}
+      title={@page_title}
+      action={@live_action}
+      collection={@collection}
+      return_to={Routes.collection_show_path(@socket, :show, @collection)}
+    />
+  </.modal>
+<% end %>
+
+<ul>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, @collection), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.collection_index_path(@socket, :index) %></span>

@@ -1,0 +1,81 @@
+<h1>Show Work</h1>
+
+<%= if @live_action in [:edit] do %>
+  <.modal return_to={Routes.work_show_path(@socket, :show, @work)}>
+    <.live_component
+      module={TextServerWeb.WorkLive.FormComponent}
+      id={@work.id}
+      title={@page_title}
+      action={@live_action}
+      work={@work}
+      return_to={Routes.work_show_path(@socket, :show, @work)}
+    />
+  </.modal>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>Description:</strong>
+    <%= @work.description %>
+  </li>
+
+  <li>
+    <strong>English title:</strong>
+    <%= @work.english_title %>
+  </li>
+
+  <li>
+    <strong>Filemd5hash:</strong>
+    <%= @work.filemd5hash %>
+  </li>
+
+  <li>
+    <strong>Filename:</strong>
+    <%= @work.filename %>
+  </li>
+
+  <li>
+    <strong>Form:</strong>
+    <%= @work.form %>
+  </li>
+
+  <li>
+    <strong>Full urn:</strong>
+    <%= @work.full_urn %>
+  </li>
+
+  <li>
+    <strong>Label:</strong>
+    <%= @work.label %>
+  </li>
+
+  <li>
+    <strong>Original title:</strong>
+    <%= @work.original_title %>
+  </li>
+
+  <li>
+    <strong>Slug:</strong>
+    <%= @work.slug %>
+  </li>
+
+  <li>
+    <strong>Structure:</strong>
+    <%= @work.structure %>
+  </li>
+
+  <li>
+    <strong>Urn:</strong>
+    <%= @work.urn %>
+  </li>
+
+  <li>
+    <strong>Work type:</strong>
+    <%= @work.work_type %>
+  </li>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.work_show_path(@socket, :edit, @work), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.work_index_path(@socket, :index) %></span>

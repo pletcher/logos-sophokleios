@@ -1,0 +1,37 @@
+<h1>Listing Collections</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.collection_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.CollectionLive.FormComponent}
+      id={@collection.id || :new}
+      title={@page_title}
+      action={@live_action}
+      collection={@collection}
+      return_to={Routes.collection_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="collections">
+    <%= for collection <- @collections do %>
+      <tr id={"collection-#{collection.id}"}>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.collection_show_path(@socket, :show, collection) %></span>
+          <span><%= live_patch "Edit", to: Routes.collection_index_path(@socket, :edit, collection) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: collection.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Collection", to: Routes.collection_index_path(@socket, :new) %></span>

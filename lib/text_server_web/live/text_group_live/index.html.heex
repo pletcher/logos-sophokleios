@@ -1,0 +1,43 @@
+<h1>Listing Text groups</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.text_group_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.TextGroupLive.FormComponent}
+      id={@text_group.id || :new}
+      title={@page_title}
+      action={@live_action}
+      text_group={@text_group}
+      return_to={Routes.text_group_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Slug</th>
+      <th>Title</th>
+      <th>Urn</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="text_groups">
+    <%= for text_group <- @text_groups do %>
+      <tr id={"text_group-#{text_group.id}"}>
+        <td><%= text_group.slug %></td>
+        <td><%= text_group.title %></td>
+        <td><%= text_group.urn %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.text_group_show_path(@socket, :show, text_group) %></span>
+          <span><%= live_patch "Edit", to: Routes.text_group_index_path(@socket, :edit, text_group) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: text_group.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Text group", to: Routes.text_group_index_path(@socket, :new) %></span>

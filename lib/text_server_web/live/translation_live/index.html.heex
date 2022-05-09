@@ -1,0 +1,45 @@
+<h1>Listing Translations</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.translation_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.TranslationLive.FormComponent}
+      id={@translation.id || :new}
+      title={@page_title}
+      action={@live_action}
+      translation={@translation}
+      return_to={Routes.translation_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Slug</th>
+      <th>Title</th>
+      <th>Urn</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="translations">
+    <%= for translation <- @translations do %>
+      <tr id={"translation-#{translation.id}"}>
+        <td><%= translation.description %></td>
+        <td><%= translation.slug %></td>
+        <td><%= translation.title %></td>
+        <td><%= translation.urn %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.translation_show_path(@socket, :show, translation) %></span>
+          <span><%= live_patch "Edit", to: Routes.translation_index_path(@socket, :edit, translation) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: translation.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Translation", to: Routes.translation_index_path(@socket, :new) %></span>

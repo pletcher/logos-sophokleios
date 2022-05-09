@@ -1,0 +1,45 @@
+<h1>Listing Exemplars</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.exemplar_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.ExemplarLive.FormComponent}
+      id={@exemplar.id || :new}
+      title={@page_title}
+      action={@live_action}
+      exemplar={@exemplar}
+      return_to={Routes.exemplar_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Slug</th>
+      <th>Title</th>
+      <th>Urn</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="exemplars">
+    <%= for exemplar <- @exemplars do %>
+      <tr id={"exemplar-#{exemplar.id}"}>
+        <td><%= exemplar.description %></td>
+        <td><%= exemplar.slug %></td>
+        <td><%= exemplar.title %></td>
+        <td><%= exemplar.urn %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.exemplar_show_path(@socket, :show, exemplar) %></span>
+          <span><%= live_patch "Edit", to: Routes.exemplar_index_path(@socket, :edit, exemplar) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: exemplar.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Exemplar", to: Routes.exemplar_index_path(@socket, :new) %></span>

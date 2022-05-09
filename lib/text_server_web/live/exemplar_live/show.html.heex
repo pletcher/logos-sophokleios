@@ -1,0 +1,41 @@
+<h1>Show Exemplar</h1>
+
+<%= if @live_action in [:edit] do %>
+  <.modal return_to={Routes.exemplar_show_path(@socket, :show, @exemplar)}>
+    <.live_component
+      module={TextServerWeb.ExemplarLive.FormComponent}
+      id={@exemplar.id}
+      title={@page_title}
+      action={@live_action}
+      exemplar={@exemplar}
+      return_to={Routes.exemplar_show_path(@socket, :show, @exemplar)}
+    />
+  </.modal>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>Description:</strong>
+    <%= @exemplar.description %>
+  </li>
+
+  <li>
+    <strong>Slug:</strong>
+    <%= @exemplar.slug %>
+  </li>
+
+  <li>
+    <strong>Title:</strong>
+    <%= @exemplar.title %>
+  </li>
+
+  <li>
+    <strong>Urn:</strong>
+    <%= @exemplar.urn %>
+  </li>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.exemplar_show_path(@socket, :edit, @exemplar), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.exemplar_index_path(@socket, :index) %></span>

@@ -1,0 +1,45 @@
+<h1>Listing Text nodes</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.text_node_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.TextNodeLive.FormComponent}
+      id={@text_node.id || :new}
+      title={@page_title}
+      action={@live_action}
+      text_node={@text_node}
+      return_to={Routes.text_node_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Index</th>
+      <th>Location</th>
+      <th>Normalized text</th>
+      <th>Text</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="text_nodes">
+    <%= for text_node <- @text_nodes do %>
+      <tr id={"text_node-#{text_node.id}"}>
+        <td><%= text_node.index %></td>
+        <td><%= text_node.location %></td>
+        <td><%= text_node.normalized_text %></td>
+        <td><%= text_node.text %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.text_node_show_path(@socket, :show, text_node) %></span>
+          <span><%= live_patch "Edit", to: Routes.text_node_index_path(@socket, :edit, text_node) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: text_node.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Text node", to: Routes.text_node_index_path(@socket, :new) %></span>

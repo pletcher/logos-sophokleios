@@ -1,0 +1,36 @@
+<h1>Show Author</h1>
+
+<%= if @live_action in [:edit] do %>
+  <.modal return_to={Routes.author_show_path(@socket, :show, @author)}>
+    <.live_component
+      module={TextServerWeb.AuthorLive.FormComponent}
+      id={@author.id}
+      title={@page_title}
+      action={@live_action}
+      author={@author}
+      return_to={Routes.author_show_path(@socket, :show, @author)}
+    />
+  </.modal>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>English name:</strong>
+    <%= @author.english_name %>
+  </li>
+
+  <li>
+    <strong>Original name:</strong>
+    <%= @author.original_name %>
+  </li>
+
+  <li>
+    <strong>Slug:</strong>
+    <%= @author.slug %>
+  </li>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.author_show_path(@socket, :edit, @author), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.author_index_path(@socket, :index) %></span>

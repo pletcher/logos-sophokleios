@@ -1,0 +1,41 @@
+<h1>Show Text node</h1>
+
+<%= if @live_action in [:edit] do %>
+  <.modal return_to={Routes.text_node_show_path(@socket, :show, @text_node)}>
+    <.live_component
+      module={TextServerWeb.TextNodeLive.FormComponent}
+      id={@text_node.id}
+      title={@page_title}
+      action={@live_action}
+      text_node={@text_node}
+      return_to={Routes.text_node_show_path(@socket, :show, @text_node)}
+    />
+  </.modal>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>Index:</strong>
+    <%= @text_node.index %>
+  </li>
+
+  <li>
+    <strong>Location:</strong>
+    <%= @text_node.location %>
+  </li>
+
+  <li>
+    <strong>Normalized text:</strong>
+    <%= @text_node.normalized_text %>
+  </li>
+
+  <li>
+    <strong>Text:</strong>
+    <%= @text_node.text %>
+  </li>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.text_node_show_path(@socket, :edit, @text_node), class: "button" %></span> |
+<span><%= live_redirect "Back", to: Routes.text_node_index_path(@socket, :index) %></span>

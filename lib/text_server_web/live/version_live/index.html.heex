@@ -1,0 +1,45 @@
+<h1>Listing Versions</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.version_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.VersionLive.FormComponent}
+      id={@version.id || :new}
+      title={@page_title}
+      action={@live_action}
+      version={@version}
+      return_to={Routes.version_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Description</th>
+      <th>Slug</th>
+      <th>Title</th>
+      <th>Urn</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="versions">
+    <%= for version <- @versions do %>
+      <tr id={"version-#{version.id}"}>
+        <td><%= version.description %></td>
+        <td><%= version.slug %></td>
+        <td><%= version.title %></td>
+        <td><%= version.urn %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.version_show_path(@socket, :show, version) %></span>
+          <span><%= live_patch "Edit", to: Routes.version_index_path(@socket, :edit, version) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: version.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Version", to: Routes.version_index_path(@socket, :new) %></span>

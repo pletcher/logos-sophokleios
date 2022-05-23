@@ -146,9 +146,20 @@ defmodule TextServer.Texts do
 
   """
   def create_collection(attrs \\ %{}) do
-    %Collection{}
+    %Collection{slug: attrs[:slug] || Recase.to_kebab(attrs[:title])}
     |> Collection.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def find_or_create_collection(attrs \\ %{}) do
+    query = from(c in Collection, where: c.repository == ^attrs[:repository])
+    case Repo.one(query) do
+      nil ->
+        {:ok, new_collection} = create_collection(attrs)
+
+      collection ->
+        {:ok, collection}
+    end
   end
 
   @doc """
@@ -502,7 +513,7 @@ defmodule TextServer.Texts do
     |> where(^filter_text_group_where(attrs))
     |> limit(^limit_text_group(attrs))
     |> offset(^offset_text_group(attrs))
-    |> Repo.all
+    |> Repo.all()
   end
 
   def list_text_groups_in_collection(%Collection{} = collection, attrs \\ %{}) do
@@ -511,7 +522,7 @@ defmodule TextServer.Texts do
     |> where(^filter_text_group_where(attrs))
     |> limit(^limit_text_group(attrs))
     |> offset(^offset_text_group(attrs))
-    |> Repo.all
+    |> Repo.all()
   end
 
   def limit_text_group({"limit", value}), do: value
@@ -564,9 +575,20 @@ defmodule TextServer.Texts do
 
   """
   def create_text_group(attrs \\ %{}) do
-    %TextGroup{}
+    %TextGroup{slug: attrs[:slug] || Recase.to_kebab(attrs[:title])}
     |> TextGroup.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def find_or_create_text_group(attrs \\ %{}) do
+    query = from(t in TextGroup, where: t.urn == ^attrs[:urn])
+    case Repo.one(query) do
+      nil ->
+        {:ok, new_text_group} = create_text_group(attrs)
+
+      text_group ->
+        {:ok, text_group}
+    end
   end
 
   @doc """
@@ -998,5 +1020,86 @@ defmodule TextServer.Texts do
   """
   def change_work(%Work{} = work, attrs \\ %{}) do
     Work.changeset(work, attrs)
+  end
+
+  def repositories do
+    [
+      # %{
+      #   title: "The Center for Hellenic Studies Greek Texts",
+      #   url: "http://gitlab.archimedes.digital/archimedes/greek_text_chs",
+      #   urn: "urn:cts:greekLit"
+      #   default_language: "greek"
+      # },
+      %{
+        title: "The First Thousand Years of Greek",
+        url: "https://github.com/OpenGreekAndLatin/First1KGreek.git",
+        urn: "urn:cts:greekLit"
+      },
+      %{
+        title: "Canonical Greek Literature",
+        url: "https://github.com/PerseusDL/canonical-greekLit.git",
+        urn: "urn:cts:greekLit"
+      },
+      %{
+        title: "Canonical Latin Literature",
+        url: "https://github.com/PerseusDL/canonical-latinLit.git",
+        urn: "urn:cts:latinLit"
+      },
+      %{
+        title: "Corpus Scriptorum Ecclesiasticorum Latinorum",
+        url: "https://github.com/OpenGreekAndLatin/csel-dev.git",
+        urn: "urn:cts:latinLit"
+      },
+      %{
+        title: "Tanzil Quran Text",
+        url: "https://github.com/cltk/arabic_text_quranic_corpus.git",
+        default_language: "arabic"
+      },
+      %{
+        title: "Sefaria Jewish Texts",
+        url: "https://github.com/cltk/hebrew_text_sefaria.git",
+        default_language: "hebrew"
+      },
+      %{
+        title: "Gita Supersite",
+        url: "https://github.com/cltk/sanskrit_text_gitasupersite.git",
+        default_language: "sanskrit"
+      },
+      %{
+        title: "Classical Bengali Texts",
+        url: "https://github.com/cltk/bengali_text_wikisource.git",
+        default_language: "bengali"
+      },
+      %{
+        title: "Classical Hindi Texts",
+        url: "https://github.com/cltk/hindi_text_ltrc.git",
+        default_language: "hindi"
+      },
+      %{
+        title: "Corpus of Middle English Prose and Verse",
+        url: "https://github.com/cltk/middle_english_text_cmepv.git",
+        default_language: "middle_english"
+      },
+      %{
+        title: "Poeti d'Italia in lingua latina",
+        url: "https://github.com/cltk/latin_text_poeti_ditalia.git",
+        default_language: "latin"
+      },
+      %{
+        title: "Canonical Old Norse Literature",
+        url: "https://github.com/cltk/old_norse_text_perseus.git",
+        default_language: "old_norse"
+      },
+      %{
+        title: "Old English Poetry",
+        url: "https://github.com/cltk/old_english_text_sacred_texts.git",
+        default_language: "old_english"
+      },
+      %{
+        title: "Chinese Buddhist Electronic Text Association 01",
+        url: "https://github.com/cltk/chinese_text_cbeta_01.git",
+        default_language: "chinese"
+      }
+    ]
   end
 end

@@ -18,6 +18,21 @@ defmodule TextServer.Texts.RefsDecl do
   @doc false
   def changeset(refs_decl, attrs) do
     refs_decl
-    |> cast(attrs, [:description, :label, :match_pattern, :replacement_pattern, :slug, :structure_index, :urn])
+    |> cast(attrs, [
+      :description,
+      :label,
+      :match_pattern,
+      :replacement_pattern,
+      :slug,
+      :structure_index,
+      :urn
+    ])
+    |> validate_required([
+      :urn
+    ])
+    |> unique_constraint([
+      :urn,
+      :work_id
+    ])
   end
 end

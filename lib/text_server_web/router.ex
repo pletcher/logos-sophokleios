@@ -33,6 +33,13 @@ defmodule TextServerWeb.Router do
     live "/collections/:id", CollectionLive.Show, :show
     live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
+    live "/exemplars", ExemplarLive.Index, :index
+    live "/exemplars/new", ExemplarLive.Index, :new
+    live "/exemplars/:id/edit", ExemplarLive.Index, :edit
+
+    live "/exemplars/:id", ExemplarLive.Show, :show
+    live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
+
     live "/languages", LanguageLive.Index, :index
     live "/languages/new", LanguageLive.Index, :new
     live "/languages/:id/edit", LanguageLive.Index, :edit

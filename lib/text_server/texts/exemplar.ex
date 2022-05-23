@@ -16,6 +16,7 @@ defmodule TextServer.Texts.Exemplar do
   def changeset(exemplar, attrs) do
     exemplar
     |> cast(attrs, [:description, :slug, :title, :urn])
-    |> validate_required([:slug, :title, :urn])
+    |> validate_required([:title, :urn])
+    |> unique_constraint([:title, :urn, :work_id])
   end
 end

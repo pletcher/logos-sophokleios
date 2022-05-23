@@ -50,5 +50,9 @@ defmodule TextServer.Texts.Work do
       :structure,
       :urn
     ])
+    |> unique_constraint([
+      :filemd5hash,
+      :text_group_id
+    ])
   end
 end

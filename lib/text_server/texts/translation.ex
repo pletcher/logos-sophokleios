@@ -16,6 +16,7 @@ defmodule TextServer.Texts.Translation do
   def changeset(translation, attrs) do
     translation
     |> cast(attrs, [:description, :slug, :title, :urn])
-    |> validate_required([:slug, :title, :urn])
+    |> validate_required([:title, :urn])
+    |> unique_constraint([:title, :urn, :work_id])
   end
 end

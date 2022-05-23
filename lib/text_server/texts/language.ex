@@ -13,6 +13,6 @@ defmodule TextServer.Texts.Language do
   def changeset(language, attrs) do
     language
     |> cast(attrs, [:slug, :title])
-    |> validate_required([:slug, :title])
+    |> validate_required([:title])
   end
 end

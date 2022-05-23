@@ -9,12 +9,13 @@ defmodule TextServer.Repo.Migrations.CreateRefsDecls do
       add :replacement_pattern, :string
       add :slug, :string
       add :structure_index, :integer
-      add :urn, :string
+      add :urn, :string, null: false
       add :work_id, references(:works, on_delete: :nothing)
 
       timestamps()
     end
 
     create index(:refs_decls, [:work_id])
+    create unique_index(:refs_decls, [:urn, :work_id])
   end
 end

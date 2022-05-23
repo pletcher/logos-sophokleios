@@ -14,6 +14,6 @@ defmodule TextServer.Texts.Author do
   def changeset(author, attrs) do
     author
     |> cast(attrs, [:english_name, :original_name, :slug])
-    |> validate_required([:english_name, :original_name, :slug])
+    |> validate_required([:original_name])
   end
 end

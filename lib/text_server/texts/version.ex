@@ -16,6 +16,7 @@ defmodule TextServer.Texts.Version do
   def changeset(version, attrs) do
     version
     |> cast(attrs, [:description, :slug, :title, :urn])
-    |> validate_required([:slug, :title, :urn])
+    |> validate_required([:title, :urn])
+    |> unique_constraint([:title, :urn, :work_id])
   end
 end

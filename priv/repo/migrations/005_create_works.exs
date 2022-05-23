@@ -25,5 +25,6 @@ defmodule TextServer.Repo.Migrations.CreateWorks do
     create index(:works, [:author_id])
     create index(:works, [:language_id])
     create index(:works, [:text_group_id])
+    create unique_index(:works, [:filemd5hash, :text_group_id])
   end
 end

@@ -15,6 +15,7 @@ defmodule TextServer.Texts.TextGroup do
   def changeset(text_group, attrs) do
     text_group
     |> cast(attrs, [:slug, :title, :urn])
-    |> validate_required([:slug, :title, :urn])
+    |> validate_required([:title, :urn])
+    |> unique_constraint([:collection_id, :urn])
   end
 end

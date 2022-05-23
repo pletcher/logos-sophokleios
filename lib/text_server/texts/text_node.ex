@@ -18,5 +18,6 @@ defmodule TextServer.Texts.TextNode do
     text_node
     |> cast(attrs, [:index, :location, :normalized_text, :text])
     |> validate_required([:index, :location, :text])
+    |> unique_constraint([:index, :text])
   end
 end

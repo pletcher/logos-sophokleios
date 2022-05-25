@@ -153,6 +153,7 @@ defmodule TextServer.Texts do
 
   def find_or_create_collection(attrs \\ %{}) do
     query = from(c in Collection, where: c.repository == ^attrs[:repository])
+
     case Repo.one(query) do
       nil ->
         {:ok, new_collection} = create_collection(attrs)
@@ -582,12 +583,25 @@ defmodule TextServer.Texts do
 
   def find_or_create_text_group(attrs \\ %{}) do
     query = from(t in TextGroup, where: t.urn == ^attrs[:urn])
+
     case Repo.one(query) do
       nil ->
         {:ok, new_text_group} = create_text_group(attrs)
 
       text_group ->
         {:ok, text_group}
+    end
+  end
+
+  def upsert_text_group(attrs \\ %{}) do
+    query = from(t in TextGroup, where: t.urn == ^attrs[:urn])
+
+    case Repo.one(query) do
+      nil ->
+        {:ok, new_text_group} = create_text_group(attrs)
+
+      text_group ->
+        {:ok, updated_text_group} = update_text_group(text_group, attrs)
     end
   end
 
@@ -970,9 +984,33 @@ defmodule TextServer.Texts do
 
   """
   def create_work(attrs \\ %{}) do
-    %Work{}
+    %Work{slug: attrs[:slug] || Recase.to_kebab(attrs[:english_title])}
     |> Work.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def find_or_create_work(attrs \\ %{}) do
+    query = from(w in Work, where: w.filemd5hash == ^attrs[:filemd5hash])
+
+    case Repo.one(query) do
+      nil ->
+        {:ok, new_work} = create_work(attrs)
+
+      work ->
+        {:ok, work}
+    end
+  end
+
+  def upsert_work(attrs \\ %{}) do
+    query = from(w in Work, where: w.filemd5hash == ^attrs[:filemd5hash])
+
+    case Repo.one(query) do
+      nil ->
+        {:ok, new_work} = create_work(attrs)
+
+      work ->
+        {:ok, work} = update_work(work, attrs)
+    end
   end
 
   @doc """

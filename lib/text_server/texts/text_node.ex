@@ -7,8 +7,9 @@ defmodule TextServer.Texts.TextNode do
     field :location, {:array, :integer}
     field :normalized_text, :string
     field :text, :string
-    field :work_id, :id
     field :_search, TextServer.Ecto.Types.TsVector
+
+    belongs_to :work, TextServer.Texts.Work
 
     timestamps()
   end
@@ -17,7 +18,7 @@ defmodule TextServer.Texts.TextNode do
   def changeset(text_node, attrs) do
     text_node
     |> cast(attrs, [:index, :location, :normalized_text, :text])
-    |> validate_required([:index, :location, :text])
+    |> validate_required([:index, :location, :text, :work_id])
     |> unique_constraint([:index, :text])
   end
 end

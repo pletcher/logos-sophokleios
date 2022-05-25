@@ -23,16 +23,55 @@ defmodule Mix.Tasks.Texts.Ingest do
     String.split(url, "/")
     |> List.last()
     |> String.replace(Path.extname(url), "")
+    |> Phoenix.Naming.underscore()
     |> Phoenix.Naming.camelize(:lower)
+  end
+
+  defp ingest_collection(f, collection) do
+    {:ok, binary} = File.read(f)
+    {:ok, parsed} = Jason.decode(binary, keys: :atoms)
+    {:ok, text_group} = process_text_group(parsed, collection)
+    {:ok, work} = get_work(parsed, collection, text_group, binary, f)
+    {:ok, _version} = maybe_get_version(parsed, work)
+  end
+
+  def maybe_get_version(
+        %{edition: edition, source: "The Center for Hellenic Studies", language: "english"} =
+          data,
+        work
+      ) do
+    TextServer.Texts.find_or_create_version(%{title: edition, urn: "#{work.urn}.chs-translation"})
+  end
+
+  def maybe_get_version(
+        %{edition: edition, source: "The Center for Hellenic Studies"} = data,
+        work
+      ) do
+    TextServer.Texts.find_or_create_version(%{
+      title: edition,
+      urn: "#{work.urn}.chs-#{Phoenix.Naming.camelize(edition)}"
+    })
+  end
+
+  defp maybe_get_version(
+         %{edition: edition} = data,
+         work
+       ) do
+    TextServer.Texts.find_or_create_version(%{
+      title: edition,
+      urn: work.urn
+    })
+  end
+
+  defp maybe_get_version(_data, _work) do
+    {:ok, nil}
   end
 
   defp ingest_json(dir, collection) do
     Mix.shell().info("... Ingesting JSON-based texts in #{dir} ... \n")
 
     Path.wildcard("#{dir}/*.json")
-    |> Stream.map(&read_file/1)
-    |> Stream.map(&parse_cltk_json/1)
-    |> Stream.map(fn json -> process_text_group(json, collection) end)
+    |> Stream.map(fn f -> ingest_collection(f, collection) end)
     |> Enum.to_list()
   end
 
@@ -69,43 +108,20 @@ defmodule Mix.Tasks.Texts.Ingest do
 
   defp ingest_repos() do
     TextServer.Texts.repositories()
-    |> Enum.map(&ingest_repo/1)
+    |> Stream.map(&ingest_repo/1)
+    |> Enum.to_list()
   end
 
-  defp parse_cltk_json({:error, reason}) do
-    Mix.shell().error(reason)
-  end
-
-  defp parse_cltk_json({:ok, binary}) do
-    case Jason.decode(binary) do
-      {:ok, parsed} ->
-        parsed
-
-      {:error, reason} ->
-        Mix.shell().error(reason)
-        %{}
-    end
-  end
-
-  defp parse_cltk_json(m) do
-    Mix.shell().info("I don't know what to do with this:\n#{m}\n")
-  end
-
-  defp process_text_group(json, collection) do
+  defp get_text_group(data, collection) do
     # NOTE: (charles) At least for the Hebrew Sefarim,
     # "author" is "Not available". Is this actually what we want
     # in our URNs?
 
-    author = json["author"]
-    english_title = json["englishTitle"]
+    author = data[:author]
 
-    title = if author == "", do: english_title, else: author
+    title = if author == "", do: "unknown", else: author
 
-    if title == "" do
-      Mix.shell().info("-------- englishTitle field was blank -------")
-    end
-
-    urn = "#{collection.urn}:#{Recase.to_camel(title)}"
+    urn = "#{collection.urn}:#{Phoenix.Naming.camelize(title)}"
 
     text_group_attrs = %{
       collection_id: collection.id,
@@ -113,12 +129,45 @@ defmodule Mix.Tasks.Texts.Ingest do
       urn: urn
     }
 
-    TextServer.Texts.find_or_create_text_group(text_group_attrs)
+    TextServer.Texts.upsert_text_group(text_group_attrs)
   end
 
-  defp read_file(f) do
-    Mix.shell().info("-------- Reading #{f} ---------")
+  defp get_work(data, collection, text_group, raw, filename) do
+    description = data[:description]
+    english_title = data[:english_title] || text_group.title
+    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
+    filename = String.replace_prefix(filename, "#{path_prefix}/", "")
+    filemd5hash = :crypto.hash(:md5, raw) |> Base.encode16(case: :lower)
 
-    File.read(f)
+    [language_fragment, work_fragment | _] =
+      String.split(filename, ".") |> List.first() |> String.split("__") |> Enum.reverse()
+
+    form = nil
+
+    full_urn =
+      "#{text_group.urn}.#{Phoenix.Naming.camelize(work_fragment)}-#{Phoenix.Naming.camelize(language_fragment)}"
+
+    label = nil
+    language = data[:language]
+    original_title = data[:original_title]
+    structure = nil
+    urn = "#{text_group.urn}.#{Phoenix.Naming.camelize(english_title)}"
+    work_type = nil
+
+    TextServer.Texts.upsert_work(%{
+      description: description,
+      english_title: english_title,
+      filename: filename,
+      filemd5hash: filemd5hash,
+      form: form,
+      full_urn: full_urn,
+      label: label,
+      language: language,
+      original_title: original_title,
+      structure: structure,
+      text_group_id: text_group.id,
+      urn: urn,
+      work_type: work_type
+    })
   end
 end

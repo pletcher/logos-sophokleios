@@ -15,9 +15,11 @@ defmodule TextServer.Texts.Work do
     field :structure, :string
     field :urn, :string
     field :work_type, :string
-    field :author_id, :id
-    field :language_id, :id
-    field :text_group_id, :id
+
+    belongs_to :author, TextServer.Texts.Author
+    belongs_to :language_id, TextServer.Texts.Language
+    belongs_to :text_group, TextServer.Texts.TextGroup
+    has_many :text_nodes, TextServer.Texts.TextNode
 
     timestamps()
   end
@@ -40,14 +42,12 @@ defmodule TextServer.Texts.Work do
       :work_type
     ])
     |> validate_required([
+      :english_title,
       :filemd5hash,
       :filename,
-      :form,
       :full_urn,
-      :label,
-      :original_title,
       :slug,
-      :structure,
+      :text_group_id,
       :urn
     ])
     |> unique_constraint([

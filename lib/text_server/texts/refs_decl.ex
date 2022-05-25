@@ -10,7 +10,8 @@ defmodule TextServer.Texts.RefsDecl do
     field :slug, :string
     field :structure_index, :integer
     field :urn, :string
-    field :work_id, :id
+
+    belongs_to :work, TextServer.Texts.Work
 
     timestamps()
   end

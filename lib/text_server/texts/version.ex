@@ -7,7 +7,8 @@ defmodule TextServer.Texts.Version do
     field :slug, :string
     field :title, :string
     field :urn, :string
-    field :work_id, :id
+
+    belongs_to :work, TextServer.Texts.Work
 
     timestamps()
   end

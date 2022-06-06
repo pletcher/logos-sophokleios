@@ -1,8 +1,8 @@
 defmodule TextServerWeb.CollectionLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.Collection
+  alias TextServer.Collections
+  alias TextServer.Collections.Collection
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.CollectionLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Collection")
-    |> assign(:collection, Texts.get_collection!(id))
+    |> assign(:collection, Collections.get_collection!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.CollectionLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    collection = Texts.get_collection!(id)
-    {:ok, _} = Texts.delete_collection(collection)
+    collection = Collections.get_collection!(id)
+    {:ok, _} = Collections.delete_collection(collection)
 
     {:noreply, assign(socket, :collections, list_collections())}
   end
 
   defp list_collections do
-    Texts.list_collections()
+    Collections.list_collections()
   end
 end

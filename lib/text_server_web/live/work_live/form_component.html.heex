@@ -54,7 +54,7 @@
     <%= error_tag f, :urn %>
   
     <%= label f, :work_type %>
-    <%= text_input f, :work_type %>
+    <%= select f, :work_type, Ecto.Enum.values(TextServer.Works.Work, :work_type), prompt: "Choose a value" %>
     <%= error_tag f, :work_type %>
   
     <div>

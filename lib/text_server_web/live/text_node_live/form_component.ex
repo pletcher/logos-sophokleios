@@ -1,11 +1,11 @@
 defmodule TextServerWeb.TextNodeLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.TextNodes
 
   @impl true
   def update(%{text_node: text_node} = assigns, socket) do
-    changeset = Texts.change_text_node(text_node)
+    changeset = TextNodes.change_text_node(text_node)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.TextNodeLive.FormComponent do
   def handle_event("validate", %{"text_node" => text_node_params}, socket) do
     changeset =
       socket.assigns.text_node
-      |> Texts.change_text_node(text_node_params)
+      |> TextNodes.change_text_node(text_node_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.TextNodeLive.FormComponent do
   end
 
   defp save_text_node(socket, :edit, text_node_params) do
-    case Texts.update_text_node(socket.assigns.text_node, text_node_params) do
+    case TextNodes.update_text_node(socket.assigns.text_node, text_node_params) do
       {:ok, _text_node} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.TextNodeLive.FormComponent do
   end
 
   defp save_text_node(socket, :new, text_node_params) do
-    case Texts.create_text_node(text_node_params) do
+    case TextNodes.create_text_node(text_node_params) do
       {:ok, _text_node} ->
         {:noreply,
          socket

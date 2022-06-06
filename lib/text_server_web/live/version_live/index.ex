@@ -1,8 +1,8 @@
 defmodule TextServerWeb.VersionLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.Version
+  alias TextServer.Versions
+  alias TextServer.Versions.Version
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.VersionLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Version")
-    |> assign(:version, Texts.get_version!(id))
+    |> assign(:version, Versions.get_version!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.VersionLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    version = Texts.get_version!(id)
-    {:ok, _} = Texts.delete_version(version)
+    version = Versions.get_version!(id)
+    {:ok, _} = Versions.delete_version(version)
 
     {:noreply, assign(socket, :versions, list_versions())}
   end
 
   defp list_versions do
-    Texts.list_versions()
+    Versions.list_versions()
   end
 end

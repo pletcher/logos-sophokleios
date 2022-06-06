@@ -1,11 +1,11 @@
 defmodule TextServerWeb.LanguageLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.Languages
 
   @impl true
   def update(%{language: language} = assigns, socket) do
-    changeset = Texts.change_language(language)
+    changeset = Languages.change_language(language)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.LanguageLive.FormComponent do
   def handle_event("validate", %{"language" => language_params}, socket) do
     changeset =
       socket.assigns.language
-      |> Texts.change_language(language_params)
+      |> Languages.change_language(language_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.LanguageLive.FormComponent do
   end
 
   defp save_language(socket, :edit, language_params) do
-    case Texts.update_language(socket.assigns.language, language_params) do
+    case Languages.update_language(socket.assigns.language, language_params) do
       {:ok, _language} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.LanguageLive.FormComponent do
   end
 
   defp save_language(socket, :new, language_params) do
-    case Texts.create_language(language_params) do
+    case Languages.create_language(language_params) do
       {:ok, _language} ->
         {:noreply,
          socket

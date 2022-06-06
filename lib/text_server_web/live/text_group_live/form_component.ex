@@ -1,11 +1,11 @@
 defmodule TextServerWeb.TextGroupLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.TextGroups
 
   @impl true
   def update(%{text_group: text_group} = assigns, socket) do
-    changeset = Texts.change_text_group(text_group)
+    changeset = TextGroups.change_text_group(text_group)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.TextGroupLive.FormComponent do
   def handle_event("validate", %{"text_group" => text_group_params}, socket) do
     changeset =
       socket.assigns.text_group
-      |> Texts.change_text_group(text_group_params)
+      |> TextGroups.change_text_group(text_group_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.TextGroupLive.FormComponent do
   end
 
   defp save_text_group(socket, :edit, text_group_params) do
-    case Texts.update_text_group(socket.assigns.text_group, text_group_params) do
+    case TextGroups.update_text_group(socket.assigns.text_group, text_group_params) do
       {:ok, _text_group} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.TextGroupLive.FormComponent do
   end
 
   defp save_text_group(socket, :new, text_group_params) do
-    case Texts.create_text_group(text_group_params) do
+    case TextGroups.create_text_group(text_group_params) do
       {:ok, _text_group} ->
         {:noreply,
          socket

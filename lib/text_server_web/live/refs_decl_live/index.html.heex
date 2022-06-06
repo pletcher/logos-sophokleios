@@ -16,11 +16,11 @@
 <table>
   <thead>
     <tr>
-      <th>Description</th>
       <th>Label</th>
+      <th>Slug</th>
+      <th>Description</th>
       <th>Match pattern</th>
       <th>Replacement pattern</th>
-      <th>Slug</th>
       <th>Structure index</th>
       <th>Urn</th>
 
@@ -30,11 +30,11 @@
   <tbody id="refs_decls">
     <%= for refs_decl <- @refs_decls do %>
       <tr id={"refs_decl-#{refs_decl.id}"}>
-        <td><%= refs_decl.description %></td>
         <td><%= refs_decl.label %></td>
+        <td><%= refs_decl.slug %></td>
+        <td><%= refs_decl.description %></td>
         <td><%= refs_decl.match_pattern %></td>
         <td><%= refs_decl.replacement_pattern %></td>
-        <td><%= refs_decl.slug %></td>
         <td><%= refs_decl.structure_index %></td>
         <td><%= refs_decl.urn %></td>
 

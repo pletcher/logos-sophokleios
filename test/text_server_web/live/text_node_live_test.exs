@@ -2,7 +2,7 @@ defmodule TextServerWeb.TextNodeLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.TextNodesFixtures
 
   @create_attrs %{index: 42, location: [], normalized_text: "some normalized_text", text: "some text"}
   @update_attrs %{index: 43, location: [], normalized_text: "some updated normalized_text", text: "some updated text"}

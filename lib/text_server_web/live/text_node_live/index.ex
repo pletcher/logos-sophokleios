@@ -1,8 +1,8 @@
 defmodule TextServerWeb.TextNodeLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.TextNode
+  alias TextServer.TextNodes
+  alias TextServer.TextNodes.TextNode
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.TextNodeLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Text node")
-    |> assign(:text_node, Texts.get_text_node!(id))
+    |> assign(:text_node, TextNodes.get_text_node!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.TextNodeLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    text_node = Texts.get_text_node!(id)
-    {:ok, _} = Texts.delete_text_node(text_node)
+    text_node = TextNodes.get_text_node!(id)
+    {:ok, _} = TextNodes.delete_text_node(text_node)
 
     {:noreply, assign(socket, :text_nodes, list_text_nodes())}
   end
 
   defp list_text_nodes do
-    Texts.list_text_nodes()
+    TextNodes.list_text_nodes()
   end
 end

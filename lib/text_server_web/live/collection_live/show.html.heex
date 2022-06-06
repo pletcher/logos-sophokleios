@@ -15,6 +15,26 @@
 
 <ul>
 
+  <li>
+    <strong>Repository:</strong>
+    <%= @collection.repository %>
+  </li>
+
+  <li>
+    <strong>Slug:</strong>
+    <%= @collection.slug %>
+  </li>
+
+  <li>
+    <strong>Title:</strong>
+    <%= @collection.title %>
+  </li>
+
+  <li>
+    <strong>Urn:</strong>
+    <%= @collection.urn %>
+  </li>
+
 </ul>
 
 <span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, @collection), class: "button" %></span> |

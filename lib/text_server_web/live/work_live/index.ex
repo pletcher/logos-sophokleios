@@ -1,8 +1,8 @@
 defmodule TextServerWeb.WorkLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.Work
+  alias TextServer.Works
+  alias TextServer.Works.Work
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.WorkLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Work")
-    |> assign(:work, Texts.get_work!(id))
+    |> assign(:work, Works.get_work!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.WorkLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    work = Texts.get_work!(id)
-    {:ok, _} = Texts.delete_work(work)
+    work = Works.get_work!(id)
+    {:ok, _} = Works.delete_work(work)
 
     {:noreply, assign(socket, :works, list_works())}
   end
 
   defp list_works do
-    Texts.list_works()
+    Works.list_works()
   end
 end

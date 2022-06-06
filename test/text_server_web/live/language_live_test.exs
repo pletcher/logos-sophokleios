@@ -2,7 +2,7 @@ defmodule TextServerWeb.LanguageLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.LanguagesFixtures
 
   @create_attrs %{slug: "some slug", title: "some title"}
   @update_attrs %{slug: "some updated slug", title: "some updated title"}

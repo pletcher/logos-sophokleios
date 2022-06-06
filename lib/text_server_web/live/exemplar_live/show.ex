@@ -1,7 +1,7 @@
 defmodule TextServerWeb.ExemplarLive.Show do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
+  alias TextServer.Exemplars
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:exemplar, Texts.get_exemplar!(id))}
+     |> assign(:exemplar, Exemplars.get_exemplar!(id))}
   end
 
   defp page_title(:show), do: "Show Exemplar"

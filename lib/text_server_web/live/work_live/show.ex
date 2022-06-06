@@ -1,7 +1,7 @@
 defmodule TextServerWeb.WorkLive.Show do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
+  alias TextServer.Works
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule TextServerWeb.WorkLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:work, Texts.get_work!(id))}
+     |> assign(:work, Works.get_work!(id))}
   end
 
   defp page_title(:show), do: "Show Work"

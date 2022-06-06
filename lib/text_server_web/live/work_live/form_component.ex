@@ -1,11 +1,11 @@
 defmodule TextServerWeb.WorkLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.Works
 
   @impl true
   def update(%{work: work} = assigns, socket) do
-    changeset = Texts.change_work(work)
+    changeset = Works.change_work(work)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.WorkLive.FormComponent do
   def handle_event("validate", %{"work" => work_params}, socket) do
     changeset =
       socket.assigns.work
-      |> Texts.change_work(work_params)
+      |> Works.change_work(work_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.WorkLive.FormComponent do
   end
 
   defp save_work(socket, :edit, work_params) do
-    case Texts.update_work(socket.assigns.work, work_params) do
+    case Works.update_work(socket.assigns.work, work_params) do
       {:ok, _work} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.WorkLive.FormComponent do
   end
 
   defp save_work(socket, :new, work_params) do
-    case Texts.create_work(work_params) do
+    case Works.create_work(work_params) do
       {:ok, _work} ->
         {:noreply,
          socket

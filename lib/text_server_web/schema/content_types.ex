@@ -26,7 +26,7 @@ defmodule TextServerWeb.Schema.ContentTypes do
     end
   end
 
-  object :exemplar do
+  object :edition do
     field :id, :id
     field :title, :string
     field :slug, :string
@@ -102,11 +102,11 @@ defmodule TextServerWeb.Schema.ContentTypes do
     field :words, list_of(:word)
     field :language, :language
 
-    field :exemplar, :exemplar do
+    field :edition, :edition do
       arg :id, :integer
       arg :slug, :string
 
-      resolve &Resolvers.Texts.find_exemplar_by/3
+      resolve &Resolvers.Texts.find_edition_by/3
     end
 
     field :translation, :translation do
@@ -153,11 +153,11 @@ defmodule TextServerWeb.Schema.ContentTypes do
   object :work do
     field :id, :id
     field :description, :string
-    field :exemplar, :exemplar do
+    field :edition, :edition do
       arg :id, :integer
       arg :slug, :string
 
-      resolve &Resolvers.Texts.find_exemplar_by/3
+      resolve &Resolvers.Texts.find_edition_by/3
     end
 
     field :filemd5hash, :string

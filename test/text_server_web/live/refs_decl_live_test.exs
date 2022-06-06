@@ -2,7 +2,7 @@ defmodule TextServerWeb.RefsDeclLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.RefsDeclsFixtures
 
   @create_attrs %{description: "some description", label: "some label", match_pattern: "some match_pattern", replacement_pattern: "some replacement_pattern", slug: "some slug", structure_index: 42, urn: "some urn"}
   @update_attrs %{description: "some updated description", label: "some updated label", match_pattern: "some updated match_pattern", replacement_pattern: "some updated replacement_pattern", slug: "some updated slug", structure_index: 43, urn: "some updated urn"}

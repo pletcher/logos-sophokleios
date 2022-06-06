@@ -1,8 +1,8 @@
 defmodule TextServerWeb.ExemplarLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.Exemplar
+  alias TextServer.Exemplars
+  alias TextServer.Exemplars.Exemplar
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.ExemplarLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Exemplar")
-    |> assign(:exemplar, Texts.get_exemplar!(id))
+    |> assign(:exemplar, Exemplars.get_exemplar!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.ExemplarLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    exemplar = Texts.get_exemplar!(id)
-    {:ok, _} = Texts.delete_exemplar(exemplar)
+    exemplar = Exemplars.get_exemplar!(id)
+    {:ok, _} = Exemplars.delete_exemplar(exemplar)
 
     {:noreply, assign(socket, :exemplars, list_exemplars())}
   end
 
   defp list_exemplars do
-    Texts.list_exemplars()
+    Exemplars.list_exemplars()
   end
 end

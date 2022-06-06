@@ -1,7 +1,7 @@
 defmodule TextServerWeb.LanguageLive.Show do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
+  alias TextServer.Languages
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule TextServerWeb.LanguageLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:language, Texts.get_language!(id))}
+     |> assign(:language, Languages.get_language!(id))}
   end
 
   defp page_title(:show), do: "Show Language"

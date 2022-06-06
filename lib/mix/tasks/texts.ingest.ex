@@ -23,48 +23,131 @@ defmodule Mix.Tasks.Texts.Ingest do
     String.split(url, "/")
     |> List.last()
     |> String.replace(Path.extname(url), "")
-    |> Phoenix.Naming.underscore()
-    |> Phoenix.Naming.camelize(:lower)
+    |> Recase.to_camel()
   end
 
   defp ingest_collection(f, collection) do
+    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
+    filename = String.replace_prefix(f, "#{path_prefix}/", "")
+
+    Mix.shell().info("Ingesting #{filename}")
+
+    [text_group_fragment, work_fragment, language_fragment] =
+      String.split(filename, ".")
+      |> List.first()
+      |> String.split("__")
+
     {:ok, binary} = File.read(f)
-    {:ok, parsed} = Jason.decode(binary, keys: :atoms)
-    {:ok, text_group} = process_text_group(parsed, collection)
-    {:ok, work} = get_work(parsed, collection, text_group, binary, f)
-    {:ok, _version} = maybe_get_version(parsed, work)
-  end
+    {:ok, parsed} = Jason.decode(binary)
 
-  def maybe_get_version(
-        %{edition: edition, source: "The Center for Hellenic Studies", language: "english"} =
-          data,
-        work
-      ) do
-    TextServer.Texts.find_or_create_version(%{title: edition, urn: "#{work.urn}.chs-translation"})
-  end
+    # NOTE: (charles) For many of these texts, "author" is "Not available". Is
+    # this actually what we want in our URNs?
+    text_group_title =
+      case parsed["author"] do
+        "" -> "unknown"
+        "(Original Book)" -> "original book"
+        "Not available" -> "unknown"
+        _ -> parsed["author"]
+      end
 
-  def maybe_get_version(
-        %{edition: edition, source: "The Center for Hellenic Studies"} = data,
-        work
-      ) do
-    TextServer.Texts.find_or_create_version(%{
-      title: edition,
-      urn: "#{work.urn}.chs-#{Phoenix.Naming.camelize(edition)}"
-    })
-  end
+    {:ok, text_group} =
+      TextServer.TextGroups.find_or_create_text_group(%{
+        collection_id: collection.id,
+        title: text_group_title,
+        urn: "#{collection.urn}:#{Recase.to_camel(text_group_title)}"
+      })
 
-  defp maybe_get_version(
-         %{edition: edition} = data,
-         work
-       ) do
-    TextServer.Texts.find_or_create_version(%{
-      title: edition,
-      urn: work.urn
-    })
-  end
+    {:ok, language} = TextServer.Languages.find_or_create_language(%{title: parsed["language"]})
 
-  defp maybe_get_version(_data, _work) do
-    {:ok, nil}
+    work_urn = "#{text_group.urn}.#{Recase.to_camel(work_fragment)}"
+    english_title = parsed["englishTitle"] || text_group.title
+    original_title = parsed["originalTitle"]
+    description = parsed["description"]
+
+    {:ok, work} =
+      TextServer.Works.find_or_create_work(%{
+        description: description,
+        english_title: english_title,
+        original_title: original_title,
+        urn: work_urn,
+        text_group_id: text_group.id
+      })
+
+    # NOTE: (charles) The Middle English texts (so far) are not very
+    # well organized. The data itself appears to be mostly fine, but
+    # they're missing titles (Piers Plowman was, at least) or have titles
+    # that are way too long.
+
+    version_attrs =
+      case parsed do
+        %{
+          "edition" => edition,
+          "source" => "The Center for Hellenic Studies",
+          "language" => "english"
+        } ->
+          %{
+            title: edition,
+            urn: "#{work.urn}.chs-translation",
+            version_type: :translation,
+            work_id: work.id
+          }
+
+        %{"edition" => edition, "source" => "The Center For Hellenic Studies"} ->
+          %{
+            title: edition,
+            urn: "#{work.urn}.chs-#{Recase.to_camel(edition)}",
+            version_type: :edition,
+            work_id: work.id
+          }
+
+        %{"edition" => edition} ->
+          %{
+            title: edition,
+            urn: "#{work.urn}.#{Recase.to_camel(language_fragment)}",
+            version_type: :edition,
+            work_id: work.id
+          }
+
+        _ ->
+          %{
+            title: original_title || english_title,
+            urn: "#{work.urn}.#{Recase.to_camel(language_fragment)}",
+            version_type: :edition,
+            work_id: work.id
+          }
+      end
+
+    {:ok, version} = TextServer.Versions.find_or_create_version(version_attrs)
+
+    source = parsed["source"]
+    source_link = parsed["sourceLink"]
+
+    {:ok, exemplar} =
+      TextServer.Exemplars.find_or_create_exemplar(%{
+        description: description,
+        filename: filename,
+        filemd5hash: :crypto.hash(:md5, binary) |> Base.encode16(case: :lower),
+        form: nil,
+        label: nil,
+        language_id: language.id,
+        title: original_title || english_title,
+        source: source,
+        source_link: source_link,
+        structure: nil,
+        urn: "#{version.urn}.#{Recase.to_camel(source)}",
+        version_id: version.id
+      })
+
+    Iteraptor.to_flatmap(parsed["text"])
+    |> Enum.map(fn {k, v} ->
+      location = String.split(k, ".") |> Enum.map(&String.to_integer/1)
+
+      TextServer.TextNodes.find_or_create_text_node(%{
+        location: location,
+        text: v,
+        exemplar_id: exemplar.id
+      })
+    end)
   end
 
   defp ingest_json(dir, collection) do
@@ -80,7 +163,7 @@ defmodule Mix.Tasks.Texts.Ingest do
   end
 
   defp ingest_repo(repo) do
-    %{:title => title, :url => url} = repo
+    %{title: title, url: url} = repo
     dir = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
 
     repo_dir_name =
@@ -97,7 +180,7 @@ defmodule Mix.Tasks.Texts.Ingest do
       urn: urn
     }
 
-    {:ok, collection} = TextServer.Texts.find_or_create_collection(collection_attrs)
+    {:ok, collection} = TextServer.Collections.find_or_create_collection(collection_attrs)
 
     if File.dir?(json_dir = Path.join(dest, "cltk_json")) do
       ingest_json(json_dir, collection)
@@ -110,64 +193,5 @@ defmodule Mix.Tasks.Texts.Ingest do
     TextServer.Texts.repositories()
     |> Stream.map(&ingest_repo/1)
     |> Enum.to_list()
-  end
-
-  defp get_text_group(data, collection) do
-    # NOTE: (charles) At least for the Hebrew Sefarim,
-    # "author" is "Not available". Is this actually what we want
-    # in our URNs?
-
-    author = data[:author]
-
-    title = if author == "", do: "unknown", else: author
-
-    urn = "#{collection.urn}:#{Phoenix.Naming.camelize(title)}"
-
-    text_group_attrs = %{
-      collection_id: collection.id,
-      title: title,
-      urn: urn
-    }
-
-    TextServer.Texts.upsert_text_group(text_group_attrs)
-  end
-
-  defp get_work(data, collection, text_group, raw, filename) do
-    description = data[:description]
-    english_title = data[:english_title] || text_group.title
-    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
-    filename = String.replace_prefix(filename, "#{path_prefix}/", "")
-    filemd5hash = :crypto.hash(:md5, raw) |> Base.encode16(case: :lower)
-
-    [language_fragment, work_fragment | _] =
-      String.split(filename, ".") |> List.first() |> String.split("__") |> Enum.reverse()
-
-    form = nil
-
-    full_urn =
-      "#{text_group.urn}.#{Phoenix.Naming.camelize(work_fragment)}-#{Phoenix.Naming.camelize(language_fragment)}"
-
-    label = nil
-    language = data[:language]
-    original_title = data[:original_title]
-    structure = nil
-    urn = "#{text_group.urn}.#{Phoenix.Naming.camelize(english_title)}"
-    work_type = nil
-
-    TextServer.Texts.upsert_work(%{
-      description: description,
-      english_title: english_title,
-      filename: filename,
-      filemd5hash: filemd5hash,
-      form: form,
-      full_urn: full_urn,
-      label: label,
-      language: language,
-      original_title: original_title,
-      structure: structure,
-      text_group_id: text_group.id,
-      urn: urn,
-      work_type: work_type
-    })
   end
 end

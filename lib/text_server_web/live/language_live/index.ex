@@ -1,8 +1,8 @@
 defmodule TextServerWeb.LanguageLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.Language
+  alias TextServer.Languages
+  alias TextServer.Languages.Language
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.LanguageLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Language")
-    |> assign(:language, Texts.get_language!(id))
+    |> assign(:language, Languages.get_language!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.LanguageLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    language = Texts.get_language!(id)
-    {:ok, _} = Texts.delete_language(language)
+    language = Languages.get_language!(id)
+    {:ok, _} = Languages.delete_language(language)
 
     {:noreply, assign(socket, :languages, list_languages())}
   end
 
   defp list_languages do
-    Texts.list_languages()
+    Languages.list_languages()
   end
 end

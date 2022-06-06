@@ -2,7 +2,7 @@ defmodule TextServerWeb.ExemplarLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.ExemplarsFixtures
 
   @create_attrs %{description: "some description", slug: "some slug", title: "some title", urn: "some urn"}
   @update_attrs %{description: "some updated description", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}

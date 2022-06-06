@@ -1,11 +1,11 @@
 defmodule TextServerWeb.ExemplarLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.Exemplars
 
   @impl true
   def update(%{exemplar: exemplar} = assigns, socket) do
-    changeset = Texts.change_exemplar(exemplar)
+    changeset = Exemplars.change_exemplar(exemplar)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   def handle_event("validate", %{"exemplar" => exemplar_params}, socket) do
     changeset =
       socket.assigns.exemplar
-      |> Texts.change_exemplar(exemplar_params)
+      |> Exemplars.change_exemplar(exemplar_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   end
 
   defp save_exemplar(socket, :edit, exemplar_params) do
-    case Texts.update_exemplar(socket.assigns.exemplar, exemplar_params) do
+    case Exemplars.update_exemplar(socket.assigns.exemplar, exemplar_params) do
       {:ok, _exemplar} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   end
 
   defp save_exemplar(socket, :new, exemplar_params) do
-    case Texts.create_exemplar(exemplar_params) do
+    case Exemplars.create_exemplar(exemplar_params) do
       {:ok, _exemplar} ->
         {:noreply,
          socket

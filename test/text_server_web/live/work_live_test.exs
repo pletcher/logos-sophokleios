@@ -2,10 +2,10 @@ defmodule TextServerWeb.WorkLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.WorksFixtures
 
-  @create_attrs %{description: "some description", english_title: "some english_title", filemd5hash: "some filemd5hash", filename: "some filename", form: "some form", full_urn: "some full_urn", label: "some label", original_title: "some original_title", slug: "some slug", structure: "some structure", urn: "some urn", work_type: "some work_type"}
-  @update_attrs %{description: "some updated description", english_title: "some updated english_title", filemd5hash: "some updated filemd5hash", filename: "some updated filename", form: "some updated form", full_urn: "some updated full_urn", label: "some updated label", original_title: "some updated original_title", slug: "some updated slug", structure: "some updated structure", urn: "some updated urn", work_type: "some updated work_type"}
+  @create_attrs %{description: "some description", english_title: "some english_title", filemd5hash: "some filemd5hash", filename: "some filename", form: "some form", full_urn: "some full_urn", label: "some label", original_title: "some original_title", slug: "some slug", structure: "some structure", urn: "some urn", work_type: :edition}
+  @update_attrs %{description: "some updated description", english_title: "some updated english_title", filemd5hash: "some updated filemd5hash", filename: "some updated filename", form: "some updated form", full_urn: "some updated full_urn", label: "some updated label", original_title: "some updated original_title", slug: "some updated slug", structure: "some updated structure", urn: "some updated urn", work_type: :translation}
   @invalid_attrs %{description: nil, english_title: nil, filemd5hash: nil, filename: nil, form: nil, full_urn: nil, label: nil, original_title: nil, slug: nil, structure: nil, urn: nil, work_type: nil}
 
   defp create_work(_) do

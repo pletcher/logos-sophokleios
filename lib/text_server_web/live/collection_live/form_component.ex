@@ -1,11 +1,11 @@
 defmodule TextServerWeb.CollectionLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.Collections
 
   @impl true
   def update(%{collection: collection} = assigns, socket) do
-    changeset = Texts.change_collection(collection)
+    changeset = Collections.change_collection(collection)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.CollectionLive.FormComponent do
   def handle_event("validate", %{"collection" => collection_params}, socket) do
     changeset =
       socket.assigns.collection
-      |> Texts.change_collection(collection_params)
+      |> Collections.change_collection(collection_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.CollectionLive.FormComponent do
   end
 
   defp save_collection(socket, :edit, collection_params) do
-    case Texts.update_collection(socket.assigns.collection, collection_params) do
+    case Collections.update_collection(socket.assigns.collection, collection_params) do
       {:ok, _collection} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.CollectionLive.FormComponent do
   end
 
   defp save_collection(socket, :new, collection_params) do
-    case Texts.create_collection(collection_params) do
+    case Collections.create_collection(collection_params) do
       {:ok, _collection} ->
         {:noreply,
          socket

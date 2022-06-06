@@ -1,8 +1,8 @@
 defmodule TextServerWeb.TextGroupLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.TextGroup
+  alias TextServer.TextGroups
+  alias TextServer.TextGroups.TextGroup
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.TextGroupLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Text group")
-    |> assign(:text_group, Texts.get_text_group!(id))
+    |> assign(:text_group, TextGroups.get_text_group!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.TextGroupLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    text_group = Texts.get_text_group!(id)
-    {:ok, _} = Texts.delete_text_group(text_group)
+    text_group = TextGroups.get_text_group!(id)
+    {:ok, _} = TextGroups.delete_text_group(text_group)
 
     {:noreply, assign(socket, :text_groups, list_text_groups())}
   end
 
   defp list_text_groups do
-    Texts.list_text_groups()
+    TextGroups.list_text_groups()
   end
 end

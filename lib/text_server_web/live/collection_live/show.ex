@@ -1,7 +1,7 @@
 defmodule TextServerWeb.CollectionLive.Show do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
+  alias TextServer.Collections
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule TextServerWeb.CollectionLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:collection, Texts.get_collection!(id))}
+     |> assign(:collection, Collections.get_collection!(id))}
   end
 
   defp page_title(:show), do: "Show Collection"

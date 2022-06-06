@@ -1,11 +1,11 @@
 defmodule TextServerWeb.VersionLive.FormComponent do
   use TextServerWeb, :live_component
 
-  alias TextServer.Texts
+  alias TextServer.Versions
 
   @impl true
   def update(%{version: version} = assigns, socket) do
-    changeset = Texts.change_version(version)
+    changeset = Versions.change_version(version)
 
     {:ok,
      socket
@@ -17,7 +17,7 @@ defmodule TextServerWeb.VersionLive.FormComponent do
   def handle_event("validate", %{"version" => version_params}, socket) do
     changeset =
       socket.assigns.version
-      |> Texts.change_version(version_params)
+      |> Versions.change_version(version_params)
       |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, :changeset, changeset)}
@@ -28,7 +28,7 @@ defmodule TextServerWeb.VersionLive.FormComponent do
   end
 
   defp save_version(socket, :edit, version_params) do
-    case Texts.update_version(socket.assigns.version, version_params) do
+    case Versions.update_version(socket.assigns.version, version_params) do
       {:ok, _version} ->
         {:noreply,
          socket
@@ -41,7 +41,7 @@ defmodule TextServerWeb.VersionLive.FormComponent do
   end
 
   defp save_version(socket, :new, version_params) do
-    case Texts.create_version(version_params) do
+    case Versions.create_version(version_params) do
       {:ok, _version} ->
         {:noreply,
          socket

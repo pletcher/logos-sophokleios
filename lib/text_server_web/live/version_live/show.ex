@@ -1,7 +1,7 @@
 defmodule TextServerWeb.VersionLive.Show do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
+  alias TextServer.Versions
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule TextServerWeb.VersionLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:version, Texts.get_version!(id))}
+     |> assign(:version, Versions.get_version!(id))}
   end
 
   defp page_title(:show), do: "Show Version"

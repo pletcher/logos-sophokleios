@@ -16,9 +16,9 @@
 <table>
   <thead>
     <tr>
-      <th>Description</th>
-      <th>Slug</th>
       <th>Title</th>
+      <th>Slug</th>
+      <th>Description</th>
       <th>Urn</th>
 
       <th></th>
@@ -27,9 +27,9 @@
   <tbody id="exemplars">
     <%= for exemplar <- @exemplars do %>
       <tr id={"exemplar-#{exemplar.id}"}>
-        <td><%= exemplar.description %></td>
-        <td><%= exemplar.slug %></td>
         <td><%= exemplar.title %></td>
+        <td><%= exemplar.slug %></td>
+        <td><%= exemplar.description %></td>
         <td><%= exemplar.urn %></td>
 
         <td>

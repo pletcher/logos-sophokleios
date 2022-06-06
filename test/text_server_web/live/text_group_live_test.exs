@@ -2,7 +2,7 @@ defmodule TextServerWeb.TextGroupLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.TextGroupsFixtures
 
   @create_attrs %{slug: "some slug", title: "some title", urn: "some urn"}
   @update_attrs %{slug: "some updated slug", title: "some updated title", urn: "some updated urn"}

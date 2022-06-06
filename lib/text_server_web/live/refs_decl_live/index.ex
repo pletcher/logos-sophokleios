@@ -1,8 +1,8 @@
 defmodule TextServerWeb.RefsDeclLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Texts
-  alias TextServer.Texts.RefsDecl
+  alias TextServer.RefsDecls
+  alias TextServer.RefsDecls.RefsDecl
 
   @impl true
   def mount(_params, _session, socket) do
@@ -17,7 +17,7 @@ defmodule TextServerWeb.RefsDeclLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Refs decl")
-    |> assign(:refs_decl, Texts.get_refs_decl!(id))
+    |> assign(:refs_decl, RefsDecls.get_refs_decl!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -34,13 +34,13 @@ defmodule TextServerWeb.RefsDeclLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    refs_decl = Texts.get_refs_decl!(id)
-    {:ok, _} = Texts.delete_refs_decl(refs_decl)
+    refs_decl = RefsDecls.get_refs_decl!(id)
+    {:ok, _} = RefsDecls.delete_refs_decl(refs_decl)
 
     {:noreply, assign(socket, :refs_decls, list_refs_decls())}
   end
 
   defp list_refs_decls do
-    Texts.list_refs_decls()
+    RefsDecls.list_refs_decls()
   end
 end

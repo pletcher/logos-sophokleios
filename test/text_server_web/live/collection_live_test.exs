@@ -2,11 +2,11 @@ defmodule TextServerWeb.CollectionLiveTest do
   use TextServerWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import TextServer.TextsFixtures
+  import TextServer.CollectionsFixtures
 
-  @create_attrs %{}
-  @update_attrs %{}
-  @invalid_attrs %{}
+  @create_attrs %{repository: "some repository", slug: "some slug", title: "some title", urn: "some urn"}
+  @update_attrs %{repository: "some updated repository", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
+  @invalid_attrs %{repository: nil, slug: nil, title: nil, urn: nil}
 
   defp create_collection(_) do
     collection = collection_fixture()
@@ -16,10 +16,11 @@ defmodule TextServerWeb.CollectionLiveTest do
   describe "Index" do
     setup [:create_collection]
 
-    test "lists all collections", %{conn: conn} do
+    test "lists all collections", %{conn: conn, collection: collection} do
       {:ok, _index_live, html} = live(conn, Routes.collection_index_path(conn, :index))
 
       assert html =~ "Listing Collections"
+      assert html =~ collection.repository
     end
 
     test "saves new collection", %{conn: conn} do
@@ -41,6 +42,7 @@ defmodule TextServerWeb.CollectionLiveTest do
         |> follow_redirect(conn, Routes.collection_index_path(conn, :index))
 
       assert html =~ "Collection created successfully"
+      assert html =~ "some repository"
     end
 
     test "updates collection in listing", %{conn: conn, collection: collection} do
@@ -62,6 +64,7 @@ defmodule TextServerWeb.CollectionLiveTest do
         |> follow_redirect(conn, Routes.collection_index_path(conn, :index))
 
       assert html =~ "Collection updated successfully"
+      assert html =~ "some updated repository"
     end
 
     test "deletes collection in listing", %{conn: conn, collection: collection} do
@@ -79,6 +82,7 @@ defmodule TextServerWeb.CollectionLiveTest do
       {:ok, _show_live, html} = live(conn, Routes.collection_show_path(conn, :show, collection))
 
       assert html =~ "Show Collection"
+      assert html =~ collection.repository
     end
 
     test "updates collection within modal", %{conn: conn, collection: collection} do
@@ -100,6 +104,7 @@ defmodule TextServerWeb.CollectionLiveTest do
         |> follow_redirect(conn, Routes.collection_show_path(conn, :show, collection))
 
       assert html =~ "Collection updated successfully"
+      assert html =~ "some updated repository"
     end
   end
 end

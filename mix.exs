@@ -53,7 +53,8 @@ defmodule TextServer.MixProject do
       {:absinthe_phoenix, "~> 2.0.0"},
       {:absinthe_plug, "~> 1.5"},
       {:recase, "~> 0.5"},
-      {:iteraptor, "~> 1.12.0"}
+      {:iteraptor, "~> 1.12.0"},
+      {:saxy, "~> 1.3"}
     ]
   end
 

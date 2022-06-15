@@ -26,7 +26,32 @@ defmodule Mix.Tasks.Texts.Ingest do
     |> Recase.to_camel()
   end
 
-  defp ingest_collection(f, collection) do
+  defp parse_text_group_cts(f, collection) do
+    Mix.shell().info("Ingesting text_group CTS at #{f}")
+
+    stream = File.stream!(f)
+    {:ok, data} = Saxy.parse_stream(stream, Xml.TextGroupCtsHandler, %{})
+
+    %{
+      collection_id: collection.id,
+      title: data[:groupname],
+      urn: data[:urn],
+      language: data[:language]
+    }
+  end
+
+  defp parse_work_xml(f) do
+    Mix.shell().info("Ingesting work CTS at #{f}")
+
+    stream = File.stream!(f)
+    {:ok, cts_data} = Saxy.parse_stream(stream, Xml.WorkCtsHandler, {nil, []})
+
+    %{work_data: cts_data}
+    # every work cts file should have a groupUrn attribute for finding and assigning
+    # the text_group
+  end
+
+  defp ingest_json_collection(f, collection) do
     path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
     filename = String.replace_prefix(f, "#{path_prefix}/", "")
 
@@ -57,7 +82,8 @@ defmodule Mix.Tasks.Texts.Ingest do
         urn: "#{collection.urn}:#{Recase.to_camel(text_group_title)}"
       })
 
-    {:ok, language} = TextServer.Languages.find_or_create_language(%{title: parsed["language"]})
+    {:ok, language} =
+      TextServer.Languages.find_or_create_language(%{title: String.downcase(parsed["language"])})
 
     work_urn = "#{text_group.urn}.#{Recase.to_camel(work_fragment)}"
     english_title = parsed["englishTitle"] || text_group.title
@@ -148,18 +174,54 @@ defmodule Mix.Tasks.Texts.Ingest do
         exemplar_id: exemplar.id
       })
     end)
+
+    f
   end
 
   defp ingest_json(dir, collection) do
     Mix.shell().info("... Ingesting JSON-based texts in #{dir} ... \n")
 
-    Path.wildcard("#{dir}/*.json")
-    |> Stream.map(fn f -> ingest_collection(f, collection) end)
-    |> Enum.to_list()
+    ingested_files =
+      Path.wildcard("#{dir}/*.json")
+      |> Stream.map(fn f -> ingest_json_collection(f, collection) end)
+      |> Enum.to_list()
+      |> Enum.join("\n")
+
+    Mix.shell().info("... Finished ingesting the following JSON files: ... \n #{ingested_files}")
   end
 
   defp ingest_xml(dir, collection) do
-    Mix.shell().info("Ingesting XML: #{dir}")
+    Mix.shell().info("... Ingesting XML-based texts in: #{dir} ... \n")
+
+    # We only want directories that have a valid __cts__.xml file. We'll handle
+    # differentiating between text_group and work directories below, then when
+    # we parse a work's CTS XML file, we'll also read in the XML exemplars in
+    # that directory.
+    cts_glob = Path.wildcard("#{dir}/**/__cts__.xml")
+
+    text_groups_data =
+      cts_glob
+      |> Stream.filter(fn f ->
+        String.split(f, "/data/") |> List.last() |> String.split("/") |> Enum.count() == 2
+      end)
+      |> Stream.map(fn f -> parse_text_group_cts(f, collection) end)
+
+    works_data =
+      cts_glob
+      |> Stream.filter(fn f ->
+        String.split(f, "/data/") |> List.last() |> String.split("/") |> Enum.count() > 2
+      end)
+      |> Stream.map(&parse_work_xml/1)
+
+    text_groups =
+      text_groups_data
+      |> Enum.map(fn tg ->
+        TextServer.Languages.find_or_create_language(%{title: Map.get(tg, :language)})
+        TextServer.TextGroups.find_or_create_text_group(Map.delete(tg, :language))
+      end)
+
+    works = works_data |> Enum.to_list()
+    # Mix.shell().info("... Finished ingesting the following XML files: ... \n #{ingested_files}")
   end
 
   defp ingest_repo(repo) do
@@ -183,9 +245,9 @@ defmodule Mix.Tasks.Texts.Ingest do
     {:ok, collection} = TextServer.Collections.find_or_create_collection(collection_attrs)
 
     if File.dir?(json_dir = Path.join(dest, "cltk_json")) do
-      ingest_json(json_dir, collection)
+      # ingest_json(json_dir, collection)
     else
-      ingest_xml(dest, collection)
+      ingest_xml(Path.join(dest, "data"), collection)
     end
   end
 

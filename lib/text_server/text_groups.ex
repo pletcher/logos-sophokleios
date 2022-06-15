@@ -101,6 +101,12 @@ defmodule TextServer.TextGroups do
     end
   end
 
+  def get_by_urn(urn) do
+    query = from(t in TextGroup, where: t.urn == ^urn)
+
+    Repo.one(query)
+  end
+
   @doc """
   Updates a text_group.
 

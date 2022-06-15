@@ -64,11 +64,7 @@ defmodule TextServer.Works do
     end
   end
 
-  def get_by_urn(urn) do
-    query = from(w in Work, where: w.urn == ^urn)
-
-    Repo.one(query)
-  end
+  def get_by_urn(urn), do: Repo.get_by(Work, %{urn: urn})
 
   @doc """
   Updates a work.

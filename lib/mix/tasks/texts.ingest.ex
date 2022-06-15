@@ -46,9 +46,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     stream = File.stream!(f)
     {:ok, cts_data} = Saxy.parse_stream(stream, Xml.WorkCtsHandler, {nil, []})
 
-    %{work_data: cts_data}
-    # every work cts file should have a groupUrn attribute for finding and assigning
-    # the text_group
+    cts_data
   end
 
   defp ingest_json_collection(f, collection) do
@@ -220,8 +218,43 @@ defmodule Mix.Tasks.Texts.Ingest do
         TextServer.TextGroups.find_or_create_text_group(Map.delete(tg, :language))
       end)
 
-    works = works_data |> Enum.to_list()
-    # Mix.shell().info("... Finished ingesting the following XML files: ... \n #{ingested_files}")
+    works =
+      works_data
+      |> Enum.map(fn ws ->
+        Enum.filter(ws, &Map.has_key?(&1, :text_group_urn))
+        |> Enum.map(fn w ->
+          text_group = TextServer.TextGroups.get_by_urn(Map.get(w, :text_group_urn))
+          work_attrs = Map.take(w, Map.keys(TextServer.Works.Work.__struct__()))
+
+          if text_group != nil do
+            TextServer.Works.find_or_create_work(
+              Map.put(work_attrs, :text_group_id, text_group.id)
+            )
+          else
+            text_group =
+              TextServer.TextGroups.find_or_create_text_group(%{
+                collection_id: collection.id,
+                title: "Orphaned Work Parent Group",
+                urn: w[:text_group_urn]
+              })
+
+            TextServer.Works.find_or_create_work(
+              Map.put(work_attrs, :text_group_id, text_group.id)
+            )
+          end
+        end)
+
+        Enum.filter(ws, &Map.has_key?(&1, :work_urn))
+        |> Enum.map(fn v ->
+          work = TextServer.Works.get_by_urn(Map.get(v, :work_urn))
+
+          version_attrs =
+            Map.take(v, Map.keys(TextServer.Versions.Version.__struct__()))
+            |> Map.put(:work_id, work.id)
+
+          TextServer.Versions.find_or_create_version(version_attrs)
+        end)
+      end)
   end
 
   defp ingest_repo(repo) do

@@ -17,8 +17,12 @@ defmodule Xml.WorkCtsHandler do
   end
 
   def handle_event(:characters, chars, {current_element, works}) do
-    [work | works] = works
-    {:ok, {nil, [Map.put(work, current_element, chars) | works]}}
+    if String.trim(chars) == "" do
+      {:ok, {nil, works}}
+    else
+      [work | works] = works
+      {:ok, {nil, [Map.put(work, current_element, chars) | works]}}
+    end
   end
 
   def handle_event(:characters, _chars, {current_element, works}) do

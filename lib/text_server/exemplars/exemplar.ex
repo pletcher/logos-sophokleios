@@ -16,6 +16,8 @@ defmodule TextServer.Exemplars.Exemplar do
     belongs_to :language, TextServer.Languages.Language
     belongs_to :version, TextServer.Versions.Version
 
+    embeds_one :tei_header, TextServer.Exemplars.TeiHeader
+
     timestamps()
   end
 
@@ -35,6 +37,7 @@ defmodule TextServer.Exemplars.Exemplar do
       :urn,
       :version_id
     ])
+    |> cast_embed(:tei_header)
     |> validate_required([:filemd5hash, :filename, :title, :urn])
     |> assoc_constraint(:language)
     |> assoc_constraint(:version)

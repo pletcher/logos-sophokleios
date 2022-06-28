@@ -35,9 +35,6 @@ defmodule Xml.WorkCtsHandler do
     {:ok, state}
   end
 
-  # NOTE: Private functions only return the changed state; public functions
-  # handle setting the status symbol
-
   defp handle_element("ti:about", attributes, state), do: handle_about(attributes, state)
 
   defp handle_element("ti:commentary", attributes, state),

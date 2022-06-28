@@ -26,6 +26,77 @@ defmodule Mix.Tasks.Texts.Ingest do
     |> Recase.to_camel()
   end
 
+  def get_filename_from_path(s) do
+    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
+
+    String.replace_prefix(s, "#{path_prefix}/", "")
+  end
+
+  def parse_exemplar_xml(f) do
+    Mix.shell().info("Ingesting exemplar XML at #{f}")
+
+    file_stream = File.stream!(f)
+    {:ok, header_data} = Saxy.parse_stream(file_stream, Xml.ExemplarHeaderHandler, {nil, []})
+    {:ok, body_data} = Saxy.parse_stream(file_stream, Xml.ExemplarBodyHandler, %{})
+
+    ordered_header_data = Enum.reverse(header_data)
+    filename = get_filename_from_path(f)
+
+    exemplar = %{
+      filemd5hash: :crypto.hash(:md5, Enum.to_list(file_stream)) |> Base.encode16(case: :lower),
+      filename: filename,
+      label: nil,
+      source: nil,
+      source_link: nil,
+      structure: nil,
+      title:
+        ordered_header_data |> Enum.find(fn m -> Map.get(m, :text_server_tag_name) == :title end),
+      urn: String.replace(filename, ".xml", ""),
+      tei_header: %{
+        file_description: %{
+          title_statement: [],
+          publication_statement: [],
+          source_description: []
+        },
+        profile_description: [],
+        revision_description: []
+      }
+    }
+
+    # {:ok, data} =
+    #   Saxy.parse_stream(
+    #     stream,
+    #     Xml.ExemplarHandler,
+    #     {nil,
+    #      %{
+    #        description: nil,
+    #        filemd5hash: nil,
+    #        filename: nil,
+    #        label: nil,
+    #        source: nil,
+    #        source_link: nil,
+    #        structure: nil,
+    #        title: nil,
+    #        urn: nil,
+    #        tei_header: %{
+    #          file_description: %{
+    #            title_statement: [],
+    #            publication_statement: [],
+    #            source_description: []
+    #          },
+    #          profile_description: [],
+    #          revision_description: []
+    #        }
+    #      }}
+    #   )
+
+    # refs_decls: [],
+    #            # location: {:array, :integer}, text
+    #            text_nodes: [],
+    #            elements: []
+    #            # attributes, end_urn, end_text_node_id, exemplar_id, start_text_node_id, element_type_id
+  end
+
   defp parse_text_group_cts(f, collection) do
     Mix.shell().info("Ingesting text_group CTS at #{f}")
 
@@ -50,8 +121,7 @@ defmodule Mix.Tasks.Texts.Ingest do
   end
 
   defp ingest_json_collection(f, collection) do
-    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
-    filename = String.replace_prefix(f, "#{path_prefix}/", "")
+    filename = get_filename_from_path(f)
 
     Mix.shell().info("Ingesting #{filename}")
 
@@ -191,25 +261,29 @@ defmodule Mix.Tasks.Texts.Ingest do
   defp ingest_xml(dir, collection) do
     Mix.shell().info("... Ingesting XML-based texts in: #{dir} ... \n")
 
-    # We only want directories that have a valid __cts__.xml file. We'll handle
-    # differentiating between text_group and work directories below, then when
-    # we parse a work's CTS XML file, we'll also read in the XML exemplars in
-    # that directory.
-    cts_glob = Path.wildcard("#{dir}/**/__cts__.xml")
+    xml_files = Path.wildcard("#{dir}/**/*.xml")
+
+    cts_files =
+      xml_files
+      |> Stream.filter(&String.ends_with?(&1, "__cts__.xml"))
+      |> Enum.reduce(%{text_group_files: [], work_files: []}, fn f, acc ->
+        update =
+          if String.split(f, "/data/") |> List.last() |> Path.split() |> Enum.count() == 2 do
+            :text_group_files
+          else
+            :work_files
+          end
+
+        Map.update(acc, update, [f], &[f | &1])
+      end)
+
+    exemplar_files = xml_files |> Stream.reject(&String.ends_with?(&1, "__cts__.xml"))
 
     text_groups_data =
-      cts_glob
-      |> Stream.filter(fn f ->
-        String.split(f, "/data/") |> List.last() |> String.split("/") |> Enum.count() == 2
-      end)
-      |> Stream.map(fn f -> parse_text_group_cts(f, collection) end)
+      cts_files[:text_group_files] |> Stream.map(&parse_text_group_cts(&1, collection))
 
-    works_data =
-      cts_glob
-      |> Stream.filter(fn f ->
-        String.split(f, "/data/") |> List.last() |> String.split("/") |> Enum.count() > 2
-      end)
-      |> Stream.map(&parse_work_xml/1)
+    works_data = cts_files[:work_files] |> Stream.map(&parse_work_xml/1)
+    exemplars_data = exemplar_files |> Stream.map(&parse_exemplar_xml/1)
 
     text_groups =
       text_groups_data
@@ -218,9 +292,13 @@ defmodule Mix.Tasks.Texts.Ingest do
         TextServer.TextGroups.find_or_create_text_group(Map.delete(tg, :language))
       end)
 
-    works =
-      works_data
-      |> Enum.map(fn ws ->
+    works_and_versions = create_works_and_versions(works_data, collection)
+  end
+
+  defp create_works_and_versions(data, collection) do
+    data
+    |> Enum.map(fn ws ->
+      saved_works =
         Enum.filter(ws, &Map.has_key?(&1, :text_group_urn))
         |> Enum.map(fn w ->
           text_group = TextServer.TextGroups.get_by_urn(Map.get(w, :text_group_urn))
@@ -244,6 +322,7 @@ defmodule Mix.Tasks.Texts.Ingest do
           end
         end)
 
+      saved_versions =
         Enum.filter(ws, &Map.has_key?(&1, :work_urn))
         |> Enum.map(fn v ->
           work = TextServer.Works.get_by_urn(Map.get(v, :work_urn))
@@ -254,7 +333,9 @@ defmodule Mix.Tasks.Texts.Ingest do
 
           TextServer.Versions.find_or_create_version(version_attrs)
         end)
-      end)
+
+      %{versions: saved_versions, works: saved_works}
+    end)
   end
 
   defp ingest_repo(repo) do

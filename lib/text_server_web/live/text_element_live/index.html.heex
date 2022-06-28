@@ -1,0 +1,41 @@
+<h1>Listing Text elements</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.text_element_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.TextElementLive.FormComponent}
+      id={@text_element.id || :new}
+      title={@page_title}
+      action={@live_action}
+      text_element={@text_element}
+      return_to={Routes.text_element_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>End urn</th>
+      <th>Attributes</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="text_elements">
+    <%= for text_element <- @text_elements do %>
+      <tr id={"text_element-#{text_element.id}"}>
+        <td><%= text_element.end_urn %></td>
+        <td><%= text_element.attributes %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.text_element_show_path(@socket, :show, text_element) %></span>
+          <span><%= live_patch "Edit", to: Routes.text_element_index_path(@socket, :edit, text_element) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: text_element.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Text element", to: Routes.text_element_index_path(@socket, :new) %></span>

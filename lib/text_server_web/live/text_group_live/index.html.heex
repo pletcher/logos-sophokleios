@@ -26,7 +26,6 @@
   <tbody id="text_groups">
     <%= for text_group <- @text_groups do %>
       <tr id={"text_group-#{text_group.id}"}>
-        <td><%= text_group.slug %></td>
         <td><%= text_group.title %></td>
         <td><%= text_group.urn %></td>
 

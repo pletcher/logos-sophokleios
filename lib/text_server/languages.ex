@@ -67,6 +67,17 @@ defmodule TextServer.Languages do
     end
   end
 
+  def get_by_slug(slug) do
+    cleaned_slug =
+      case slug do
+        "eng" -> "en"
+        "la" -> "lat"
+        _ -> slug
+      end
+
+    Repo.get_by(Language, slug: cleaned_slug)
+  end
+
   @doc """
   Updates a language.
 

@@ -99,7 +99,7 @@ defmodule Xml.WorkCtsHandler do
 
   defp handle_commentary(attributes, {_current_element, works}) do
     attrs = Map.new(attributes)
-    commentary = %{urn: attrs["urn"], work_urn: attrs["workUrn"]}
+    commentary = %{version_type: :commentary, urn: attrs["urn"], work_urn: attrs["workUrn"]}
 
     {:ok, {:commentary, [commentary | works]}}
   end

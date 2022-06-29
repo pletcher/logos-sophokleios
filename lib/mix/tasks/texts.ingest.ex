@@ -27,74 +27,129 @@ defmodule Mix.Tasks.Texts.Ingest do
   end
 
   def get_filename_from_path(s) do
-    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
+    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "tmp"))
 
     String.replace_prefix(s, "#{path_prefix}/", "")
+  end
+
+  def get_ref_levels_from_tei_header(header_data) do
+    ref_state_units =
+      header_data
+      |> Enum.filter(fn d -> Map.get(d, :tag_name) == "refState" end)
+      |> Enum.map(fn r ->
+        Map.get(r, :attributes)
+        |> Enum.find_value(fn a ->
+          if elem(a, 0) == "unit" do
+            elem(a, 1)
+          end
+        end)
+      end)
+      |> Enum.reverse()
+
+    units = unless Enum.empty?(ref_state_units) do
+      ref_state_units
+    else
+      cref =
+        header_data
+        |> Enum.filter(fn d -> Map.get(d, :tag_name) == "cRefPattern" end)
+        |> List.first()
+
+      attrs = Map.get(cref || %{}, :attributes)
+
+      Enum.find_value(attrs || [], fn a ->
+        if elem(a, 0) == "n" do
+          [elem(a, 1)]
+        end
+      end)
+    end
+
+    if is_nil(units) do
+      ["level_one"]
+    else
+      units
+    end
+  end
+
+  def get_content_from_tag(data, tag) do
+    Enum.find_value(data, fn d ->
+      if d[:current_tag] == tag do
+        d[:content]
+      end
+    end)
   end
 
   def parse_exemplar_xml(f) do
     Mix.shell().info("Ingesting exemplar XML at #{f}")
 
     file_stream = File.stream!(f)
-    {:ok, header_data} = Saxy.parse_stream(file_stream, Xml.ExemplarHeaderHandler, {nil, []})
-    {:ok, body_data} = Saxy.parse_stream(file_stream, Xml.ExemplarBodyHandler, %{})
 
-    ordered_header_data = Enum.reverse(header_data)
-    filename = get_filename_from_path(f)
+    header_data =
+      case Saxy.parse_stream(file_stream, Xml.ExemplarHeaderHandler, {nil, []}) do
+        {:ok, data} -> data
+        {:error, _reason} -> nil
+      end
 
-    exemplar = %{
-      filemd5hash: :crypto.hash(:md5, Enum.to_list(file_stream)) |> Base.encode16(case: :lower),
-      filename: filename,
-      label: nil,
-      source: nil,
-      source_link: nil,
-      structure: nil,
-      title:
-        ordered_header_data |> Enum.find(fn m -> Map.get(m, :text_server_tag_name) == :title end),
-      urn: String.replace(filename, ".xml", ""),
-      tei_header: %{
-        file_description: %{
-          title_statement: [],
-          publication_statement: [],
-          source_description: []
-        },
-        profile_description: [],
-        revision_description: []
-      }
-    }
+    exemplar =
+      if is_nil(header_data) do
+        nil
+      else
+        ref_levels = get_ref_levels_from_tei_header(header_data)
 
-    # {:ok, data} =
-    #   Saxy.parse_stream(
-    #     stream,
-    #     Xml.ExemplarHandler,
-    #     {nil,
-    #      %{
-    #        description: nil,
-    #        filemd5hash: nil,
-    #        filename: nil,
-    #        label: nil,
-    #        source: nil,
-    #        source_link: nil,
-    #        structure: nil,
-    #        title: nil,
-    #        urn: nil,
-    #        tei_header: %{
-    #          file_description: %{
-    #            title_statement: [],
-    #            publication_statement: [],
-    #            source_description: []
-    #          },
-    #          profile_description: [],
-    #          revision_description: []
-    #        }
-    #      }}
-    #   )
+        language_id =
+          Enum.find_value(header_data, fn d ->
+            attrs = Map.new(d[:attributes])
+            lang = Enum.find(attrs, fn a -> elem(a, 0) == "xml:lang" end)
 
-    # refs_decls: [],
-    #            # location: {:array, :integer}, text
-    #            text_nodes: [],
-    #            elements: []
-    #            # attributes, end_urn, end_text_node_id, exemplar_id, start_text_node_id, element_type_id
+            unless is_nil(lang) do
+              language = TextServer.Languages.get_by_slug(elem(lang, 1))
+              language.id
+            else
+              IO.inspect("Could not find language for slug #{lang}. Defaulting to English")
+              language = TextServer.Languages.get_by_slug("en")
+              language.id
+            end
+          end)
+
+        body_data =
+          case Saxy.parse_stream(file_stream, Xml.ExemplarBodyHandler, %{ref_levels: ref_levels}) do
+            {:ok, data} -> data
+            {:error, _reason} -> nil
+          end
+
+        %{
+          body: body_data,
+          filemd5hash:
+            :crypto.hash(:md5, Enum.to_list(file_stream)) |> Base.encode16(case: :lower),
+          filename: f,
+          header: header_data,
+          structure: Enum.join(ref_levels || ["line"], "."),
+          language_id: language_id,
+          title: get_content_from_tag(header_data, :title),
+          tei_header: %{
+            file_description: %{
+              date: get_content_from_tag(header_data, :date),
+              editor: get_content_from_tag(header_data, :title),
+              principal: get_content_from_tag(header_data, :principal),
+              publisher: get_content_from_tag(header_data, :publisher),
+              publication_place: get_content_from_tag(header_data, :publication_placer),
+              responsibility:
+                Enum.filter(header_data, fn d ->
+                  d[:current_tag] == :name
+                end)
+                |> Enum.map(fn d -> d[:content] end),
+              sponsor: get_content_from_tag(header_data, :sponsor)
+            },
+            profile_description: %{},
+            revision_description: %{
+              changes:
+                Enum.filter(header_data, fn d -> d[:current_tag] == :change end)
+                |> Enum.map(fn d ->
+                  %{attributes: Map.new(d[:attributes]), description: d[:content]}
+                end)
+            }
+          }
+        }
+      end
   end
 
   defp parse_text_group_cts(f, collection) do
@@ -258,17 +313,16 @@ defmodule Mix.Tasks.Texts.Ingest do
     Mix.shell().info("... Finished ingesting the following JSON files: ... \n #{ingested_files}")
   end
 
-  defp ingest_xml(dir, collection) do
+  def ingest_xml(dir, collection) do
     Mix.shell().info("... Ingesting XML-based texts in: #{dir} ... \n")
 
-    xml_files = Path.wildcard("#{dir}/**/*.xml")
+    xml_files = Path.wildcard("#{dir}/**/__cts__.xml")
 
     cts_files =
       xml_files
-      |> Stream.filter(&String.ends_with?(&1, "__cts__.xml"))
       |> Enum.reduce(%{text_group_files: [], work_files: []}, fn f, acc ->
         update =
-          if String.split(f, "/data/") |> List.last() |> Path.split() |> Enum.count() == 2 do
+          if String.split(f, "/data/") |> List.last() |> Path.split() |> Enum.count() < 3 do
             :text_group_files
           else
             :work_files
@@ -277,13 +331,10 @@ defmodule Mix.Tasks.Texts.Ingest do
         Map.update(acc, update, [f], &[f | &1])
       end)
 
-    exemplar_files = xml_files |> Stream.reject(&String.ends_with?(&1, "__cts__.xml"))
-
     text_groups_data =
       cts_files[:text_group_files] |> Stream.map(&parse_text_group_cts(&1, collection))
 
     works_data = cts_files[:work_files] |> Stream.map(&parse_work_xml/1)
-    exemplars_data = exemplar_files |> Stream.map(&parse_exemplar_xml/1)
 
     text_groups =
       text_groups_data
@@ -293,6 +344,37 @@ defmodule Mix.Tasks.Texts.Ingest do
       end)
 
     works_and_versions = create_works_and_versions(works_data, collection)
+
+    exemplars =
+      works_and_versions
+      |> Stream.map(fn w -> w[:versions] end)
+      |> Enum.map(fn vs ->
+        vs
+        |> Enum.map(fn v ->
+          urn = String.split(v.urn, ":") |> List.last()
+          exemplar_files = Path.wildcard("#{dir}/**/#{urn}.xml")
+
+          exemplar_files
+          |> Enum.map(fn f ->
+            exemplar_data = parse_exemplar_xml(f)
+
+            exemplar =
+              if is_nil(exemplar_data) do
+                IO.inspect("Unable to parse exemplar file #{f}")
+                nil
+              else
+                ex_data =
+                  Map.merge(
+                    Map.delete(exemplar_data, :body),
+                    %{description: v.description, label: v.label, urn: v.urn, version_id: v.id}
+                  )
+
+                {:ok, exemplar} = TextServer.Exemplars.find_or_create_exemplar(ex_data)
+                exemplar
+              end
+          end)
+        end)
+      end)
   end
 
   defp create_works_and_versions(data, collection) do
@@ -316,9 +398,12 @@ defmodule Mix.Tasks.Texts.Ingest do
                 urn: w[:text_group_urn]
               })
 
-            TextServer.Works.find_or_create_work(
-              Map.put(work_attrs, :text_group_id, text_group.id)
-            )
+            {:ok, work} =
+              TextServer.Works.find_or_create_work(
+                Map.put(work_attrs, :text_group_id, text_group.id)
+              )
+
+            work
           end
         end)
 
@@ -331,7 +416,8 @@ defmodule Mix.Tasks.Texts.Ingest do
             Map.take(v, Map.keys(TextServer.Versions.Version.__struct__()))
             |> Map.put(:work_id, work.id)
 
-          TextServer.Versions.find_or_create_version(version_attrs)
+          {:ok, version} = TextServer.Versions.find_or_create_version(version_attrs)
+          version
         end)
 
       %{versions: saved_versions, works: saved_works}

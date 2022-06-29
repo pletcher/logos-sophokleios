@@ -4,9 +4,9 @@ defmodule TextServer.Versions.Version do
 
   schema "versions" do
     field :description, :string
-    field :title, :string
+    field :label, :string
     field :urn, :string
-    field :version_type, Ecto.Enum, values: [:edition, :translation]
+    field :version_type, Ecto.Enum, values: [:commentary, :edition, :translation]
 
     belongs_to :work, TextServer.Works.Work
 
@@ -18,8 +18,8 @@ defmodule TextServer.Versions.Version do
   @doc false
   def changeset(version, attrs) do
     version
-    |> cast(attrs, [:description, :title, :urn, :version_type, :work_id])
-    |> validate_required([:title, :urn, :version_type])
+    |> cast(attrs, [:description, :label, :urn, :version_type, :work_id])
+    |> validate_required([:label, :urn, :version_type])
     |> assoc_constraint(:work)
     |> unique_constraint(:urn)
   end

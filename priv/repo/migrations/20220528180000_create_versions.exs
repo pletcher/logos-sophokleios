@@ -4,14 +4,14 @@ defmodule TextServer.Repo.Migrations.CreateVersions do
   def change do
     create table(:versions) do
       add :description, :text
-      add :title, :text, null: false
+      add :label, :text, null: false
       add :urn, :text, null: false
       add :work_id, references(:works, on_delete: :nothing), null: false
 
       timestamps()
     end
 
-    version_type_create_query = "CREATE TYPE version_type AS ENUM ('edition', 'translation')"
+    version_type_create_query = "CREATE TYPE version_type AS ENUM ('commentary', 'edition', 'translation')"
     version_type_drop_query = "DROP TYPE version_type"
 
     execute(version_type_create_query, version_type_drop_query)

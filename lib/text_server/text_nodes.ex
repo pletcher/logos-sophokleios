@@ -37,6 +37,10 @@ defmodule TextServer.TextNodes do
   """
   def get_text_node!(id), do: Repo.get!(TextNode, id)
 
+  def get_by(attrs \\ %{}) do
+    Repo.get_by(TextNode, attrs)
+  end
+
   @doc """
   Creates a text_node.
 

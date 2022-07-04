@@ -46,22 +46,23 @@ defmodule Mix.Tasks.Texts.Ingest do
       end)
       |> Enum.reverse()
 
-    units = unless Enum.empty?(ref_state_units) do
-      ref_state_units
-    else
-      cref =
-        header_data
-        |> Enum.filter(fn d -> Map.get(d, :tag_name) == "cRefPattern" end)
-        |> List.first()
+    units =
+      unless Enum.empty?(ref_state_units) do
+        ref_state_units
+      else
+        cref =
+          header_data
+          |> Enum.filter(fn d -> Map.get(d, :tag_name) == "cRefPattern" end)
+          |> List.first()
 
-      attrs = Map.get(cref || %{}, :attributes)
+        attrs = Map.get(cref || %{}, :attributes)
 
-      Enum.find_value(attrs || [], fn a ->
-        if elem(a, 0) == "n" do
-          [elem(a, 1)]
-        end
-      end)
-    end
+        Enum.find_value(attrs || [], fn a ->
+          if elem(a, 0) == "n" do
+            [elem(a, 1)]
+          end
+        end)
+      end
 
     if is_nil(units) do
       ["level_one"]
@@ -104,7 +105,7 @@ defmodule Mix.Tasks.Texts.Ingest do
               language = TextServer.Languages.get_by_slug(elem(lang, 1))
               language.id
             else
-              IO.inspect("Could not find language for slug #{lang}. Defaulting to English")
+              IO.inspect("Could not find language for slug #{lang}. Defaulting to English.")
               language = TextServer.Languages.get_by_slug("en")
               language.id
             end
@@ -372,9 +373,89 @@ defmodule Mix.Tasks.Texts.Ingest do
                 {:ok, exemplar} = TextServer.Exemplars.find_or_create_exemplar(ex_data)
                 exemplar
               end
+
+            # NOTE: (charles) This is admittedly a bit confusing. "elems" here
+            # refers to anything contained in an exemplar's body, including
+            # TextNodes. TextNodes are differentiated from TextElements by
+            # containing a :content key.
+            text_elements =
+              unless is_nil(exemplar) do
+                elems = exemplar_data[:body][:text_elements]
+
+                process_exemplar_text_nodes(
+                  exemplar,
+                  Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
+                )
+
+                process_exemplar_text_elements(exemplar, elems)
+              end
           end)
         end)
       end)
+  end
+
+  def process_exemplar_text_elements(exemplar, data) do
+    data
+    |> Enum.group_by(fn el -> el[:tag_name] end)
+    |> Enum.each(fn {k, v} ->
+      [starts, ends] =
+        case Enum.group_by(v, fn x -> Map.has_key?(x, :start) end) do
+          %{true: starts, false: ends} -> [starts, ends]
+          %{true: starts} -> [starts, []]
+          %{false: ends} -> [[], ends]
+        end
+
+      indexed_starts = Enum.with_index(starts)
+
+      indexed_starts
+      |> Enum.each(fn {start, i} ->
+        matching_end =
+          case Enum.fetch(ends, i) do
+            {:ok, e} -> e
+            {:error, _reason} -> IO.inspect("No matching end node found! #{inspect(start)}")
+            :error -> IO.inspect("Something went wrong! #{inspect(start)}")
+          end
+
+        element_type =
+          case TextServer.ElementTypes.find_or_create_element_type(%{name: start[:tag_name]}) do
+            {:ok, element_type} ->
+              element_type
+
+            {:error, reason} ->
+              IO.inspect("There was an error finding or creating an ElementType: #{reason}")
+          end
+
+        end_node =
+          TextServer.TextNodes.get_by(%{
+            exemplar_id: exemplar.id,
+            location: matching_end[:location]
+          })
+
+        start_node =
+          TextServer.TextNodes.get_by(%{exemplar_id: exemplar.id, location: start[:location]})
+
+        unless is_nil(start_node) or is_nil(end_node) do
+          TextServer.TextElements.find_or_create_text_element(%{
+            attributes: start[:attributes],
+            element_type_id: element_type.id,
+            end_offset: matching_end[:offset],
+            end_text_node_id: end_node.id,
+            start_offset: start[:offset],
+            start_text_node_id: start_node.id
+          })
+        end
+      end)
+    end)
+  end
+
+  defp process_exemplar_text_nodes(exemplar, nodes) do
+    Enum.each(nodes, fn el ->
+      TextServer.TextNodes.find_or_create_text_node(%{
+        exemplar_id: exemplar.id,
+        location: el[:location],
+        text: el[:content]
+      })
+    end)
   end
 
   defp create_works_and_versions(data, collection) do

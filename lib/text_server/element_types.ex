@@ -55,6 +55,15 @@ defmodule TextServer.ElementTypes do
     |> Repo.insert()
   end
 
+  def find_or_create_element_type(attrs) do
+    query = from(e in ElementType, where: e.name == ^attrs[:name])
+
+    case Repo.one(query) do
+      nil -> create_element_type(attrs)
+      element_type -> {:ok, element_type}
+    end
+  end
+
   @doc """
   Updates a element_type.
 

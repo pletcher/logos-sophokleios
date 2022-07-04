@@ -4,11 +4,12 @@ defmodule TextServer.Repo.Migrations.CreateTextElements do
   def change do
     create table(:text_elements) do
       add :attributes, :map
+      add :end_offset, :integer, default: 0
+      add :start_offset, :integer, default: 0
       add :element_type_id, references(:element_types, on_delete: :nothing), null: false
-      add :end_urn, :string, null: false
       add :end_text_node_id, references(:text_nodes, on_delete: :nothing), null: false
       add :start_text_node_id, references(:text_nodes, on_delete: :nothing), null: false
-      add :start_urn, :string, null: false
+
 
       timestamps()
     end

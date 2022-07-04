@@ -55,6 +55,21 @@ defmodule TextServer.TextElements do
     |> Repo.insert()
   end
 
+  def find_or_create_text_element(attrs) do
+    query =
+      from(t in TextElement,
+        where:
+          t.element_type_id == ^attrs[:element_type_id] and
+            t.end_text_node_id == ^attrs[:end_text_node_id] and
+            t.start_text_node_id == ^attrs[:start_text_node_id]
+      )
+
+    case Repo.one(query) do
+      nil -> create_text_element(attrs)
+      element -> {:ok, element}
+    end
+  end
+
   @doc """
   Updates a text_element.
 

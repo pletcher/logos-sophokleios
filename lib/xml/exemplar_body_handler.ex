@@ -6,7 +6,7 @@ defmodule Xml.ExemplarBodyHandler do
      %{
        ref_levels: ref_levels,
        text_elements: [],
-       location: Tuple.duplicate(0, Enum.count(ref_levels || ["substitute"]))
+       location: List.duplicate(0, Enum.count(ref_levels || ["substitute"]))
      }}
   end
 
@@ -36,14 +36,15 @@ defmodule Xml.ExemplarBodyHandler do
   def handle_event(
         :end_element,
         name,
-        %{location: location, text_elements: text_elements} = state
+        %{location: location, text_elements: text_elements, offset: offset} = state
       ) do
-    if Enum.empty?(text_elements) do
-      {:ok, state}
-    else
-      {:ok, Map.put(state, :text_elements, [%{end: name, location: location} | text_elements])}
-    end
+    {:ok,
+     Map.put(state, :text_elements, [
+       %{tag_name: name, end: name, location: location, offset: offset} | text_elements
+     ])}
   end
+
+  def handle_event(:end_element, _name, state), do: {:ok, state}
 
   def handle_event(:characters, chars, state) do
     cond do
@@ -56,7 +57,14 @@ defmodule Xml.ExemplarBodyHandler do
       true ->
         [node | nodes] = state[:text_elements]
 
-        {:ok, Map.put(state, :text_elements, [Map.put(node, :content, chars) | nodes])}
+        current_position = Map.get(state, :offset, 0)
+
+        new_state =
+          state
+          |> Map.put(:text_elements, [Map.put(node, :content, chars) | nodes])
+          |> Map.put(:offset, current_position + String.length(chars))
+
+        {:ok, new_state}
     end
   end
 
@@ -74,7 +82,13 @@ defmodule Xml.ExemplarBodyHandler do
 
   defp set_element(state, name, attrs \\ []) do
     Map.put(state, :text_elements, [
-      %{tag_name: name, attributes: Map.new(attrs), location: state[:location]}
+      %{
+        tag_name: name,
+        start: name,
+        attributes: Map.new(attrs),
+        location: state[:location],
+        offset: state[:offset]
+      }
       | state[:text_elements]
     ])
   end
@@ -82,56 +96,57 @@ defmodule Xml.ExemplarBodyHandler do
   defp set_location(state, "bibl", _attrs), do: state
 
   defp set_location(state, name, attrs \\ []) do
+    # We can zero out the position every time the location changes
     ref_levels = state[:ref_levels]
     attr_map = Map.new(attrs)
     n = Map.get(attr_map, "n")
     type = Map.get(attr_map, "type")
     subtype = Map.get(attr_map, "subtype")
 
-    cond do
-      is_nil(ref_levels) ->
-        state
+    int =
+      case Integer.parse(n || "0") do
+        {i, _rem} -> i
+        _ -> 0
+      end
 
-      is_nil(n) ->
-        state
+    new_state =
+      cond do
+        is_nil(ref_levels) ->
+          state
 
-      type == "textpart" ->
-        idx = Enum.find_index(ref_levels, fn r -> r == subtype end)
+        is_nil(n) ->
+          state
 
-        unless is_nil(idx) do
-          i =
-            case Integer.parse(n) do
-              :error -> 0
-              {int, _rem} -> int
-              _ -> 0
+        type == "textpart" ->
+          idx = Enum.find_index(ref_levels, fn r -> r == subtype end)
+
+          location =
+            if is_nil(idx) do
+              [int]
+            else
+              try do
+                state[:location] |> List.replace_at(idx, int)
+              rescue
+                ArgumentError -> state[:location]
+              end
             end
 
-          new_location =
-            try do
-              state[:location] |> put_elem(idx, i)
-            rescue
-              ArgumentError -> state[:location]
-            end
+          Map.put(state, :location, location)
 
-          Map.put(state, :location, new_location)
-        else
-          i = Integer.parse(n)
+        Enum.count(attrs) == 1 ->
+          Map.put(state, :location, [int])
 
-          if i == :error do
-            Map.put(state, :location, {0})
-          else
-            Map.put(state, :location, {i})
-          end
-        end
+        true ->
+          state
+      end
 
-      n && Enum.count(attrs) == 1 ->
-        Map.put(state, :location, {Integer.parse(n)})
-
-      true ->
-        state
+    if new_state[:location] == state[:location] do
+      new_state
+    else
+      Map.put(new_state, :offset, 0)
     end
   end
-end
+ end
 
 # elements in <body>:
 # div, p, milestone, term, add, l, lb, speaker, del, sp, quote

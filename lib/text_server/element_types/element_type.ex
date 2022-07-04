@@ -13,7 +13,7 @@ defmodule TextServer.ElementTypes.ElementType do
   def changeset(element_type, attrs) do
     element_type
     |> cast(attrs, [:name, :description])
-    |> validate_required([:name, :description])
+    |> validate_required([:name])
     |> unique_constraint(:name)
   end
 end

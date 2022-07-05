@@ -8,6 +8,8 @@ defmodule TextServer.TextGroups.TextGroup do
 
     belongs_to :collection, TextServer.Collections.Collection
 
+    has_many :works, TextServer.Works.Work
+
     timestamps()
   end
 

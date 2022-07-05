@@ -1,12 +1,15 @@
 defmodule Xml.ExemplarBodyHandler do
   @behaviour Saxy.Handler
 
-  def handle_event(:start_document, _prolog, %{ref_levels: ref_levels} = _state) do
+  def handle_event(:start_document, _prolog, state) do
+    ref_levels = state[:ref_levels]
+
     {:ok,
      %{
-       ref_levels: ref_levels,
+       location: List.duplicate(0, Enum.count(ref_levels || ["substitute"])),
+       offset: 0,
        text_elements: [],
-       location: List.duplicate(0, Enum.count(ref_levels || ["substitute"]))
+       ref_levels: ref_levels
      }}
   end
 
@@ -14,13 +17,9 @@ defmodule Xml.ExemplarBodyHandler do
     {:ok, state}
   end
 
-  def handle_event(
-        :start_element,
-        {name, attributes},
-        %{
-          text_elements: elements
-        } = state
-      ) do
+  def handle_event(:start_element, {name, attributes}, state) do
+    elements = state[:text_elements]
+
     cond do
       not Enum.empty?(elements) ->
         handle_element(name, attributes, state)
@@ -33,15 +32,20 @@ defmodule Xml.ExemplarBodyHandler do
     end
   end
 
-  def handle_event(
-        :end_element,
-        name,
-        %{location: location, text_elements: text_elements, offset: offset} = state
-      ) do
-    {:ok,
-     Map.put(state, :text_elements, [
-       %{tag_name: name, end: name, location: location, offset: offset} | text_elements
-     ])}
+  def handle_event(:end_element, name, state) do
+    text_elements = state[:text_elements]
+
+    if Enum.count(text_elements) == 0 do
+      {:ok, state}
+    else
+      location = state[:location]
+      offset = state[:offset]
+
+      {:ok,
+       Map.put(state, :text_elements, [
+         %{tag_name: name, end: name, location: location, offset: offset} | text_elements
+       ])}
+    end
   end
 
   def handle_event(:end_element, _name, state), do: {:ok, state}
@@ -146,7 +150,7 @@ defmodule Xml.ExemplarBodyHandler do
       Map.put(new_state, :offset, 0)
     end
   end
- end
+end
 
 # elements in <body>:
 # div, p, milestone, term, add, l, lb, speaker, del, sp, quote

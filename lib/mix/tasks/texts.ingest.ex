@@ -382,12 +382,17 @@ defmodule Mix.Tasks.Texts.Ingest do
               unless is_nil(exemplar) do
                 elems = exemplar_data[:body][:text_elements]
 
-                process_exemplar_text_nodes(
-                  exemplar,
-                  Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
-                )
+                if is_nil(elems) do
+                  IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
+                  []
+                else
+                  process_exemplar_text_nodes(
+                    exemplar,
+                    Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
+                  )
 
-                process_exemplar_text_elements(exemplar, elems)
+                  process_exemplar_text_elements(exemplar, elems)
+                end
               end
           end)
         end)
@@ -411,9 +416,15 @@ defmodule Mix.Tasks.Texts.Ingest do
       |> Enum.each(fn {start, i} ->
         matching_end =
           case Enum.fetch(ends, i) do
-            {:ok, e} -> e
-            {:error, _reason} -> IO.inspect("No matching end node found! #{inspect(start)}")
-            :error -> IO.inspect("Something went wrong! #{inspect(start)}")
+            {:ok, e} ->
+              e
+
+            :error ->
+              IO.inspect(
+                "No matching end node found! Index: #{i}\n#{inspect(start)}\nExemplar ID: #{exemplar.id}"
+              )
+
+              nil
           end
 
         element_type =
@@ -423,6 +434,7 @@ defmodule Mix.Tasks.Texts.Ingest do
 
             {:error, reason} ->
               IO.inspect("There was an error finding or creating an ElementType: #{reason}")
+              nil
           end
 
         end_node =
@@ -438,9 +450,9 @@ defmodule Mix.Tasks.Texts.Ingest do
           TextServer.TextElements.find_or_create_text_element(%{
             attributes: start[:attributes],
             element_type_id: element_type.id,
-            end_offset: matching_end[:offset],
+            end_offset: matching_end[:offset] || 0,
             end_text_node_id: end_node.id,
-            start_offset: start[:offset],
+            start_offset: start[:offset] || 0,
             start_text_node_id: start_node.id
           })
         end

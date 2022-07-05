@@ -21,11 +21,6 @@
   </li>
 
   <li>
-    <strong>Slug:</strong>
-    <%= @collection.slug %>
-  </li>
-
-  <li>
     <strong>Title:</strong>
     <%= @collection.title %>
   </li>
@@ -36,6 +31,11 @@
   </li>
 
 </ul>
+
+<div>
+  <h2>Text Groups</h2>
+
+</div>
 
 <span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, @collection), class: "button" %></span> |
 <span><%= live_redirect "Back", to: Routes.collection_index_path(@socket, :index) %></span>

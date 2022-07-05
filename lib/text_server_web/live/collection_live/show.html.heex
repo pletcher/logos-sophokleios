@@ -34,7 +34,27 @@
 
 <div>
   <h2>Text Groups</h2>
-
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>URN</th>
+        <th title="Actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= for text_group <- @text_group_page.entries do %>
+        <tr>
+          <td><%= text_group.title %></td>
+          <td><%= text_group.urn %></td>
+          <td>
+            <span><%= live_redirect "Show", to: Routes.text_group_show_path(@socket, :show, text_group) %></span>
+            <span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, text_group) %></span>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 <span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, @collection), class: "button" %></span> |

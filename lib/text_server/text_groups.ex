@@ -20,27 +20,13 @@ defmodule TextServer.TextGroups do
   def list_text_groups(attrs \\ %{}) do
     TextGroup
     |> where(^filter_text_group_where(attrs))
-    |> limit(^limit_text_group(attrs))
-    |> offset(^offset_text_group(attrs))
-    |> Repo.all()
+    |> Repo.paginate()
   end
 
-  def list_text_groups_in_collection(%TextServer.Collections.Collection{} = collection, attrs \\ %{}) do
+  def paginate_text_groups(params \\ []) do
     TextGroup
-    |> where([t], t.collection_id == ^collection.id)
-    |> where(^filter_text_group_where(attrs))
-    |> limit(^limit_text_group(attrs))
-    |> offset(^offset_text_group(attrs))
-    |> Repo.all()
+    |> Repo.paginate(params)
   end
-
-  def limit_text_group({"limit", value}), do: value
-
-  def limit_text_group(_), do: 20
-
-  def offset_text_group({"offset", value}), do: value
-
-  def offset_text_group(_), do: 0
 
   def filter_text_group_where(params) do
     Enum.reduce(params, dynamic(true), fn

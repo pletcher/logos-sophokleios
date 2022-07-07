@@ -8,7 +8,7 @@ defmodule TextServer.TextElements.TextElement do
     field :start_offset, :integer
 
     belongs_to :element_type, TextServer.ElementTypes.ElementType
-    belongs_to :end_text_node, TextSrver.TextNodes.TextNode
+    belongs_to :end_text_node, TextServer.TextNodes.TextNode
     belongs_to :start_text_node, TextServer.TextNodes.TextNode
 
     timestamps()

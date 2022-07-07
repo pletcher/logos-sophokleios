@@ -6,7 +6,7 @@ defmodule Xml.ExemplarBodyHandler do
 
     {:ok,
      %{
-       location: List.duplicate(0, Enum.count(ref_levels || ["substitute"])),
+       location: List.duplicate(0, Enum.count(ref_levels || ["line"])),
        offset: 0,
        text_elements: [],
        ref_levels: ref_levels
@@ -48,8 +48,6 @@ defmodule Xml.ExemplarBodyHandler do
     end
   end
 
-  def handle_event(:end_element, _name, state), do: {:ok, state}
-
   def handle_event(:characters, chars, state) do
     cond do
       String.trim(chars) == "" ->
@@ -59,13 +57,30 @@ defmodule Xml.ExemplarBodyHandler do
         {:ok, state}
 
       true ->
-        [node | nodes] = state[:text_elements]
+        current_els = state[:text_elements]
 
+        # NOTE: (charles) If a node with `:content` already exists at
+        # this location, we need to concatenate its `:content` with
+        # the `chars` here. Otherwise, we simply add the `chars` to
+        # the current node (at index 0).
         current_position = Map.get(state, :offset, 0)
+        current_location = Map.get(state, :location)
+        existing_text_node_index = Enum.find_index(current_els, fn el ->
+          Map.has_key?(el, :content) and el[:location] == current_location
+        end)
+
+        els = unless is_nil(existing_text_node_index) do
+          text_node = current_els[existing_text_node_index]
+          content = text_node[:content]
+          List.replace_at(current_els, existing_text_node_index, Map.put(text_node, :content, content ++ chars))
+        else
+          [node | nodes] = current_els
+          [Map.put(node, :content, chars) | nodes]
+        end
 
         new_state =
           state
-          |> Map.put(:text_elements, [Map.put(node, :content, chars) | nodes])
+          |> Map.put(:text_elements, els)
           |> Map.put(:offset, current_position + String.length(chars))
 
         {:ok, new_state}
@@ -77,14 +92,12 @@ defmodule Xml.ExemplarBodyHandler do
   end
 
   defp handle_element(name, attributes, state) do
-    els = state[:text_elements]
-
     new_state = state |> set_location(name, attributes) |> set_element(name, attributes)
 
     {:ok, new_state}
   end
 
-  defp set_element(state, name, attrs \\ []) do
+  defp set_element(state, name, attrs) do
     Map.put(state, :text_elements, [
       %{
         tag_name: name,
@@ -99,7 +112,7 @@ defmodule Xml.ExemplarBodyHandler do
 
   defp set_location(state, "bibl", _attrs), do: state
 
-  defp set_location(state, name, attrs \\ []) do
+  defp set_location(state, _name, attrs) do
     # We can zero out the position every time the location changes
     ref_levels = state[:ref_levels]
     attr_map = Map.new(attrs)

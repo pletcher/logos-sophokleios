@@ -41,3 +41,20 @@
 </table>
 
 <span><%= live_patch "New Collection", to: Routes.collection_index_path(@socket, :new) %></span>
+<%= if @total_pages > 1 do %>
+  <nav class="border-t border-gray-200">
+    <ul class="flex my-2">
+      <li>
+        <%= live_redirect "Previous", to: Routes.collection_index_path(@socket, :index, page: @page_number - 1) %>
+      </li>
+      <%= for idx <-  Enum.to_list(1..@total_pages) do %>
+        <li>
+          <%= live_redirect idx, to: Routes.collection_index_path(@socket, :index, page: idx) %>
+        </li>
+      <% end %>
+      <li>
+        <%= live_redirect "Next", to: Routes.collection_index_path(@socket, :index, page: @page_number + 1) %>
+      </li>
+    </ul>
+  </nav>
+<% end %>

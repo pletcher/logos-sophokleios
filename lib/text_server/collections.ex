@@ -22,6 +22,15 @@ defmodule TextServer.Collections do
   end
 
   @doc """
+  Returns a paginated list of collections matching
+  the given query.
+  """
+  def paginate_collections(params \\ []) do
+    Collection
+    |> Repo.paginate(params)
+  end
+
+  @doc """
   Gets a single collection.
 
   Raises `Ecto.NoResultsError` if the Collection does not exist.
@@ -60,7 +69,7 @@ defmodule TextServer.Collections do
 
     case Repo.one(query) do
       nil ->
-        {:ok, new_collection} = create_collection(attrs)
+        {:ok, _new_collection} = create_collection(attrs)
 
       collection ->
         {:ok, collection}

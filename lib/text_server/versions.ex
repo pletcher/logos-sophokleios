@@ -21,6 +21,10 @@ defmodule TextServer.Versions do
     Repo.all(Version)
   end
 
+  def list_versions_in_collection(collection_id) do
+    Repo.all(from v in Version, where: v.collection_id == ^collection_id)
+  end
+
   @doc """
   Gets a single version.
 

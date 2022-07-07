@@ -9,7 +9,7 @@ defmodule TextServerWeb.CollectionLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id} = params, _uri, socket) do
+  def handle_params(%{"id" => id} = _params, _uri, socket) do
       # entries: entries,
       # page_number: page_number,
       # page_size: page_size,

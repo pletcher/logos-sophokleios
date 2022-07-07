@@ -1,7 +1,7 @@
 defmodule Xml.TextGroupCtsHandler do
   @behaviour Saxy.Handler
 
-  def handle_event(:start_document, prolog, state) do
+  def handle_event(:start_document, _prolog, state) do
     IO.inspect("Start parsing document")
     {:ok, state}
   end
@@ -24,7 +24,7 @@ defmodule Xml.TextGroupCtsHandler do
     {:ok, Map.delete(state, :waiting_for) |> Map.put(waiting_for, chars)}
   end
 
-  def handle_event(:characters, chars, state) do
+  def handle_event(:characters, _chars, state) do
     {:ok, state}
   end
 
@@ -40,7 +40,7 @@ defmodule Xml.TextGroupCtsHandler do
   defp handle_element("ti:groupname", attributes, state), do: handle_group_name(attributes, state)
   defp handle_element("ti:textgroup", attributes, state), do: handle_text_group(attributes, state)
 
-  defp handle_element(name, attributes, state) do
+  defp handle_element(name, _attributes, state) do
     IO.inspect("Received unknown element #{name}")
     state
   end

@@ -65,7 +65,7 @@ defmodule Mix.Tasks.Texts.Ingest do
       end
 
     if is_nil(units) do
-      ["level_one"]
+      ["line"]
     else
       units
     end
@@ -90,7 +90,7 @@ defmodule Mix.Tasks.Texts.Ingest do
         {:error, _reason} -> nil
       end
 
-    exemplar =
+    _exemplar =
       if is_nil(header_data) do
         nil
       else
@@ -181,7 +181,7 @@ defmodule Mix.Tasks.Texts.Ingest do
 
     Mix.shell().info("Ingesting #{filename}")
 
-    [text_group_fragment, work_fragment, language_fragment] =
+    [_text_group_fragment, work_fragment, language_fragment] =
       String.split(filename, ".")
       |> List.first()
       |> String.split("__")
@@ -236,7 +236,7 @@ defmodule Mix.Tasks.Texts.Ingest do
           "language" => "english"
         } ->
           %{
-            title: edition,
+            label: edition,
             urn: "#{work.urn}.chs-translation",
             version_type: :translation,
             work_id: work.id
@@ -244,7 +244,7 @@ defmodule Mix.Tasks.Texts.Ingest do
 
         %{"edition" => edition, "source" => "The Center For Hellenic Studies"} ->
           %{
-            title: edition,
+            label: edition,
             urn: "#{work.urn}.chs-#{Recase.to_camel(edition)}",
             version_type: :edition,
             work_id: work.id
@@ -252,7 +252,7 @@ defmodule Mix.Tasks.Texts.Ingest do
 
         %{"edition" => edition} ->
           %{
-            title: edition,
+            label: edition,
             urn: "#{work.urn}.#{Recase.to_camel(language_fragment)}",
             version_type: :edition,
             work_id: work.id
@@ -260,7 +260,7 @@ defmodule Mix.Tasks.Texts.Ingest do
 
         _ ->
           %{
-            title: original_title || english_title,
+            label: original_title || english_title,
             urn: "#{work.urn}.#{Recase.to_camel(language_fragment)}",
             version_type: :edition,
             work_id: work.id
@@ -317,10 +317,18 @@ defmodule Mix.Tasks.Texts.Ingest do
   def ingest_xml(dir, collection) do
     Mix.shell().info("... Ingesting XML-based texts in: #{dir} ... \n")
 
-    xml_files = Path.wildcard("#{dir}/**/__cts__.xml")
+    file_queue = TextServer.Ingestion.list_ingestion_items_in_collection(collection.id)
+
+    xml_files =
+      if Enum.count(file_queue) == 0 do
+        Path.wildcard("#{dir}/**/*.xml")
+      else
+        file_queue |> Enum.map(fn f -> f.path end)
+      end
 
     cts_files =
       xml_files
+      |> Stream.filter(fn f -> String.ends_with?(f, "__cts__.xml") end)
       |> Enum.reduce(%{text_group_files: [], work_files: []}, fn f, acc ->
         update =
           if String.split(f, "/data/") |> List.last() |> Path.split() |> Enum.count() < 3 do
@@ -333,68 +341,81 @@ defmodule Mix.Tasks.Texts.Ingest do
       end)
 
     text_groups_data =
-      cts_files[:text_group_files] |> Stream.map(&parse_text_group_cts(&1, collection))
+      Stream.map(cts_files[:text_group_files], &parse_text_group_cts(&1, collection))
 
-    works_data = cts_files[:work_files] |> Stream.map(&parse_work_xml/1)
+    works_data = Stream.map(cts_files[:work_files], &parse_work_xml/1)
 
-    text_groups =
+    _text_groups =
       text_groups_data
       |> Enum.map(fn tg ->
         TextServer.Languages.find_or_create_language(%{title: Map.get(tg, :language)})
         TextServer.TextGroups.find_or_create_text_group(Map.delete(tg, :language))
       end)
 
+    TextServer.Ingestion.delete_all_items_by_paths(cts_files[:text_group_files])
+
     works_and_versions = create_works_and_versions(works_data, collection)
 
-    exemplars =
-      works_and_versions
-      |> Stream.map(fn w -> w[:versions] end)
-      |> Enum.map(fn vs ->
-        vs
-        |> Enum.map(fn v ->
-          urn = String.split(v.urn, ":") |> List.last()
-          exemplar_files = Path.wildcard("#{dir}/**/#{urn}.xml")
+    TextServer.Ingestion.delete_all_items_by_paths(cts_files[:work_files])
 
-          exemplar_files
-          |> Enum.map(fn f ->
-            exemplar_data = parse_exemplar_xml(f)
+    versions =
+      Stream.flat_map(works_and_versions || [], fn wvs -> Map.get(wvs, :versions, []) end)
 
-            exemplar =
-              if is_nil(exemplar_data) do
-                IO.inspect("Unable to parse exemplar file #{f}")
-                nil
+    versions =
+      if Enum.count(versions) == 0 do
+        TextServer.Versions.list_versions_in_collection(collection.id)
+      else
+        versions
+      end
+
+    _exemplars =
+      Enum.map(versions, fn v ->
+        urn = String.split(v.urn, ":") |> List.last()
+        ingestion_exemplars = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
+
+        ingestion_exemplars
+        |> Enum.map(fn ex ->
+          f = ex.path
+          exemplar_data = parse_exemplar_xml(f)
+
+          exemplar =
+            if is_nil(exemplar_data) do
+              IO.inspect("Unable to parse exemplar file #{f}")
+              nil
+            else
+              ex_data =
+                Map.merge(
+                  Map.delete(exemplar_data, :body),
+                  %{description: v.description, label: v.label, urn: v.urn, version_id: v.id}
+                )
+
+              {:ok, exemplar} = TextServer.Exemplars.find_or_create_exemplar(ex_data)
+              exemplar
+            end
+
+          # NOTE: (charles) This is admittedly a bit confusing. "elems" here
+          # refers to anything contained in an exemplar's body, including
+          # TextNodes. TextNodes are differentiated from TextElements by
+          # containing a :content key.
+          _text_elements =
+            unless is_nil(exemplar) do
+              elems = exemplar_data[:body][:text_elements]
+
+              if is_nil(elems) do
+                IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
+                []
               else
-                ex_data =
-                  Map.merge(
-                    Map.delete(exemplar_data, :body),
-                    %{description: v.description, label: v.label, urn: v.urn, version_id: v.id}
-                  )
+                process_exemplar_text_nodes(
+                  exemplar,
+                  Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
+                )
 
-                {:ok, exemplar} = TextServer.Exemplars.find_or_create_exemplar(ex_data)
-                exemplar
+                process_exemplar_text_elements(exemplar, elems)
               end
+            end
 
-            # NOTE: (charles) This is admittedly a bit confusing. "elems" here
-            # refers to anything contained in an exemplar's body, including
-            # TextNodes. TextNodes are differentiated from TextElements by
-            # containing a :content key.
-            text_elements =
-              unless is_nil(exemplar) do
-                elems = exemplar_data[:body][:text_elements]
-
-                if is_nil(elems) do
-                  IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
-                  []
-                else
-                  process_exemplar_text_nodes(
-                    exemplar,
-                    Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
-                  )
-
-                  process_exemplar_text_elements(exemplar, elems)
-                end
-              end
-          end)
+          TextServer.Ingestion.delete_item(ex)
+          ex
         end)
       end)
   end
@@ -402,7 +423,7 @@ defmodule Mix.Tasks.Texts.Ingest do
   def process_exemplar_text_elements(exemplar, data) do
     data
     |> Enum.group_by(fn el -> el[:tag_name] end)
-    |> Enum.each(fn {k, v} ->
+    |> Enum.each(fn {_k, v} ->
       [starts, ends] =
         case Enum.group_by(v, fn x -> Map.has_key?(x, :start) end) do
           %{true: starts, false: ends} -> [starts, ends]
@@ -538,7 +559,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     {:ok, collection} = TextServer.Collections.find_or_create_collection(collection_attrs)
 
     if File.dir?(json_dir = Path.join(dest, "cltk_json")) do
-      # ingest_json(json_dir, collection)
+      ingest_json(json_dir, collection)
     else
       ingest_xml(Path.join(dest, "data"), collection)
     end

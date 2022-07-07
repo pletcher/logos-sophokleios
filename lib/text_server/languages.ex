@@ -60,7 +60,7 @@ defmodule TextServer.Languages do
 
     case Repo.one(query) do
       nil ->
-        {:ok, new_language} = create_language(attrs)
+        {:ok, _new_language} = create_language(attrs)
 
       language ->
         {:ok, language}

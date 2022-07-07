@@ -80,7 +80,7 @@ defmodule TextServer.TextGroups do
 
     case Repo.one(query) do
       nil ->
-        {:ok, new_text_group} = create_text_group(attrs)
+        {:ok, _new_text_group} = create_text_group(attrs)
 
       text_group ->
         {:ok, text_group}

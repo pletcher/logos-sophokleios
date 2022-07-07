@@ -4,7 +4,6 @@ defmodule TextServer.Texts do
   """
 
   import Ecto.Query, warn: false
-  alias TextServer.Repo
 
   def repositories do
     [

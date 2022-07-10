@@ -309,12 +309,11 @@ defmodule Mix.Tasks.Texts.Ingest do
       Path.wildcard("#{dir}/*.json")
       |> Stream.map(fn f -> ingest_json_collection(f, collection) end)
       |> Enum.to_list()
-      |> Enum.join("\n")
 
-    Mix.shell().info("... Finished ingesting the following JSON files: ... \n #{ingested_files}")
+    Mix.shell().info("... Finished ingesting the following JSON files: ... \n #{inspect(ingested_files)}")
   end
 
-  def ingest_xml(dir, collection) do
+  defp ingest_xml(dir, collection) do
     Mix.shell().info("... Ingesting XML-based texts in: #{dir} ... \n")
 
     file_queue = TextServer.Ingestion.list_ingestion_items_in_collection(collection.id)
@@ -420,7 +419,7 @@ defmodule Mix.Tasks.Texts.Ingest do
       end)
   end
 
-  def process_exemplar_text_elements(exemplar, data) do
+  defp process_exemplar_text_elements(exemplar, data) do
     data
     |> Enum.group_by(fn el -> el[:tag_name] end)
     |> Enum.each(fn {_k, v} ->

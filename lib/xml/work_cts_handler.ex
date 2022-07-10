@@ -12,7 +12,7 @@ defmodule Xml.WorkCtsHandler do
   def handle_event(:start_element, {name, attributes}, state),
     do: handle_element(name, attributes, state)
 
-  def handle_event(:end_element, name, {_current_element, works}) do
+  def handle_event(:end_element, _name, {_current_element, works}) do
     {:ok, {nil, works}}
   end
 
@@ -23,11 +23,6 @@ defmodule Xml.WorkCtsHandler do
       [work | works] = works
       {:ok, {nil, [Map.put(work, current_element, chars) | works]}}
     end
-  end
-
-  def handle_event(:characters, _chars, {current_element, works}) do
-    IO.inspect("Not sure what to do with the characters for unknown element #{current_element}")
-    {:ok, {nil, works}}
   end
 
   def handle_event(:cdata, cdata, state) do
@@ -76,12 +71,12 @@ defmodule Xml.WorkCtsHandler do
   # TODO: It's currently unclear what we should do about these elements. We can
   # resolve this TODO when we have explicit actions (or non-actions) for each of
   # them
-  defp handle_element("cpt:structured-metadata", attributes, state), do: {:ok, state}
-  defp handle_element("dct:hasVersion", attributes, state), do: {:ok, state}
-  defp handle_element("dct:isVersionOf", attributes, state), do: {:ok, state}
-  defp handle_element("foreign", attributes, state), do: {:ok, state}
-  defp handle_element("ti:memberof", attributes, state), do: {:ok, state}
-  defp handle_element("memberof", attributes, state), do: {:ok, state}
+  defp handle_element("cpt:structured-metadata", _attributes, state), do: {:ok, state}
+  defp handle_element("dct:hasVersion", _attributes, state), do: {:ok, state}
+  defp handle_element("dct:isVersionOf", _attributes, state), do: {:ok, state}
+  defp handle_element("foreign", _attributes, state), do: {:ok, state}
+  defp handle_element("ti:memberof", _attributes, state), do: {:ok, state}
+  defp handle_element("memberof", _attributes, state), do: {:ok, state}
   # END unhandled elements
 
   defp handle_element(name, _attributes, state) do

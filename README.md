@@ -48,6 +48,26 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
+## Front-end environment and development
+
+We're leveraging Phoenix LiveView as much as possible for the front-end, but
+occasionally we need modern niceties for CSS and JS. If you need to install a
+dependency:
+
+1. Think very carefully. Do we really need this dependency? What happens if it
+   breaks?
+2. Run `npm i -D <dependency>` from within the `assets/` directory.
+
+## Commentaries
+
+Comments get as specific as possible (e.g., up to a specific lemma); but if that
+fails, specificity falls back up the citation chain (e.g., on the specific
+section in Pausanias).
+
+## TODO: Blog posts
+
+Allow writing blog posts on commentaries in progress
+
 ## Learn more
 
   * Official website: https://www.phoenixframework.org/

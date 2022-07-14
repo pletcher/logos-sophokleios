@@ -23,8 +23,9 @@ defmodule TextServer.TextGroups do
     |> Repo.paginate()
   end
 
-  def paginate_text_groups(params \\ []) do
+  def paginate_text_groups(collection_id, params \\ []) do
     TextGroup
+    |> where([t], t.collection_id == ^collection_id)
     |> Repo.paginate(params)
   end
 

@@ -5,25 +5,31 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <%= csrf_meta_tag() %>
-    <%= live_title_tag assigns[:page_title] || "TextServer", suffix: " · Phoenix Framework" %>
+    <%= live_title_tag assigns[:page_title] || "Open Commentaries" %>
     <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")}/>
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>
   <body>
-    <header>
-      <section class="container">
-        <nav>
-          <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
-            <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-              <li><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></li>
-            <% end %>
-          </ul>
-        </nav>
-        <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src={Routes.static_path(@conn, "/images/phoenix.png")} alt="Phoenix Framework Logo"/>
-        </a>
-      </section>
+    <header class="bg-alexandria-scrolls bg-center h-64">
+      <nav class="bg-transparent">
+        <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <div class="relative flex items-center justify-between h-16">
+            <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
+              <div class="hidden sm:block sm:ml-6">
+                <div class="flex space-x-4">
+                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Dashboard</a>
+                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Team</a>
+                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Projects</a>
+                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Calendar</a>
+                  <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
+                    <%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
     </header>
     <%= @inner_content %>
   </body>

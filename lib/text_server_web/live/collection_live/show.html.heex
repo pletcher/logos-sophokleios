@@ -43,13 +43,13 @@
       </tr>
     </thead>
     <tbody>
-      <%= for text_group <- @text_group_page.entries do %>
+      <%= for text_group <- @text_groups do %>
         <tr>
           <td><%= text_group.title %></td>
           <td><%= text_group.urn %></td>
           <td>
             <span><%= live_redirect "Show", to: Routes.text_group_show_path(@socket, :show, text_group) %></span>
-            <span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, text_group) %></span>
+            <span><%= live_patch "Edit", to: Routes.text_group_show_path(@socket, :edit, text_group) %></span>
           </td>
         </tr>
       <% end %>
@@ -59,3 +59,20 @@
 
 <span><%= live_patch "Edit", to: Routes.collection_show_path(@socket, :edit, @collection), class: "button" %></span> |
 <span><%= live_redirect "Back", to: Routes.collection_index_path(@socket, :index) %></span>
+<%= if @total_pages > 1 do %>
+  <nav class="border-t border-gray-200">
+    <ul class="flex my-2">
+      <li>
+        <%= live_redirect "Previous", to: Routes.collection_show_path(@socket, :show, @collection, page: @page_number - 1) %>
+      </li>
+      <%= for idx <- Enum.to_list(1..@total_pages) do %>
+        <li>
+          <%= live_redirect idx, to: Routes.collection_show_path(@socket, :show, @collection, page: idx) %>
+        </li>
+      <% end %>
+      <li>
+        <%= live_redirect "Next", to: Routes.collection_show_path(@socket, :show, @collection, page: @page_number + 1) %>
+      </li>
+    </ul>
+  </nav>
+<% end %>

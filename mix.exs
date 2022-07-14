@@ -55,7 +55,8 @@ defmodule TextServer.MixProject do
       {:recase, "~> 0.5"},
       {:iteraptor, "~> 1.12.0"},
       {:saxy, "~> 1.3", only: [:dev, :test]},
-      {:scrivener_ecto, "~> 2.7"}
+      {:scrivener_ecto, "~> 2.7"},
+      {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev}
     ]
   end
 
@@ -71,7 +72,7 @@ defmodule TextServer.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]
+      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
     ]
   end
 end

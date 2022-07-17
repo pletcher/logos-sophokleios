@@ -17,18 +17,26 @@
             <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
               <div class="hidden sm:block sm:ml-6">
                 <div class="flex space-x-4">
-                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Dashboard</a>
-                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Team</a>
-                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Projects</a>
-                  <a href="#" class="text-white hover:text-gray-200 px-3 py-2 text-sm font-medium">Calendar</a>
+                  <%= link "Open Commentaries", to: Routes.page_path(@conn, :index), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
+                  <%= link "Projects", to: Routes.page_path(@conn, :index), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
                     <%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
                   <% end %>
                 </div>
               </div>
             </div>
+            <div class="relative flex items-center justify-end h-16">
+            <%= if @current_user do %>
+              <%= link @current_user.email, to: Routes.user_settings_path(@conn, :edit), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
+              <%= link "Log out", to: Routes.user_session_path(@conn, :delete), method: :delete, class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
+            <% else %>
+              <%= link "Register", to: Routes.user_registration_path(@conn, :new), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
+              <%= link "Log in", to: Routes.user_session_path(@conn, :new), class: "text-white hover:text-gray-200 px-3 py-2 text-sm font-medium" %>
+            <% end %>
+            </div>
           </div>
         </div>
+        <%= render "_user_menu.html", assigns %>
       </nav>
     </header>
     <%= @inner_content %>

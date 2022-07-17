@@ -249,10 +249,10 @@ defmodule TextServer.Accounts do
 
   ## Examples
 
-      iex> deliver_user_confirmation_instructions(user, &Routes.user_confirmation_url(conn, :edit, &1))
+      iex> deliver_user_confirmation_email(user, &Routes.user_confirmation_url(conn, :edit, &1))
       {:ok, %{to: ..., body: ...}}
 
-      iex> deliver_user_confirmation_instructions(confirmed_user, &Routes.user_confirmation_url(conn, :edit, &1))
+      iex> deliver_user_confirmation_email(confirmed_user, &Routes.user_confirmation_url(conn, :edit, &1))
       {:error, :already_confirmed}
 
   """
@@ -263,7 +263,7 @@ defmodule TextServer.Accounts do
     else
       {encoded_token, user_token} = UserToken.build_email_token(user, "confirm")
       Repo.insert!(user_token)
-      UserNotifier.deliver_confirmation_instructions(user, confirmation_url_fun.(encoded_token))
+      UserNotifier.deliver_confirmation_email(user, confirmation_url_fun.(encoded_token))
     end
   end
 

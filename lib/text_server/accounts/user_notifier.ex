@@ -1,5 +1,7 @@
 defmodule TextServer.Accounts.UserNotifier do
-  import Swoosh.Email
+  use Phoenix.Swoosh,
+    view: TextServerWeb.UserNotifierView,
+    layout: {TextServerWeb.LayoutView, :email}
 
   alias TextServer.Mailer
 
@@ -8,7 +10,7 @@ defmodule TextServer.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"TextServer", "contact@example.com"})
+      |> from({"Open Commentaries", "contact@oc.newalexandria.info"})
       |> subject(subject)
       |> text_body(body)
 
@@ -17,41 +19,58 @@ defmodule TextServer.Accounts.UserNotifier do
     end
   end
 
+  defp unsubscribe_url(email) do
+    "https://oc.newalexandria.info/unsubscribe/#{email}"
+  end
+
   @doc """
-  Deliver instructions to confirm account.
+  Deliver confirmation email with text fallback
   """
-  def deliver_confirmation_instructions(user, url) do
-    deliver(user.email, "Confirmation instructions", """
+  def deliver_confirmation_email(user, url) do
+    email = new()
+    |> to(user.email)
+    |> from({"Open Commentaries", "contact@oc.newalexandria.info"})
+    |> subject("Please confirm your Open Commentaries email address")
+    |> render_body("user_confirmation.html", %{unsubscribe_url: unsubscribe_url(user.email), url: url})
+    |> text_body(confirmation_instructions_text(user.email, url))
+
+    with {:ok, _metadata} <- Mailer.deliver(email) do
+      {:ok, email}
+    end
+  end
+
+  def confirmation_instructions_text(email, url) do
+    """
 
     ==============================
 
-    Hi #{user.email},
+    Hi #{email},
 
-    You can confirm your account by visiting the URL below:
+    Please confirm your Open Commentaries account by visiting the URL below:
 
     #{url}
 
-    If you didn't create an account with us, please ignore this.
+    If you didn't create an account with us, please ignore this email.
 
     ==============================
-    """)
+    """
   end
 
   @doc """
   Deliver instructions to reset a user password.
   """
   def deliver_reset_password_instructions(user, url) do
-    deliver(user.email, "Reset password instructions", """
+    deliver(user.email, "Open Commentaries reset password instructions", """
 
     ==============================
 
     Hi #{user.email},
 
-    You can reset your password by visiting the URL below:
+    You can reset your Open Commentaries password by visiting the URL below:
 
     #{url}
 
-    If you didn't request this change, please ignore this.
+    If you didn't request this change, please ignore this email.
 
     ==============================
     """)
@@ -61,17 +80,17 @@ defmodule TextServer.Accounts.UserNotifier do
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do
-    deliver(user.email, "Update email instructions", """
+    deliver(user.email, "Open Commentaries update email instructions", """
 
     ==============================
 
     Hi #{user.email},
 
-    You can change your email by visiting the URL below:
+    You can change your Open Commentaries email by visiting the URL below:
 
     #{url}
 
-    If you didn't request this change, please ignore this.
+    If you didn't request this change, please ignore this email.
 
     ==============================
     """)

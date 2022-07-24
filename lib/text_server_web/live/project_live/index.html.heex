@@ -14,11 +14,15 @@
     </.modal>
   <% end %>
 
-  <div class="py-8 max-w-md w-full">
-  <%= if length(@project_collection) == 0 do %>
-    <p>It looks like there aren't any projects yet.</p>
-  <% else %>
-    <div>Project list goes here</div>
-  <% end %>
+  <div class="py-8 w-full">
+    <%= if length(@project_collection) == 0 do %>
+      <p>It looks like there aren't any projects yet.</p>
+    <% else %>
+      <div class="mt-6 col-auto grid grid-cols-1 gap-y-10 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+        <%= for project <- @project_collection do   %>
+          <ProjectComponents.card project={project} url={Routes.project_show_path(@socket, :show, project)} />
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </article>

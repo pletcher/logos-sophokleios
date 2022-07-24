@@ -4,5 +4,5 @@
   title={@page_title}
   action={@live_action}
   project={@project}
-  return_to={Routes.project_index_path(@socket, :user_project_index, @current_user.id)}
+  return_to={Routes.project_user_project_index_path(@socket, :index, @current_user.id)}
 />

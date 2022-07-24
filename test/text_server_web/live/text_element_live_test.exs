@@ -70,7 +70,10 @@ defmodule TextServerWeb.TextElementLiveTest do
     test "deletes text_element in listing", %{conn: conn, text_element: text_element} do
       {:ok, index_live, _html} = live(conn, Routes.text_element_index_path(conn, :index))
 
-      assert index_live |> element("#text_element-#{text_element.id} a", "Delete") |> render_click()
+      assert index_live
+             |> element("#text_element-#{text_element.id} a", "Delete")
+             |> render_click()
+
       refute has_element?(index_live, "#text_element-#{text_element.id}")
     end
   end
@@ -79,14 +82,16 @@ defmodule TextServerWeb.TextElementLiveTest do
     setup [:create_text_element]
 
     test "displays text_element", %{conn: conn, text_element: text_element} do
-      {:ok, _show_live, html} = live(conn, Routes.text_element_show_path(conn, :show, text_element))
+      {:ok, _show_live, html} =
+        live(conn, Routes.text_element_show_path(conn, :show, text_element))
 
       assert html =~ "Show Text element"
       assert html =~ text_element.end_urn
     end
 
     test "updates text_element within modal", %{conn: conn, text_element: text_element} do
-      {:ok, show_live, _html} = live(conn, Routes.text_element_show_path(conn, :show, text_element))
+      {:ok, show_live, _html} =
+        live(conn, Routes.text_element_show_path(conn, :show, text_element))
 
       assert show_live |> element("a", "Edit") |> render_click() =~
                "Edit Text element"

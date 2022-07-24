@@ -21,7 +21,12 @@ defmodule TextServer.CollectionsTest do
     end
 
     test "create_collection/1 with valid data creates a collection" do
-      valid_attrs = %{repository: "some repository", slug: "some slug", title: "some title", urn: "some urn"}
+      valid_attrs = %{
+        repository: "some repository",
+        slug: "some slug",
+        title: "some title",
+        urn: "some urn"
+      }
 
       assert {:ok, %Collection{} = collection} = Collections.create_collection(valid_attrs)
       assert collection.repository == "some repository"
@@ -36,9 +41,17 @@ defmodule TextServer.CollectionsTest do
 
     test "update_collection/2 with valid data updates the collection" do
       collection = collection_fixture()
-      update_attrs = %{repository: "some updated repository", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
 
-      assert {:ok, %Collection{} = collection} = Collections.update_collection(collection, update_attrs)
+      update_attrs = %{
+        repository: "some updated repository",
+        slug: "some updated slug",
+        title: "some updated title",
+        urn: "some updated urn"
+      }
+
+      assert {:ok, %Collection{} = collection} =
+               Collections.update_collection(collection, update_attrs)
+
       assert collection.repository == "some updated repository"
       assert collection.slug == "some updated slug"
       assert collection.title == "some updated title"
@@ -47,7 +60,10 @@ defmodule TextServer.CollectionsTest do
 
     test "update_collection/2 with invalid data returns error changeset" do
       collection = collection_fixture()
-      assert {:error, %Ecto.Changeset{}} = Collections.update_collection(collection, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Collections.update_collection(collection, @invalid_attrs)
+
       assert collection == Collections.get_collection!(collection.id)
     end
 

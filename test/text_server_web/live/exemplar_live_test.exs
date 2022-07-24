@@ -4,8 +4,18 @@ defmodule TextServerWeb.ExemplarLiveTest do
   import Phoenix.LiveViewTest
   import TextServer.ExemplarsFixtures
 
-  @create_attrs %{description: "some description", slug: "some slug", title: "some title", urn: "some urn"}
-  @update_attrs %{description: "some updated description", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
+  @create_attrs %{
+    description: "some description",
+    slug: "some slug",
+    title: "some title",
+    urn: "some urn"
+  }
+  @update_attrs %{
+    description: "some updated description",
+    slug: "some updated slug",
+    title: "some updated title",
+    urn: "some updated urn"
+  }
   @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
 
   defp create_exemplar(_) do

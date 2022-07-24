@@ -26,9 +26,7 @@ defmodule TextServer.TextsFixtures do
   def collection_fixture(attrs \\ %{}) do
     {:ok, collection} =
       attrs
-      |> Enum.into(%{
-
-      })
+      |> Enum.into(%{})
       |> TextServer.Texts.create_collection()
 
     collection

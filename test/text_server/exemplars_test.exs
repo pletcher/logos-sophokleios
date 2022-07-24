@@ -21,7 +21,12 @@ defmodule TextServer.ExemplarsTest do
     end
 
     test "create_exemplar/1 with valid data creates a exemplar" do
-      valid_attrs = %{description: "some description", slug: "some slug", title: "some title", urn: "some urn"}
+      valid_attrs = %{
+        description: "some description",
+        slug: "some slug",
+        title: "some title",
+        urn: "some urn"
+      }
 
       assert {:ok, %Exemplar{} = exemplar} = Exemplars.create_exemplar(valid_attrs)
       assert exemplar.description == "some description"
@@ -36,7 +41,13 @@ defmodule TextServer.ExemplarsTest do
 
     test "update_exemplar/2 with valid data updates the exemplar" do
       exemplar = exemplar_fixture()
-      update_attrs = %{description: "some updated description", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
+
+      update_attrs = %{
+        description: "some updated description",
+        slug: "some updated slug",
+        title: "some updated title",
+        urn: "some updated urn"
+      }
 
       assert {:ok, %Exemplar{} = exemplar} = Exemplars.update_exemplar(exemplar, update_attrs)
       assert exemplar.description == "some updated description"

@@ -65,18 +65,26 @@ defmodule Xml.ExemplarBodyHandler do
         # the current node (at index 0).
         current_position = Map.get(state, :offset, 0)
         current_location = Map.get(state, :location)
-        existing_text_node_index = Enum.find_index(current_els, fn el ->
-          Map.has_key?(el, :content) and el[:location] == current_location
-        end)
 
-        els = unless is_nil(existing_text_node_index) do
-          {:ok, text_node} = Enum.fetch(current_els, existing_text_node_index)
-          content = text_node[:content]
-          List.replace_at(current_els, existing_text_node_index, Map.put(text_node, :content, content <> chars))
-        else
-          [node | nodes] = current_els
-          [Map.put(node, :content, chars) | nodes]
-        end
+        existing_text_node_index =
+          Enum.find_index(current_els, fn el ->
+            Map.has_key?(el, :content) and el[:location] == current_location
+          end)
+
+        els =
+          unless is_nil(existing_text_node_index) do
+            {:ok, text_node} = Enum.fetch(current_els, existing_text_node_index)
+            content = text_node[:content]
+
+            List.replace_at(
+              current_els,
+              existing_text_node_index,
+              Map.put(text_node, :content, content <> chars)
+            )
+          else
+            [node | nodes] = current_els
+            [Map.put(node, :content, chars) | nodes]
+          end
 
         new_state =
           state

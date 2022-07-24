@@ -24,7 +24,9 @@ defmodule TextServer.Repo.Migrations.CreateProjects do
       add :user_id, references(:users)
     end
 
-    project_user_type_create_query = "CREATE TYPE project_user_type AS ENUM ('admin', 'editor', 'user')"
+    project_user_type_create_query =
+      "CREATE TYPE project_user_type AS ENUM ('admin', 'editor', 'user')"
+
     project_user_type_drop_query = "DROP TYPE project_user_type"
 
     execute(project_user_type_create_query, project_user_type_drop_query)

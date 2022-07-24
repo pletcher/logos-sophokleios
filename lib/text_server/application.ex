@@ -17,7 +17,7 @@ defmodule TextServer.Application do
       # Start the Endpoint (http/https)
       TextServerWeb.Endpoint,
       # Add Absinthe for GraphQL support
-      {Absinthe.Subscription, TextServerWeb.Endpoint},
+      {Absinthe.Subscription, TextServerWeb.Endpoint}
       # Start a worker by calling: TextServer.Worker.start_link(arg)
       # {TextServer.Worker, arg}
     ]

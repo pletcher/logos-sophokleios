@@ -27,12 +27,16 @@ defmodule TextServer.Accounts.UserNotifier do
   Deliver confirmation email with text fallback
   """
   def deliver_confirmation_email(user, url) do
-    email = new()
-    |> to(user.email)
-    |> from({"Open Commentaries", "contact@oc.newalexandria.info"})
-    |> subject("Please confirm your Open Commentaries email address")
-    |> render_body("user_confirmation.html", %{unsubscribe_url: unsubscribe_url(user.email), url: url})
-    |> text_body(confirmation_instructions_text(user.email, url))
+    email =
+      new()
+      |> to(user.email)
+      |> from({"Open Commentaries", "contact@oc.newalexandria.info"})
+      |> subject("Please confirm your Open Commentaries email address")
+      |> render_body("user_confirmation.html", %{
+        unsubscribe_url: unsubscribe_url(user.email),
+        url: url
+      })
+      |> text_body(confirmation_instructions_text(user.email, url))
 
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}

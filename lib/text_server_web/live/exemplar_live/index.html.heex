@@ -33,13 +33,24 @@
         <td><%= exemplar.urn %></td>
 
         <td>
-          <span><%= live_redirect "Show", to: Routes.exemplar_show_path(@socket, :show, exemplar) %></span>
-          <span><%= live_patch "Edit", to: Routes.exemplar_index_path(@socket, :edit, exemplar) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: exemplar.id, data: [confirm: "Are you sure?"] %></span>
+          <span>
+            <%= live_redirect("Show", to: Routes.exemplar_show_path(@socket, :show, exemplar)) %>
+          </span>
+          <span>
+            <%= live_patch("Edit", to: Routes.exemplar_index_path(@socket, :edit, exemplar)) %>
+          </span>
+          <span>
+            <%= link("Delete",
+              to: "#",
+              phx_click: "delete",
+              phx_value_id: exemplar.id,
+              data: [confirm: "Are you sure?"]
+            ) %>
+          </span>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<span><%= live_patch "New Exemplar", to: Routes.exemplar_index_path(@socket, :new) %></span>
+<span><%= live_patch("New Exemplar", to: Routes.exemplar_index_path(@socket, :new)) %></span>

@@ -1,41 +1,24 @@
-<h1>Listing Projects</h1>
+<article class="min-h-full min-w-full py-12 px-4 sm:px-6 lg:px-8">
+  <h1 class="mt-4 mx-auto text-xl">Projects</h1>
 
-<%= if @live_action in [:new, :edit] do %>
-  <.modal return_to={Routes.project_index_path(@socket, :index)}>
-    <.live_component
-      module={TextServerWeb.ProjectLive.FormComponent}
-      id={@project.id || :new}
-      title={@page_title}
-      action={@live_action}
-      project={@project}
-      return_to={Routes.project_index_path(@socket, :index)}
-    />
-  </.modal>
-<% end %>
+  <%= if @live_action in [:edit] do %>
+    <.modal return_to={Routes.project_index_path(@socket, :index)}>
+      <.live_component
+        module={TextServerWeb.ProjectLive.FormComponent}
+        id={@project.id}
+        title={@page_title}
+        action={@live_action}
+        project={@project}
+        return_to={Routes.project_index_path(@socket, :index)}
+      />
+    </.modal>
+  <% end %>
 
-<table>
-  <thead>
-    <tr>
-      <th>Description</th>
-      <th>Domain</th>
-
-      <th></th>
-    </tr>
-  </thead>
-  <tbody id="project">
-    <%= for project <- @project_collection do %>
-      <tr id={"project-#{project.id}"}>
-        <td><%= project.description %></td>
-        <td><%= project.domain %></td>
-
-        <td>
-          <span><%= live_redirect "Show", to: Routes.project_show_path(@socket, :show, project) %></span>
-          <span><%= live_patch "Edit", to: Routes.project_index_path(@socket, :edit, project) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: project.id, data: [confirm: "Are you sure?"] %></span>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<span><%= live_patch "New Project", to: Routes.project_index_path(@socket, :new) %></span>
+  <div class="py-8 max-w-md w-full">
+  <%= if length(@project_collection) == 0 do %>
+    <p>It looks like there aren't any projects yet.</p>
+  <% else %>
+    <div>Project list goes here</div>
+  <% end %>
+  </div>
+</article>

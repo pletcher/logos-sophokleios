@@ -36,14 +36,19 @@ defmodule TextServer.TextElementsTest do
       text_element = text_element_fixture()
       update_attrs = %{attributes: %{}, end_urn: "some updated end_urn"}
 
-      assert {:ok, %TextElement{} = text_element} = TextElements.update_text_element(text_element, update_attrs)
+      assert {:ok, %TextElement{} = text_element} =
+               TextElements.update_text_element(text_element, update_attrs)
+
       assert text_element.attributes == %{}
       assert text_element.end_urn == "some updated end_urn"
     end
 
     test "update_text_element/2 with invalid data returns error changeset" do
       text_element = text_element_fixture()
-      assert {:error, %Ecto.Changeset{}} = TextElements.update_text_element(text_element, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               TextElements.update_text_element(text_element, @invalid_attrs)
+
       assert text_element == TextElements.get_text_element!(text_element.id)
     end
 

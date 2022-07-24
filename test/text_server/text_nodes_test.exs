@@ -21,7 +21,12 @@ defmodule TextServer.TextNodesTest do
     end
 
     test "create_text_node/1 with valid data creates a text_node" do
-      valid_attrs = %{index: 42, location: [], normalized_text: "some normalized_text", text: "some text"}
+      valid_attrs = %{
+        index: 42,
+        location: [],
+        normalized_text: "some normalized_text",
+        text: "some text"
+      }
 
       assert {:ok, %TextNode{} = text_node} = TextNodes.create_text_node(valid_attrs)
       assert text_node.index == 42
@@ -36,7 +41,13 @@ defmodule TextServer.TextNodesTest do
 
     test "update_text_node/2 with valid data updates the text_node" do
       text_node = text_node_fixture()
-      update_attrs = %{index: 43, location: [], normalized_text: "some updated normalized_text", text: "some updated text"}
+
+      update_attrs = %{
+        index: 43,
+        location: [],
+        normalized_text: "some updated normalized_text",
+        text: "some updated text"
+      }
 
       assert {:ok, %TextNode{} = text_node} = TextNodes.update_text_node(text_node, update_attrs)
       assert text_node.index == 43

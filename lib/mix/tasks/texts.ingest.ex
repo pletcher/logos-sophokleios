@@ -310,7 +310,9 @@ defmodule Mix.Tasks.Texts.Ingest do
       |> Stream.map(fn f -> ingest_json_collection(f, collection) end)
       |> Enum.to_list()
 
-    Mix.shell().info("... Finished ingesting the following JSON files: ... \n #{inspect(ingested_files)}")
+    Mix.shell().info(
+      "... Finished ingesting the following JSON files: ... \n #{inspect(ingested_files)}"
+    )
   end
 
   defp ingest_xml(dir, collection) do

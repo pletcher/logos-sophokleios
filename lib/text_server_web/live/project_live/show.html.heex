@@ -14,7 +14,6 @@
 <% end %>
 
 <ul>
-
   <li>
     <strong>Description:</strong>
     <%= @project.description %>
@@ -24,8 +23,9 @@
     <strong>Domain:</strong>
     <%= @project.domain %>
   </li>
-
 </ul>
 
-<span><%= live_patch "Edit", to: Routes.project_show_path(@socket, :edit, @project), class: "button" %></span> |
-<span><%= live_redirect "Back", to: Routes.project_index_path(@socket, :index) %></span>
+<span>
+  <%= live_patch("Edit", to: Routes.project_show_path(@socket, :edit, @project), class: "button") %>
+</span> |
+<span><%= live_redirect("Back", to: Routes.project_index_path(@socket, :index)) %></span>

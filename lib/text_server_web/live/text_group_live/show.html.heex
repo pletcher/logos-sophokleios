@@ -14,7 +14,6 @@
 <% end %>
 
 <ul>
-
   <li>
     <strong>Title:</strong>
     <%= @text_group.title %>
@@ -24,8 +23,12 @@
     <strong>URN:</strong>
     <%= @text_group.urn %>
   </li>
-
 </ul>
 
-<span><%= live_patch "Edit", to: Routes.text_group_show_path(@socket, :edit, @text_group), class: "button" %></span> |
-<span><%= live_redirect "Back", to: Routes.text_group_index_path(@socket, :index) %></span>
+<span>
+  <%= live_patch("Edit",
+    to: Routes.text_group_show_path(@socket, :edit, @text_group),
+    class: "button"
+  ) %>
+</span> |
+<span><%= live_redirect("Back", to: Routes.text_group_index_path(@socket, :index)) %></span>

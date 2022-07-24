@@ -33,13 +33,24 @@
         <td><%= version.urn %></td>
 
         <td>
-          <span><%= live_redirect "Show", to: Routes.version_show_path(@socket, :show, version) %></span>
-          <span><%= live_patch "Edit", to: Routes.version_index_path(@socket, :edit, version) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: version.id, data: [confirm: "Are you sure?"] %></span>
+          <span>
+            <%= live_redirect("Show", to: Routes.version_show_path(@socket, :show, version)) %>
+          </span>
+          <span>
+            <%= live_patch("Edit", to: Routes.version_index_path(@socket, :edit, version)) %>
+          </span>
+          <span>
+            <%= link("Delete",
+              to: "#",
+              phx_click: "delete",
+              phx_value_id: version.id,
+              data: [confirm: "Are you sure?"]
+            ) %>
+          </span>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<span><%= live_patch "New Version", to: Routes.version_index_path(@socket, :new) %></span>
+<span><%= live_patch("New Version", to: Routes.version_index_path(@socket, :new)) %></span>

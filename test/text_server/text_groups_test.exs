@@ -35,9 +35,16 @@ defmodule TextServer.TextGroupsTest do
 
     test "update_text_group/2 with valid data updates the text_group" do
       text_group = text_group_fixture()
-      update_attrs = %{slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
 
-      assert {:ok, %TextGroup{} = text_group} = TextGroups.update_text_group(text_group, update_attrs)
+      update_attrs = %{
+        slug: "some updated slug",
+        title: "some updated title",
+        urn: "some updated urn"
+      }
+
+      assert {:ok, %TextGroup{} = text_group} =
+               TextGroups.update_text_group(text_group, update_attrs)
+
       assert text_group.slug == "some updated slug"
       assert text_group.title == "some updated title"
       assert text_group.urn == "some updated urn"
@@ -45,7 +52,10 @@ defmodule TextServer.TextGroupsTest do
 
     test "update_text_group/2 with invalid data returns error changeset" do
       text_group = text_group_fixture()
-      assert {:error, %Ecto.Changeset{}} = TextGroups.update_text_group(text_group, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               TextGroups.update_text_group(text_group, @invalid_attrs)
+
       assert text_group == TextGroups.get_text_group!(text_group.id)
     end
 

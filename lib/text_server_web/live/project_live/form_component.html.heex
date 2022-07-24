@@ -1,24 +1,80 @@
-<div>
-  <h2><%= @title %></h2>
+<article class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <section class="max-w-md w-full space-y-8">
+    <h2><%= @title %></h2>
 
-  <.form
-    let={f}
-    for={@changeset}
-    id="project-form"
-    phx-target={@myself}
-    phx-change="validate"
-    phx-submit="save">
-  
-    <%= label f, :description %>
-    <%= textarea f, :description %>
-    <%= error_tag f, :description %>
-  
-    <%= label f, :domain %>
-    <%= text_input f, :domain %>
-    <%= error_tag f, :domain %>
-  
-    <div>
-      <%= submit "Save", phx_disable_with: "Saving..." %>
-    </div>
-  </.form>
-</div>
+    <.form
+      let={f}
+      for={@changeset}
+      class="mt-8 space-y-6"
+      id="project-form"
+      phx-target={@myself}
+      phx-change="validate"
+      phx-submit="save"
+    >
+      <div class="rounded-md -space-y-px">
+        <div>
+          <%= label(f, :title, class: "block mb-1") %>
+          <%= text_input(f, :title,
+            required: true,
+            class:
+              "appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
+            placeholder: "Commentaria nova in nescioquid"
+          ) %>
+        </div>
+        <%= error_tag(f, :domain) %>
+      </div>
+
+      <div class="rounded-md shadow-sm -space-y-px">
+        <div>
+          <%= label(f, :description, class: "block mb-1") %>
+          <%= textarea(f, :description,
+            required: true,
+            class:
+              "appearance-none relative resize-none block w-full p-3 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
+            placeholder: "New comments on something or other ...",
+            rows: 4
+          ) %>
+        </div>
+        <%= error_tag(f, :description) %>
+      </div>
+
+      <div class="rounded-md -space-y-px">
+        <div>
+          <%= label(f, :domain, class: "block mb-1") %>
+          <%= text_input(f, :domain,
+            required: true,
+            class:
+              "appearance-none relative resize-none w-40 py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
+            placeholder: "commentaria-nova"
+          ) %> <span>.oc.newalexandria.info</span>
+        </div>
+        <%= error_tag(f, :domain) %>
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-stone-600 hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"
+        >
+          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <!-- Heroicon name: outline/book (https://heroicons.com/) -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+          </span> Create project
+        </button>
+      </div>
+    </.form>
+  </section>
+</article>

@@ -25,9 +25,7 @@ defmodule TextServer.ProjectsFixtures do
   def exemplar_fixture(attrs \\ %{}) do
     {:ok, exemplar} =
       attrs
-      |> Enum.into(%{
-
-      })
+      |> Enum.into(%{})
       |> TextServer.Projects.create_exemplar()
 
     exemplar

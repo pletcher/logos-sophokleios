@@ -29,13 +29,24 @@
         <td><%= text_group.urn %></td>
 
         <td>
-          <span><%= live_redirect "Show", to: Routes.text_group_show_path(@socket, :show, text_group) %></span>
-          <span><%= live_patch "Edit", to: Routes.text_group_index_path(@socket, :edit, text_group) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: text_group.id, data: [confirm: "Are you sure?"] %></span>
+          <span>
+            <%= live_redirect("Show", to: Routes.text_group_show_path(@socket, :show, text_group)) %>
+          </span>
+          <span>
+            <%= live_patch("Edit", to: Routes.text_group_index_path(@socket, :edit, text_group)) %>
+          </span>
+          <span>
+            <%= link("Delete",
+              to: "#",
+              phx_click: "delete",
+              phx_value_id: text_group.id,
+              data: [confirm: "Are you sure?"]
+            ) %>
+          </span>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<span><%= live_patch "New Text group", to: Routes.text_group_index_path(@socket, :new) %></span>
+<span><%= live_patch("New Text group", to: Routes.text_group_index_path(@socket, :new)) %></span>

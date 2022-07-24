@@ -14,7 +14,6 @@
 <% end %>
 
 <ul>
-
   <li>
     <strong>Slug:</strong>
     <%= @language.slug %>
@@ -24,8 +23,9 @@
     <strong>Title:</strong>
     <%= @language.title %>
   </li>
-
 </ul>
 
-<span><%= live_patch "Edit", to: Routes.language_show_path(@socket, :edit, @language), class: "button" %></span> |
-<span><%= live_redirect "Back", to: Routes.language_index_path(@socket, :index) %></span>
+<span>
+  <%= live_patch("Edit", to: Routes.language_show_path(@socket, :edit, @language), class: "button") %>
+</span> |
+<span><%= live_redirect("Back", to: Routes.language_index_path(@socket, :index)) %></span>

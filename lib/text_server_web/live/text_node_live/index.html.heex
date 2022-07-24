@@ -33,13 +33,24 @@
         <td><%= text_node.text %></td>
 
         <td>
-          <span><%= live_redirect "Show", to: Routes.text_node_show_path(@socket, :show, text_node) %></span>
-          <span><%= live_patch "Edit", to: Routes.text_node_index_path(@socket, :edit, text_node) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: text_node.id, data: [confirm: "Are you sure?"] %></span>
+          <span>
+            <%= live_redirect("Show", to: Routes.text_node_show_path(@socket, :show, text_node)) %>
+          </span>
+          <span>
+            <%= live_patch("Edit", to: Routes.text_node_index_path(@socket, :edit, text_node)) %>
+          </span>
+          <span>
+            <%= link("Delete",
+              to: "#",
+              phx_click: "delete",
+              phx_value_id: text_node.id,
+              data: [confirm: "Are you sure?"]
+            ) %>
+          </span>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<span><%= live_patch "New Text node", to: Routes.text_node_index_path(@socket, :new) %></span>
+<span><%= live_patch("New Text node", to: Routes.text_node_index_path(@socket, :new)) %></span>

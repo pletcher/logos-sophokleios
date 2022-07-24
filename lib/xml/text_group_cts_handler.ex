@@ -35,8 +35,13 @@ defmodule Xml.TextGroupCtsHandler do
 
   defp handle_element("groupname", attributes, state), do: handle_group_name(attributes, state)
   defp handle_element("textgroup", attributes, state), do: handle_text_group(attributes, state)
-  defp handle_element("cts:groupname", attributes, state), do: handle_group_name(attributes, state)
-  defp handle_element("cts:textgroup", attributes, state), do: handle_text_group(attributes, state)
+
+  defp handle_element("cts:groupname", attributes, state),
+    do: handle_group_name(attributes, state)
+
+  defp handle_element("cts:textgroup", attributes, state),
+    do: handle_text_group(attributes, state)
+
   defp handle_element("ti:groupname", attributes, state), do: handle_group_name(attributes, state)
   defp handle_element("ti:textgroup", attributes, state), do: handle_text_group(attributes, state)
 

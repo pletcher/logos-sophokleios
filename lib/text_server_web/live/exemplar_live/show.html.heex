@@ -14,7 +14,6 @@
 <% end %>
 
 <ul>
-
   <li>
     <strong>Title:</strong>
     <%= @exemplar.title %>
@@ -34,8 +33,9 @@
     <strong>Urn:</strong>
     <%= @exemplar.urn %>
   </li>
-
 </ul>
 
-<span><%= live_patch "Edit", to: Routes.exemplar_show_path(@socket, :edit, @exemplar), class: "button" %></span> |
-<span><%= live_redirect "Back", to: Routes.exemplar_index_path(@socket, :index) %></span>
+<span>
+  <%= live_patch("Edit", to: Routes.exemplar_show_path(@socket, :edit, @exemplar), class: "button") %>
+</span> |
+<span><%= live_redirect("Back", to: Routes.exemplar_index_path(@socket, :index)) %></span>

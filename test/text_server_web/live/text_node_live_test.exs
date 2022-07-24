@@ -4,8 +4,18 @@ defmodule TextServerWeb.TextNodeLiveTest do
   import Phoenix.LiveViewTest
   import TextServer.TextNodesFixtures
 
-  @create_attrs %{index: 42, location: [], normalized_text: "some normalized_text", text: "some text"}
-  @update_attrs %{index: 43, location: [], normalized_text: "some updated normalized_text", text: "some updated text"}
+  @create_attrs %{
+    index: 42,
+    location: [],
+    normalized_text: "some normalized_text",
+    text: "some text"
+  }
+  @update_attrs %{
+    index: 43,
+    location: [],
+    normalized_text: "some updated normalized_text",
+    text: "some updated text"
+  }
   @invalid_attrs %{index: nil, location: [], normalized_text: nil, text: nil}
 
   defp create_text_node(_) do

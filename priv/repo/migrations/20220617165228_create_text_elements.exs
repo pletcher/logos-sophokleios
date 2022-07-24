@@ -10,7 +10,6 @@ defmodule TextServer.Repo.Migrations.CreateTextElements do
       add :end_text_node_id, references(:text_nodes, on_delete: :nothing), null: false
       add :start_text_node_id, references(:text_nodes, on_delete: :nothing), null: false
 
-
       timestamps()
     end
 

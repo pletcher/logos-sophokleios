@@ -3,7 +3,6 @@ defmodule TextServer.Projects.Exemplar do
   import Ecto.Changeset
 
   schema "project_exemplars" do
-
     field :exemplar_id, :id
     field :project_id, :id
 

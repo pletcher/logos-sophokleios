@@ -29,13 +29,30 @@
         <td><%= element_type.description %></td>
 
         <td>
-          <span><%= live_redirect "Show", to: Routes.element_type_show_path(@socket, :show, element_type) %></span>
-          <span><%= live_patch "Edit", to: Routes.element_type_index_path(@socket, :edit, element_type) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: element_type.id, data: [confirm: "Are you sure?"] %></span>
+          <span>
+            <%= live_redirect("Show",
+              to: Routes.element_type_show_path(@socket, :show, element_type)
+            ) %>
+          </span>
+          <span>
+            <%= live_patch("Edit",
+              to: Routes.element_type_index_path(@socket, :edit, element_type)
+            ) %>
+          </span>
+          <span>
+            <%= link("Delete",
+              to: "#",
+              phx_click: "delete",
+              phx_value_id: element_type.id,
+              data: [confirm: "Are you sure?"]
+            ) %>
+          </span>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<span><%= live_patch "New Element type", to: Routes.element_type_index_path(@socket, :new) %></span>
+<span>
+  <%= live_patch("New Element type", to: Routes.element_type_index_path(@socket, :new)) %>
+</span>

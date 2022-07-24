@@ -36,14 +36,19 @@ defmodule TextServer.ElementTypesTest do
       element_type = element_type_fixture()
       update_attrs = %{description: "some updated description", name: "some updated name"}
 
-      assert {:ok, %ElementType{} = element_type} = ElementTypes.update_element_type(element_type, update_attrs)
+      assert {:ok, %ElementType{} = element_type} =
+               ElementTypes.update_element_type(element_type, update_attrs)
+
       assert element_type.description == "some updated description"
       assert element_type.name == "some updated name"
     end
 
     test "update_element_type/2 with invalid data returns error changeset" do
       element_type = element_type_fixture()
-      assert {:error, %Ecto.Changeset{}} = ElementTypes.update_element_type(element_type, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               ElementTypes.update_element_type(element_type, @invalid_attrs)
+
       assert element_type == ElementTypes.get_element_type!(element_type.id)
     end
 

@@ -21,7 +21,12 @@ defmodule TextServer.VersionsTest do
     end
 
     test "create_version/1 with valid data creates a version" do
-      valid_attrs = %{description: "some description", slug: "some slug", title: "some title", urn: "some urn"}
+      valid_attrs = %{
+        description: "some description",
+        slug: "some slug",
+        title: "some title",
+        urn: "some urn"
+      }
 
       assert {:ok, %Version{} = version} = Versions.create_version(valid_attrs)
       assert version.description == "some description"
@@ -36,7 +41,13 @@ defmodule TextServer.VersionsTest do
 
     test "update_version/2 with valid data updates the version" do
       version = version_fixture()
-      update_attrs = %{description: "some updated description", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
+
+      update_attrs = %{
+        description: "some updated description",
+        slug: "some updated slug",
+        title: "some updated title",
+        urn: "some updated urn"
+      }
 
       assert {:ok, %Version{} = version} = Versions.update_version(version, update_attrs)
       assert version.description == "some updated description"

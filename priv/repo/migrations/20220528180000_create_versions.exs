@@ -11,7 +11,9 @@ defmodule TextServer.Repo.Migrations.CreateVersions do
       timestamps()
     end
 
-    version_type_create_query = "CREATE TYPE version_type AS ENUM ('commentary', 'edition', 'translation')"
+    version_type_create_query =
+      "CREATE TYPE version_type AS ENUM ('commentary', 'edition', 'translation')"
+
     version_type_drop_query = "DROP TYPE version_type"
 
     execute(version_type_create_query, version_type_drop_query)

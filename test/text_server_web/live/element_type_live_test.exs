@@ -70,7 +70,10 @@ defmodule TextServerWeb.ElementTypeLiveTest do
     test "deletes element_type in listing", %{conn: conn, element_type: element_type} do
       {:ok, index_live, _html} = live(conn, Routes.element_type_index_path(conn, :index))
 
-      assert index_live |> element("#element_type-#{element_type.id} a", "Delete") |> render_click()
+      assert index_live
+             |> element("#element_type-#{element_type.id} a", "Delete")
+             |> render_click()
+
       refute has_element?(index_live, "#element_type-#{element_type.id}")
     end
   end
@@ -79,14 +82,16 @@ defmodule TextServerWeb.ElementTypeLiveTest do
     setup [:create_element_type]
 
     test "displays element_type", %{conn: conn, element_type: element_type} do
-      {:ok, _show_live, html} = live(conn, Routes.element_type_show_path(conn, :show, element_type))
+      {:ok, _show_live, html} =
+        live(conn, Routes.element_type_show_path(conn, :show, element_type))
 
       assert html =~ "Show Element type"
       assert html =~ element_type.description
     end
 
     test "updates element_type within modal", %{conn: conn, element_type: element_type} do
-      {:ok, show_live, _html} = live(conn, Routes.element_type_show_path(conn, :show, element_type))
+      {:ok, show_live, _html} =
+        live(conn, Routes.element_type_show_path(conn, :show, element_type))
 
       assert show_live |> element("a", "Edit") |> render_click() =~
                "Edit Element type"

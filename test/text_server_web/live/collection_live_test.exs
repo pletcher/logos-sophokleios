@@ -4,8 +4,18 @@ defmodule TextServerWeb.CollectionLiveTest do
   import Phoenix.LiveViewTest
   import TextServer.CollectionsFixtures
 
-  @create_attrs %{repository: "some repository", slug: "some slug", title: "some title", urn: "some urn"}
-  @update_attrs %{repository: "some updated repository", slug: "some updated slug", title: "some updated title", urn: "some updated urn"}
+  @create_attrs %{
+    repository: "some repository",
+    slug: "some slug",
+    title: "some title",
+    urn: "some urn"
+  }
+  @update_attrs %{
+    repository: "some updated repository",
+    slug: "some updated slug",
+    title: "some updated title",
+    urn: "some updated urn"
+  }
   @invalid_attrs %{repository: nil, slug: nil, title: nil, urn: nil}
 
   defp create_collection(_) do

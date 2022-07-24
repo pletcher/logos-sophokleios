@@ -7,22 +7,22 @@
     id="collection-form"
     phx-target={@myself}
     phx-change="validate"
-    phx-submit="save">
-  
-    <%= label f, :repository %>
-    <%= text_input f, :repository %>
-    <%= error_tag f, :repository %>
-  
-    <%= label f, :title %>
-    <%= text_input f, :title %>
-    <%= error_tag f, :title %>
-  
-    <%= label f, :urn %>
-    <%= text_input f, :urn %>
-    <%= error_tag f, :urn %>
-  
+    phx-submit="save"
+  >
+    <%= label(f, :repository) %>
+    <%= text_input(f, :repository) %>
+    <%= error_tag(f, :repository) %>
+
+    <%= label(f, :title) %>
+    <%= text_input(f, :title) %>
+    <%= error_tag(f, :title) %>
+
+    <%= label(f, :urn) %>
+    <%= text_input(f, :urn) %>
+    <%= error_tag(f, :urn) %>
+
     <div>
-      <%= submit "Save", phx_disable_with: "Saving..." %>
+      <%= submit("Save", phx_disable_with: "Saving...") %>
     </div>
   </.form>
 </div>

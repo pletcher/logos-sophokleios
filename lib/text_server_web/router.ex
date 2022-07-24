@@ -22,85 +22,90 @@ defmodule TextServerWeb.Router do
 
     get "/", PageController, :index
 
-    live "/authors", AuthorLive.Index, :index
-    live "/authors/new", AuthorLive.Index, :new
-    live "/authors/:id/edit", AuthorLive.Index, :edit
+    live_session :default, on_mount: TextServerWeb.UserAuthLive do
+      live "/authors", AuthorLive.Index, :index
+      live "/authors/new", AuthorLive.Index, :new
+      live "/authors/:id/edit", AuthorLive.Index, :edit
 
-    live "/authors/:id", AuthorLive.Show, :show
-    live "/authors/:id/show/edit", AuthorLive.Show, :edit
+      live "/authors/:id", AuthorLive.Show, :show
+      live "/authors/:id/show/edit", AuthorLive.Show, :edit
 
-    live "/collections", CollectionLive.Index, :index
-    live "/collections/new", CollectionLive.Index, :new
-    live "/collections/:id/edit", CollectionLive.Index, :edit
+      live "/collections", CollectionLive.Index, :index
+      live "/collections/new", CollectionLive.Index, :new
+      live "/collections/:id/edit", CollectionLive.Index, :edit
 
-    live "/collections/:id", CollectionLive.Show, :show
-    live "/collections/:id/show/edit", CollectionLive.Show, :edit
+      live "/collections/:id", CollectionLive.Show, :show
+      live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
-    live "/exemplars", ExemplarLive.Index, :index
-    live "/exemplars/new", ExemplarLive.Index, :new
-    live "/exemplars/:id/edit", ExemplarLive.Index, :edit
+      live "/exemplars", ExemplarLive.Index, :index
+      live "/exemplars/new", ExemplarLive.Index, :new
+      live "/exemplars/:id/edit", ExemplarLive.Index, :edit
 
-    live "/exemplars/:id", ExemplarLive.Show, :show
-    live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
+      live "/exemplars/:id", ExemplarLive.Show, :show
+      live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
 
-    live "/languages", LanguageLive.Index, :index
-    live "/languages/new", LanguageLive.Index, :new
-    live "/languages/:id/edit", LanguageLive.Index, :edit
+      live "/languages", LanguageLive.Index, :index
+      live "/languages/new", LanguageLive.Index, :new
+      live "/languages/:id/edit", LanguageLive.Index, :edit
 
-    live "/languages/:id", LanguageLive.Show, :show
-    live "/languages/:id/show/edit", LanguageLive.Show, :edit
+      live "/languages/:id", LanguageLive.Show, :show
+      live "/languages/:id/show/edit", LanguageLive.Show, :edit
 
-    live "/refs_decls", RefsDeclLive.Index, :index
-    live "/refs_decls/new", RefsDeclLive.Index, :new
-    live "/refs_decls/:id/edit", RefsDeclLive.Index, :edit
+      live "/projects", ProjectLive.Index, :index
+      live "/projects/:id", ProjectLive.Show, :show
 
-    live "/refs_decls/:id", RefsDeclLive.Show, :show
-    live "/refs_decls/:id/show/edit", RefsDeclLive.Show, :edit
+      live "/refs_decls", RefsDeclLive.Index, :index
+      live "/refs_decls/new", RefsDeclLive.Index, :new
+      live "/refs_decls/:id/edit", RefsDeclLive.Index, :edit
 
-    live "/text_groups", TextGroupLive.Index, :index
-    live "/text_groups/new", TextGroupLive.Index, :new
-    live "/text_groups/:id/edit", TextGroupLive.Index, :edit
+      live "/refs_decls/:id", RefsDeclLive.Show, :show
+      live "/refs_decls/:id/show/edit", RefsDeclLive.Show, :edit
 
-    live "/text_groups/:id", TextGroupLive.Show, :show
-    live "/text_groups/:id/show/edit", TextGroupLive.Show, :edit
+      live "/text_groups", TextGroupLive.Index, :index
+      live "/text_groups/new", TextGroupLive.Index, :new
+      live "/text_groups/:id/edit", TextGroupLive.Index, :edit
 
-    live "/text_nodes", TextNodeLive.Index, :index
-    live "/text_nodes/new", TextNodeLive.Index, :new
-    live "/text_nodes/:id/edit", TextNodeLive.Index, :edit
+      live "/text_groups/:id", TextGroupLive.Show, :show
+      live "/text_groups/:id/show/edit", TextGroupLive.Show, :edit
 
-    live "/text_nodes/:id", TextNodeLive.Show, :show
-    live "/text_nodes/:id/show/edit", TextNodeLive.Show, :edit
+      live "/text_nodes", TextNodeLive.Index, :index
+      live "/text_nodes/new", TextNodeLive.Index, :new
+      live "/text_nodes/:id/edit", TextNodeLive.Index, :edit
 
-    live "/translations", TranslationLive.Index, :index
-    live "/translations/new", TranslationLive.Index, :new
-    live "/translations/:id/edit", TranslationLive.Index, :edit
+      live "/text_nodes/:id", TextNodeLive.Show, :show
+      live "/text_nodes/:id/show/edit", TextNodeLive.Show, :edit
 
-    live "/translations/:id", TranslationLive.Show, :show
-    live "/translations/:id/show/edit", TranslationLive.Show, :edit
+      live "/translations", TranslationLive.Index, :index
+      live "/translations/new", TranslationLive.Index, :new
+      live "/translations/:id/edit", TranslationLive.Index, :edit
 
-    live "/versions", VersionLive.Index, :index
-    live "/versions/new", VersionLive.Index, :new
-    live "/versions/:id/edit", VersionLive.Index, :edit
+      live "/translations/:id", TranslationLive.Show, :show
+      live "/translations/:id/show/edit", TranslationLive.Show, :edit
 
-    live "/versions/:id", VersionLive.Show, :show
-    live "/versions/:id/show/edit", VersionLive.Show, :edit
+      live "/versions", VersionLive.Index, :index
+      live "/versions/new", VersionLive.Index, :new
+      live "/versions/:id/edit", VersionLive.Index, :edit
 
-    live "/works", WorkLive.Index, :index
-    live "/works/new", WorkLive.Index, :new
-    live "/works/:id/edit", WorkLive.Index, :edit
+      live "/versions/:id", VersionLive.Show, :show
+      live "/versions/:id/show/edit", VersionLive.Show, :edit
 
-    live "/works/:id", WorkLive.Show, :show
-    live "/works/:id/show/edit", WorkLive.Show, :edit
+      live "/works", WorkLive.Index, :index
+      live "/works/new", WorkLive.Index, :new
+      live "/works/:id/edit", WorkLive.Index, :edit
+
+      live "/works/:id", WorkLive.Show, :show
+      live "/works/:id/show/edit", WorkLive.Show, :edit
+
+      live "/:user_id/projects", ProjectLive.UserProjectIndex, :index
+    end
   end
 
   scope "/graphql" do
     pipe_through :api
 
-    forward "/graphiql", Absinthe.Plug.GraphiQL,
-      schema: TextServerWeb.Schema
+    forward "/graphiql", Absinthe.Plug.GraphiQL, schema: TextServerWeb.Schema
 
-    forward "/", Absinthe.Plug,
-      schema: TextServerWeb.Schema
+    forward "/", Absinthe.Plug, schema: TextServerWeb.Schema
   end
 
   # Enables LiveDashboard only for development
@@ -153,6 +158,10 @@ defmodule TextServerWeb.Router do
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+
+    live_session :authenticated, on_mount: TextServerWeb.UserAuthLive do
+      live "/:user_id/projects/new", ProjectLive.New, :new
+    end
   end
 
   scope "/", TextServerWeb do

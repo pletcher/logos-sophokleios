@@ -8,6 +8,9 @@ defmodule TextServer.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
 
+    many_to_many :user_projects, TextServer.Projects.Project,
+      join_through: TextServer.Projects.User
+
     timestamps()
   end
 

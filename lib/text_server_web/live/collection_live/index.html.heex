@@ -31,29 +31,44 @@
         <td><%= collection.urn %></td>
 
         <td>
-          <span><%= live_redirect "Show", to: Routes.collection_show_path(@socket, :show, collection) %></span>
-          <span><%= live_patch "Edit", to: Routes.collection_index_path(@socket, :edit, collection) %></span>
-          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: collection.id, data: [confirm: "Are you sure?"] %></span>
+          <span>
+            <%= live_redirect("Show", to: Routes.collection_show_path(@socket, :show, collection)) %>
+          </span>
+          <span>
+            <%= live_patch("Edit", to: Routes.collection_index_path(@socket, :edit, collection)) %>
+          </span>
+          <span>
+            <%= link("Delete",
+              to: "#",
+              phx_click: "delete",
+              phx_value_id: collection.id,
+              data: [confirm: "Are you sure?"]
+            ) %>
+          </span>
         </td>
       </tr>
     <% end %>
   </tbody>
 </table>
 
-<span><%= live_patch "New Collection", to: Routes.collection_index_path(@socket, :new) %></span>
+<span><%= live_patch("New Collection", to: Routes.collection_index_path(@socket, :new)) %></span>
 <%= if @total_pages > 1 do %>
   <nav class="border-t border-gray-200">
     <ul class="flex my-2">
       <li>
-        <%= live_redirect "Previous", to: Routes.collection_index_path(@socket, :index, page: @page_number - 1) %>
+        <%= live_redirect("Previous",
+          to: Routes.collection_index_path(@socket, :index, page: @page_number - 1)
+        ) %>
       </li>
       <%= for idx <- Enum.to_list(1..@total_pages) do %>
         <li>
-          <%= live_redirect idx, to: Routes.collection_index_path(@socket, :index, page: idx) %>
+          <%= live_redirect(idx, to: Routes.collection_index_path(@socket, :index, page: idx)) %>
         </li>
       <% end %>
       <li>
-        <%= live_redirect "Next", to: Routes.collection_index_path(@socket, :index, page: @page_number + 1) %>
+        <%= live_redirect("Next",
+          to: Routes.collection_index_path(@socket, :index, page: @page_number + 1)
+        ) %>
       </li>
     </ul>
   </nav>

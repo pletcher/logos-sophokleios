@@ -3,6 +3,13 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
 
   alias TextServer.Projects
 
+  def mount(_params, _session, socket) do
+    {:ok,
+     socket
+     |> assign(:uploaded_files, [])
+     |> allow_upload(:project_image, accept: ~w(.jpg .jpeg .png), max_entries: 1)}
+  end
+
   @impl true
   def update(%{project: project} = assigns, socket) do
     changeset = Projects.change_project(project)
@@ -41,7 +48,8 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
   end
 
   defp save_project(socket, :new, project_params) do
-    project_params = assign_new(project_params, :current_user_id, fn -> socket.assigns.current_user.id end)
+    project_params =
+      assign_new(project_params, :created_by_id, fn -> socket.assigns.current_user.id end)
 
     case Projects.create_project(project_params) do
       {:ok, _project} ->

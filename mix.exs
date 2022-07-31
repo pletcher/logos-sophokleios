@@ -58,7 +58,9 @@ defmodule TextServer.MixProject do
       {:iteraptor, "~> 1.12.0"},
       {:saxy, "~> 1.3", only: [:dev, :test]},
       {:scrivener_ecto, "~> 2.7"},
-      {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev}
+      {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev},
+      {:tesla, "~> 1.4"},
+      {:hackney, "~> 1.17"}
     ]
   end
 

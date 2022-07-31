@@ -12,6 +12,10 @@ if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
   config :text_server, TextServerWeb.Endpoint, server: true
 end
 
+config :text_server,
+  unsplash_access_key: System.get_env("UNSPLASH_ACCESS_KEY"),
+  unsplash_secret_key: System.get_env("UNSPLASH_SECRET_KEY")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

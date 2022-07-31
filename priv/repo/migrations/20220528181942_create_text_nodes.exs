@@ -7,26 +7,26 @@ defmodule TextServer.Repo.Migrations.CreateTextNodes do
       add :normalized_text, :text
       add :text, :text, null: false
       add :exemplar_id, references(:exemplars, on_delete: :restrict)
-      add :_search, :tsvector
 
       timestamps()
     end
 
     create index(:text_nodes, [:exemplar_id])
-    create_if_not_exists index(:text_nodes, [:_search], using: "GIN")
 
+    # add :_search, :tsvector
+    # we're using a generated column instead of a trigger
+    # see https://www.postgresql.org/docs/12/ddl-generated-columns.html
     execute(
       """
-        CREATE OR REPLACE TRIGGER text_node_search_trigger
-        BEFORE INSERT OR UPDATE OF text
-        ON text_nodes
-        FOR EACH ROW
-        EXECUTE FUNCTION tsvector_update_trigger(_search, 'pg_catalog.english', text);
+      ALTER TABLE text_nodes
+      ADD COLUMN _search tsvector
+      GENERATED ALWAYS AS (to_tsvector('english', left(text, 1024*1024))) STORED;
       """,
       """
-        DROP TRIGGER IF EXISTS text_node_search_trigger ON text_nodes;
+      ALTER TABLE text_nodes DROP COLUMN _search;
       """
     )
+    create_if_not_exists index(:text_nodes, [:_search], using: "GIN")
 
     execute(
       """

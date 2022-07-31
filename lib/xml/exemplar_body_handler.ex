@@ -118,10 +118,9 @@ defmodule Xml.ExemplarBodyHandler do
     ])
   end
 
-  defp set_location(state, "bibl", _attrs), do: state
+  def set_location(state, "bibl", _attrs), do: state
 
-  defp set_location(state, _name, attrs) do
-    # We can zero out the position every time the location changes
+  def set_location(state, _name, attrs) do
     ref_levels = state[:ref_levels]
     attr_map = Map.new(attrs)
     n = Map.get(attr_map, "n")
@@ -136,12 +135,6 @@ defmodule Xml.ExemplarBodyHandler do
 
     new_state =
       cond do
-        is_nil(ref_levels) ->
-          state
-
-        is_nil(n) ->
-          state
-
         type == "textpart" ->
           idx = Enum.find_index(ref_levels, fn r -> r == subtype end)
 
@@ -165,6 +158,7 @@ defmodule Xml.ExemplarBodyHandler do
           state
       end
 
+    # We can zero out the offset every time the location changes
     if new_state[:location] == state[:location] do
       new_state
     else

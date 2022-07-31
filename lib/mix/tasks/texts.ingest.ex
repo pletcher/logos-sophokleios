@@ -32,45 +32,6 @@ defmodule Mix.Tasks.Texts.Ingest do
     String.replace_prefix(s, "#{path_prefix}/", "")
   end
 
-  def get_ref_levels_from_tei_header(header_data) do
-    ref_state_units =
-      header_data
-      |> Enum.filter(fn d -> Map.get(d, :tag_name) == "refState" end)
-      |> Enum.map(fn r ->
-        Map.get(r, :attributes)
-        |> Enum.find_value(fn a ->
-          if elem(a, 0) == "unit" do
-            elem(a, 1)
-          end
-        end)
-      end)
-      |> Enum.reverse()
-
-    units =
-      unless Enum.empty?(ref_state_units) do
-        ref_state_units
-      else
-        cref =
-          header_data
-          |> Enum.filter(fn d -> Map.get(d, :tag_name) == "cRefPattern" end)
-          |> List.first()
-
-        attrs = Map.get(cref || %{}, :attributes)
-
-        Enum.find_value(attrs || [], fn a ->
-          if elem(a, 0) == "n" do
-            [elem(a, 1)]
-          end
-        end)
-      end
-
-    if is_nil(units) do
-      ["line"]
-    else
-      units
-    end
-  end
-
   def get_content_from_tag(data, tag) do
     Enum.find_value(data, fn d ->
       if d[:current_tag] == tag do
@@ -94,7 +55,7 @@ defmodule Mix.Tasks.Texts.Ingest do
       if is_nil(header_data) do
         nil
       else
-        ref_levels = get_ref_levels_from_tei_header(header_data)
+        ref_levels = TextServer.Ingestion.get_ref_levels_from_tei_header(header_data)
 
         language_id =
           Enum.find_value(header_data, fn d ->
@@ -318,14 +279,7 @@ defmodule Mix.Tasks.Texts.Ingest do
   defp ingest_xml(dir, collection) do
     Mix.shell().info("... Ingesting XML-based texts in: #{dir} ... \n")
 
-    file_queue = TextServer.Ingestion.list_ingestion_items_in_collection(collection.id)
-
-    xml_files =
-      if Enum.count(file_queue) == 0 do
-        Path.wildcard("#{dir}/**/*.xml")
-      else
-        file_queue |> Enum.map(fn f -> f.path end)
-      end
+    xml_files = Path.wildcard("#{dir}/**/*.xml")
 
     cts_files =
       xml_files
@@ -342,9 +296,9 @@ defmodule Mix.Tasks.Texts.Ingest do
       end)
 
     text_groups_data =
-      Stream.map(cts_files[:text_group_files], &parse_text_group_cts(&1, collection))
+      Enum.map(cts_files[:text_group_files], &parse_text_group_cts(&1, collection))
 
-    works_data = Stream.map(cts_files[:work_files], &parse_work_xml/1)
+    works_data = Enum.map(cts_files[:work_files], &parse_work_xml/1)
 
     _text_groups =
       text_groups_data
@@ -353,14 +307,10 @@ defmodule Mix.Tasks.Texts.Ingest do
         TextServer.TextGroups.find_or_create_text_group(Map.delete(tg, :language))
       end)
 
-    TextServer.Ingestion.delete_all_items_by_paths(cts_files[:text_group_files])
-
     works_and_versions = create_works_and_versions(works_data, collection)
 
-    TextServer.Ingestion.delete_all_items_by_paths(cts_files[:work_files])
-
     versions =
-      Stream.flat_map(works_and_versions || [], fn wvs -> Map.get(wvs, :versions, []) end)
+      Enum.flat_map(works_and_versions || [], fn wvs -> Map.get(wvs, :versions, []) end)
 
     versions =
       if Enum.count(versions) == 0 do
@@ -372,11 +322,20 @@ defmodule Mix.Tasks.Texts.Ingest do
     _exemplars =
       Enum.map(versions, fn v ->
         urn = String.split(v.urn, ":") |> List.last()
-        ingestion_exemplars = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
+        # ingestion_exemplars = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
+        exemplar_files = Path.wildcard("#{dir}/**/#{urn}.xml")
 
-        ingestion_exemplars
-        |> Enum.map(fn ex ->
-          f = ex.path
+        IO.puts("... Processing exemplar files: ")
+        IO.inspect(exemplar_files)
+
+        # Sometimes the ingestion process appears to
+        # hang here, such as on the Suda
+        # (/Users/pletcher/code/new-alexandria-foundation/text_server/tmp/First1KGreek/data/tlg9010/tlg001/__cts__.xml)
+        # Not sure why, but it would be nice to add more
+        # debugging output
+
+        exemplar_files
+        |> Enum.map(fn f ->
           exemplar_data = parse_exemplar_xml(f)
 
           exemplar =
@@ -415,8 +374,7 @@ defmodule Mix.Tasks.Texts.Ingest do
               end
             end
 
-          TextServer.Ingestion.delete_item(ex)
-          ex
+          f
         end)
       end)
   end
@@ -560,7 +518,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     {:ok, collection} = TextServer.Collections.find_or_create_collection(collection_attrs)
 
     if File.dir?(json_dir = Path.join(dest, "cltk_json")) do
-      ingest_json(json_dir, collection)
+      # ingest_json(json_dir, collection)
     else
       ingest_xml(Path.join(dest, "data"), collection)
     end

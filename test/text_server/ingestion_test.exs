@@ -56,4 +56,45 @@ defmodule TextServer.IngestionTest do
       assert %Ecto.Changeset{} = Ingestion.change_item(item)
     end
   end
+
+  describe "get_ref_levels_from_tei_header/1" do
+    test "returns appropriate ref levels with `refState` elements" do
+      assert ["book", "chapter"] = Ingestion.get_ref_levels_from_tei_header(ref_state_data())
+    end
+
+    test "returns appropriate ref levels with `cRefPattern` elements" do
+      assert ["book", "chapter"] = Ingestion.get_ref_levels_from_tei_header(cref_pattern_data())
+    end
+  end
+
+  defp ref_state_data do
+    [
+      %{attributes: [{"unit", "chapter"}], tag_name: "refState"},
+      %{attributes: [{"unit", "book"}, {"delim", "."}], tag_name: "refState"},
+      %{attributes: [], tag_name: "refsDecl"}
+    ]
+  end
+
+  defp cref_pattern_data do
+    [
+      %{
+        attributes: [
+          {"n", "Book"},
+          {"matchPattern", "(\\\\w+)"},
+          {"replacementPattern",
+           "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n=\\'$1\\'])"}
+        ],
+        tag_name: "cRefPattern"
+      },
+      %{
+        attributes: [
+          {"n", "Chapter"},
+          {"matchPattern", "(\\\\w+).(\\\\w+)"},
+          {"replacementPattern",
+           "#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n=\\'$1\\']/tei:div[@n=\\'$2\\'])"}
+        ],
+        tag_name: "cRefPattern"
+      }
+    ]
+  end
 end

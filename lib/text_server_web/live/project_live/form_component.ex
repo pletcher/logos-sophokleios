@@ -48,15 +48,14 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
   end
 
   defp save_project(socket, :new, project_params) do
-    project_params =
-      assign_new(project_params, :created_by_id, fn -> socket.assigns.current_user.id end)
+    project_params = Map.put(project_params, "created_by_id", socket.assigns.current_user.id)
 
     case Projects.create_project(project_params) do
-      {:ok, _project} ->
+      {:ok, project} ->
         {:noreply,
          socket
          |> put_flash(:info, "Project created successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
+         |> push_redirect(to: Routes.project_edit_path(socket, :edit, project))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}

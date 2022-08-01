@@ -1,8 +1,6 @@
 defmodule TextServerWeb.ProjectLive.New do
   use TextServerWeb, :live_view
 
-  alias TextServer.Accounts
-  alias TextServer.Projects
   alias TextServer.Projects.Project
 
   @impl true
@@ -16,7 +14,7 @@ defmodule TextServerWeb.ProjectLive.New do
   end
 
   @impl true
-  def handle_params(params, _url, socket) do
+  def handle_params(_params, _url, socket) do
     {:noreply, socket}
   end
 

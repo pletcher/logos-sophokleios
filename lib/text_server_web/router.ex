@@ -161,6 +161,7 @@ defmodule TextServerWeb.Router do
 
     live_session :authenticated, on_mount: TextServerWeb.UserAuthLive do
       live "/:user_id/projects/new", ProjectLive.New, :new
+      live "/projects/:id/edit", ProjectLive.Edit, :edit
     end
   end
 

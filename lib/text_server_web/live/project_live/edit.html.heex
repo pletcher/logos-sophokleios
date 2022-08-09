@@ -1,9 +1,17 @@
-<.live_component
-  module={TextServerWeb.ProjectLive.FormComponent}
-  id={:new}
-  title={@page_title}
-  action={@live_action}
-  project={@project}
-  return_to={Routes.project_user_project_index_path(@socket, :index, @current_user.id)}
-  user={@current_user}
-/>
+<article>
+	<.live_component
+	  module={TextServerWeb.ProjectLive.FormComponent}
+	  action={@live_action}
+	  id={:edit}
+	  project={@project}
+	  return_to={Routes.project_user_project_index_path(@socket, :index, @current_user.id)}
+	  title={@page_title}
+	  user={@current_user}
+	/>
+
+	<.live_component
+		module={TextServerWeb.ProjectLive.UserSelectComponent}
+		id={:edit_users}
+		project={@project}
+	/>
+</article>

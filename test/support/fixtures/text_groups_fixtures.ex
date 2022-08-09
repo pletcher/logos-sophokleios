@@ -16,12 +16,16 @@ defmodule TextServer.TextGroupsFixtures do
     {:ok, text_group} =
       attrs
       |> Enum.into(%{
-        slug: unique_text_group_slug(),
+      	collection_id: collection_fixture().id,
         title: "some title",
         urn: "some urn"
       })
       |> TextServer.TextGroups.create_text_group()
 
     text_group
+  end
+
+  defp collection_fixture() do
+    TextServer.CollectionsFixtures.collection_fixture()
   end
 end

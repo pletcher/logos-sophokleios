@@ -3,8 +3,9 @@ defmodule TextServer.Projects.User do
   import Ecto.Changeset
 
   schema "project_users" do
-    field :user_id, :id
-    field :project_id, :id
+    belongs_to :user, TextServer.Accounts.User
+    belongs_to :project, TextServer.Projects.Project
+
     field :project_user_type, Ecto.Enum, values: [:admin, :editor, :user]
 
     timestamps()
@@ -16,6 +17,6 @@ defmodule TextServer.Projects.User do
     |> cast(attrs, [:project_id, :project_user_type, :user_id])
     |> assoc_constraint(:user)
     |> assoc_constraint(:project)
-    |> validate_required(:project_user_type)
+    |> validate_required([:project_id, :project_user_type, :user_id])
   end
 end

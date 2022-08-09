@@ -21,7 +21,8 @@ defmodule TextServer.Projects.Project do
   def changeset(project, attrs) do
     project
     |> cast(attrs, [:created_by_id, :description, :domain, :title])
-    |> validate_required([:description, :domain, :title])
+    |> validate_required([:created_by_id, :description, :domain, :title])
+    |> validate_format(:domain, ~r/^\w(?:[\w-]{0,61}\w)?$/)
     |> assoc_constraint(:created_by)
     |> unique_constraint(:domain)
   end

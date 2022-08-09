@@ -15,13 +15,17 @@ defmodule TextServer.Repo.Migrations.CreateProjects do
     create index(:projects, [:created_by_id])
 
     create table(:project_exemplars) do
-      add :exemplar_id, references(:exemplars)
-      add :project_id, references(:projects)
+      add :exemplar_id, references(:exemplars), null: false
+      add :project_id, references(:projects), null: false
+
+      timestamps()
     end
 
     create table(:project_users) do
-      add :project_id, references(:projects)
-      add :user_id, references(:users)
+      add :project_id, references(:projects), null: false
+      add :user_id, references(:users), null: false
+
+      timestamps()
     end
 
     project_user_type_create_query =

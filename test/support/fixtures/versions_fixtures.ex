@@ -5,11 +5,6 @@ defmodule TextServer.VersionsFixtures do
   """
 
   @doc """
-  Generate a unique version slug.
-  """
-  def unique_version_slug, do: "some slug#{System.unique_integer([:positive])}"
-
-  @doc """
   Generate a unique version urn.
   """
   def unique_version_urn, do: "some urn#{System.unique_integer([:positive])}"
@@ -22,12 +17,21 @@ defmodule TextServer.VersionsFixtures do
       attrs
       |> Enum.into(%{
         description: "some description",
-        slug: unique_version_slug(),
-        title: "some title",
-        urn: unique_version_urn()
+        label: "some title",
+        urn: unique_version_urn(),
+        version_type: version_type(),
+        work_id: work_fixture().id
       })
       |> TextServer.Versions.create_version()
 
     version
+  end
+
+  defp version_type() do
+    Enum.random([:commentary, :edition, :translation])
+  end
+
+  defp work_fixture() do
+    TextServer.WorksFixtures.work_fixture()
   end
 end

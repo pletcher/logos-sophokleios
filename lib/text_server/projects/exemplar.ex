@@ -3,8 +3,8 @@ defmodule TextServer.Projects.Exemplar do
   import Ecto.Changeset
 
   schema "project_exemplars" do
-    field :exemplar_id, :id
-    field :project_id, :id
+    belongs_to :exemplar, TextServer.Exemplars.Exemplar
+    belongs_to :project, TextServer.Projects.Project
 
     timestamps()
   end
@@ -13,6 +13,7 @@ defmodule TextServer.Projects.Exemplar do
   def changeset(exemplar, attrs) do
     exemplar
     |> cast(attrs, [:exemplar_id, :project_id])
+    |> validate_required([:exemplar_id, :project_id])
     |> assoc_constraint(:exemplar)
     |> assoc_constraint(:project)
   end

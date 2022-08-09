@@ -11,8 +11,10 @@ defmodule TextServer.ProjectsFixtures do
     {:ok, project} =
       attrs
       |> Enum.into(%{
+        created_by_id: created_by_fixture().id,
         description: "some description",
-        domain: "some domain"
+        domain: "domain",
+        title: "some title"
       })
       |> TextServer.Projects.create_project()
 
@@ -20,14 +22,21 @@ defmodule TextServer.ProjectsFixtures do
   end
 
   @doc """
-  Generate a exemplar.
+  Generate a project_exemplar.
   """
-  def exemplar_fixture(attrs \\ %{}) do
-    {:ok, exemplar} =
+  def project_exemplar_fixture(attrs \\ %{}) do
+    exemplar = TextServer.ExemplarsFixtures.exemplar_fixture()
+    project = project_fixture()
+
+    {:ok, project_exemplar} =
       attrs
-      |> Enum.into(%{})
+      |> Enum.into(%{exemplar_id: exemplar.id, project_id: project.id})
       |> TextServer.Projects.create_exemplar()
 
-    exemplar
+    project_exemplar
+  end
+
+  defp created_by_fixture() do
+    TextServer.AccountsFixtures.user_fixture()
   end
 end

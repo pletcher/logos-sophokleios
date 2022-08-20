@@ -5,8 +5,10 @@ defmodule TextServer.ProjectsTest do
 
   describe "project" do
     alias TextServer.Projects.Project
+    alias TextServer.Projects.Exemplar, as: ProjectExemplar
 
     import TextServer.AccountsFixtures
+    import TextServer.ExemplarsFixtures
     import TextServer.ProjectsFixtures
 
     @invalid_attrs %{description: nil, domain: "some domain", title: nil}
@@ -41,6 +43,25 @@ defmodule TextServer.ProjectsTest do
 
     test "create_project/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Projects.create_project(@invalid_attrs)
+    end
+
+    test "add_exemplars/2 with invalid data returns list of error changesets" do
+      project = project_fixture()
+      exemplar_ids = [1, 2, 3]
+      errors = Projects.add_exemplars(project, exemplar_ids)
+
+      Enum.each(errors, fn e ->
+        assert {:error, %Ecto.Changeset{}} = e
+      end)
+    end
+
+    test "add_exemplars/2 with valid data returns a list of ProjectExemplars" do
+      project = project_fixture()
+      exemplar = exemplar_fixture()
+
+      Enum.each(Projects.add_exemplars(project, [exemplar.id]), fn pe ->
+      	assert {:ok, %ProjectExemplar{}} = pe
+      end)
     end
 
     test "update_project/2 with valid data updates the project" do

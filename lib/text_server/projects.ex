@@ -7,6 +7,7 @@ defmodule TextServer.Projects do
   alias TextServer.Repo
 
   alias TextServer.Projects.Project
+  alias TextServer.Projects.Exemplar, as: ProjectExemplar
 
   @doc """
   Returns the list of project.
@@ -53,6 +54,26 @@ defmodule TextServer.Projects do
     %Project{}
     |> Project.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Adds exemplars to a project. The exemplars must already exist.
+
+  ## Examples
+
+  		iex> add_exemplars(project, [1, 2])
+  		{:ok, %Project{}}
+  """
+  def add_exemplars(project, exemplar_ids \\ []) do
+    exemplar_ids
+    |> Enum.map(fn ex_id ->
+      %ProjectExemplar{}
+      |> ProjectExemplar.changeset(%{
+        project_id: project.id,
+        exemplar_id: ex_id
+      })
+      |> Repo.insert()
+    end)
   end
 
   @doc """

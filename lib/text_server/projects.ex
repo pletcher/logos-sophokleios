@@ -6,8 +6,12 @@ defmodule TextServer.Projects do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
+  alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects.Project
   alias TextServer.Projects.Exemplar, as: ProjectExemplar
+  alias TextServer.TextGroups.TextGroup
+  alias TextServer.Versions.Version
+  alias TextServer.Works.Work
 
   @doc """
   Returns the list of project.
@@ -57,12 +61,29 @@ defmodule TextServer.Projects do
   end
 
   @doc """
-  Adds exemplars to a project. The exemplars must already exist.
+  Adds all exemplars of a collection to a project. Returns list of ProjectExemplars.
+
+  ## Examples
+
+  		iex> add_work(project, 1)
+  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  """
+  def add_collection(project, collection_id) do
+    text_group_ids =
+      from(t in TextGroup, where: t.collection_id == ^collection_id, select: [:id])
+      |> Repo.all()
+      |> Enum.map(fn tg -> tg.id end)
+
+    add_text_groups(project, text_group_ids)
+  end
+
+  @doc """
+  Adds exemplars to a project.
 
   ## Examples
 
   		iex> add_exemplars(project, [1, 2])
-  		{:ok, %Project{}}
+  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
   """
   def add_exemplars(project, exemplar_ids \\ []) do
     exemplar_ids
@@ -74,6 +95,49 @@ defmodule TextServer.Projects do
       })
       |> Repo.insert()
     end)
+  end
+
+  @doc """
+  Adds all exemplars of a text_group to a project. Returns list of ProjectExemplars.
+
+  ## Examples
+
+  		iex> add_work(project, [1])
+  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  """
+  def add_text_groups(project, text_group_ids) do
+  	work_ids =
+  	  from(w in Work, where: w.text_group_id in ^text_group_ids, select: [:id])
+  	  |> Repo.all()
+  	  |> Enum.map(fn w -> w.id end)
+
+  	add_works(project, work_ids)
+  end
+
+  def add_versions(project, version_ids) do
+  	exemplar_ids =
+  		from(e in Exemplar, where: e.version_id in ^ version_ids, select: [:id])
+  		|> Repo.all()
+  		|> Enum.map(fn e -> e.id end)
+
+  	add_exemplars(project, exemplar_ids)
+  end
+
+  @doc """
+  Adds all exemplars of a work to a project. Returns list of ProjectExemplars.
+
+  ## Examples
+
+  		iex> add_work(project, 1)
+  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  """
+  def add_works(project, work_ids) do
+  	version_ids =
+  		from(v in Version, where: v.work_id in ^work_ids, select: [:id])
+  		|> Repo.all()
+  		|> Enum.map(fn v -> v.id end)
+
+  	add_versions(project, version_ids)
   end
 
   @doc """

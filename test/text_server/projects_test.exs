@@ -4,8 +4,14 @@ defmodule TextServer.ProjectsTest do
   alias TextServer.Projects
 
   describe "project" do
+    import Ecto.Query, warn: false
+    alias TextServer.Repo
+
     alias TextServer.Projects.Project
     alias TextServer.Projects.Exemplar, as: ProjectExemplar
+    alias TextServer.TextGroups.TextGroup
+    alias TextServer.Versions.Version
+    alias TextServer.Works.Work
 
     import TextServer.AccountsFixtures
     import TextServer.ExemplarsFixtures
@@ -45,6 +51,33 @@ defmodule TextServer.ProjectsTest do
       assert {:error, %Ecto.Changeset{}} = Projects.create_project(@invalid_attrs)
     end
 
+    test "add_collection/2 with valid data returns a list of ProjectExemplars" do
+      project = project_fixture()
+      exemplars = [exemplar_fixture(), exemplar_fixture()]
+      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+
+      work_ids =
+        from(v in Version, where: v.id in ^version_ids, select: [:work_id])
+        |> Repo.all()
+        |> Enum.map(fn v -> v.work_id end)
+
+      text_group_ids =
+        from(w in Work, where: w.id in ^work_ids, select: [:text_group_id])
+        |> Repo.all()
+        |> Enum.map(fn w -> w.text_group_id end)
+
+      collection_ids =
+      	from(t in TextGroup, where: t.id in ^text_group_ids, select: [:collection_id])
+      	|> Repo.all()
+      	|> Enum.map(fn t -> t.collection_id end)
+
+      Enum.each(collection_ids, fn c_id ->
+      	Enum.each(Projects.add_collection(project, c_id), fn pe ->
+      		assert {:ok, %ProjectExemplar{}} = pe
+      	end)
+      end)
+    end
+
     test "add_exemplars/2 with invalid data returns list of error changesets" do
       project = project_fixture()
       exemplar_ids = [1, 2, 3]
@@ -60,7 +93,52 @@ defmodule TextServer.ProjectsTest do
       exemplar = exemplar_fixture()
 
       Enum.each(Projects.add_exemplars(project, [exemplar.id]), fn pe ->
-      	assert {:ok, %ProjectExemplar{}} = pe
+        assert {:ok, %ProjectExemplar{}} = pe
+      end)
+    end
+
+    test "add_text_groups/2 with valid data returns a list of ProjectExemplars" do
+      project = project_fixture()
+      exemplars = [exemplar_fixture(), exemplar_fixture()]
+      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+
+      work_ids =
+        from(v in Version, where: v.id in ^version_ids, select: [:work_id])
+        |> Repo.all()
+        |> Enum.map(fn v -> v.work_id end)
+
+      text_group_ids =
+        from(w in Work, where: w.id in ^work_ids, select: [:text_group_id])
+        |> Repo.all()
+        |> Enum.map(fn w -> w.text_group_id end)
+
+      Enum.each(Projects.add_text_groups(project, text_group_ids), fn pe ->
+        assert {:ok, %ProjectExemplar{}} = pe
+      end)
+    end
+
+    test "add_versions/2 with valid data returns a list of ProjectExemplars" do
+      project = project_fixture()
+      exemplars = [exemplar_fixture(), exemplar_fixture()]
+      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+
+      Enum.each(Projects.add_versions(project, version_ids), fn pe ->
+        assert {:ok, %ProjectExemplar{}} = pe
+      end)
+    end
+
+    test "add_works/2 with valid data returns a list of ProjectExemplars" do
+      project = project_fixture()
+      exemplars = [exemplar_fixture(), exemplar_fixture()]
+      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+
+      work_ids =
+        from(v in Version, where: v.id in ^version_ids, select: [:work_id])
+        |> Repo.all()
+        |> Enum.map(fn v -> v.work_id end)
+
+      Enum.each(Projects.add_works(project, work_ids), fn pe ->
+        assert {:ok, %ProjectExemplar{}} = pe
       end)
     end
 

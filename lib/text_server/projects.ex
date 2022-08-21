@@ -9,6 +9,7 @@ defmodule TextServer.Projects do
   alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects.Project
   alias TextServer.Projects.Exemplar, as: ProjectExemplar
+  alias TextServer.Projects.User, as: ProjectUser
   alias TextServer.TextGroups.TextGroup
   alias TextServer.Versions.Version
   alias TextServer.Works.Work
@@ -43,21 +44,49 @@ defmodule TextServer.Projects do
   def get_project!(id), do: Repo.get!(Project, id)
 
   @doc """
-  Creates a project.
+  Creates a project and assigns the passed-in user (generally
+  the current_user) as an admin by creating a %ProjectUser{project_user_type: :admin}
 
   ## Examples
 
-      iex> create_project(%{field: value})
+      iex> create_project(%User{}, %{field: value})
       {:ok, %Project{}}
 
       iex> create_project(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_project(attrs \\ %{}) do
-    %Project{}
-    |> Project.changeset(attrs)
-    |> Repo.insert()
+  def create_project(user, attrs \\ %{}) do
+  	Repo.transaction(fn repo ->
+  		project = %Project{created_by_id: user.id}
+  		|> Project.changeset(attrs)
+  		|> repo.insert!()
+
+  		project_user_attrs = %{
+  			project_id: project.id,
+  			project_user_type: :admin,
+  			user_id: user.id
+  		}
+
+  		_project_user = %ProjectUser{}
+  		|> ProjectUser.changeset(project_user_attrs)
+  		|> repo.insert!()
+
+  		project
+  	end)
+  end
+
+  @doc """
+  Fetches projects created by the given user.
+
+  ## Examples
+
+  		iex> created_by(%User{id: 1})
+  		{:ok, [%Project{}]}
+  """
+  def created_by(user) do
+  	from(p in Project, where: p.created_by_id == ^user.id)
+  	|> Repo.all()
   end
 
   @doc """

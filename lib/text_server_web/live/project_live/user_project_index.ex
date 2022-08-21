@@ -3,7 +3,7 @@ defmodule TextServerWeb.ProjectLive.UserProjectIndex do
 
   alias TextServer.Accounts
   alias TextServer.Projects
-  alias TextServer.Projects.Project
+  alias TextServerWeb.ProjectLive.ProjectComponents
 
   @impl true
   def mount(_params, _session, socket) do

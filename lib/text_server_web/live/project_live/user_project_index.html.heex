@@ -14,6 +14,12 @@
     </.modal>
   <% end %>
 
+  <%= for project <- @project_collection do %>
+  	<div class="mt-6 col-auto grid grid-cols-1 gap-y-10 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+	  	<ProjectComponents.card project={project} url={Routes.project_show_path(@socket, :show, project)} />
+	  </div>
+  <% end %>
+
   <%= if length(@project_collection) == 0 and @current_user do %>
     <div class="py-8 max-w-md w-full">
       It looks like you haven't created any projects yet.

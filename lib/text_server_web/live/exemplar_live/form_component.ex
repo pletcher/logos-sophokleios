@@ -11,12 +11,11 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
      socket
      |> assign(assigns)
      |> assign(:changeset, changeset)
-	   |> assign(:uploaded_files, [])
 	   |> allow_upload(:exemplar_file, accept: ~w(.docx .xml), max_entries: 1)}
   end
 
   @impl true
-  def handle_event("validate", %{"exemplar" => exemplar_params}, socket) do
+  def handle_event("validate", %{"exemplar" => exemplar_params} = params, socket) do
     changeset =
       socket.assigns.exemplar
       |> Exemplars.change_exemplar(exemplar_params)

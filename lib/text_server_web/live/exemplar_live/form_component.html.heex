@@ -52,12 +52,9 @@
 		</section>
 		<section class="relative">
 			<div
-				class="hidden cursor-pointer md:flex border border-dashed border-slate-400 md:h-full items-center justify-center rounded-md"
-				phx-drop-target={@uploads.exemplar_file.ref}>
-				<div class="font-medium text-sm text-center text-stone-400">Drop file here to upload</div>
-			</div>
-			<div class="mt-6">
-				<%= live_file_input @uploads.exemplar_file %>
+				class="md:border md:border-dashed border-slate-400 flex h-full items-center justify-center mt-6 md:mt-0 rounded-md" id="exemplar-drop-zone" phx-drop-target={@uploads.exemplar_file.ref} phx-hook="DragHook">
+				<%= live_file_input @uploads.exemplar_file, class: "h-px w-px" %>
+				<label for={@uploads.exemplar_file.ref} class="cursor-pointer font-medium text-sm text-center text-stone-400"><span class="hover:text-stone-600 hover:font-semibold">Choose an exemplar file</span><span class="hidden md:inline"> or drag it here</span></label>
 			</div>
 		</section>
 		<div class="float-left mt-6 w-full sm:col-span-1">

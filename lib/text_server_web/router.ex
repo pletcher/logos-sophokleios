@@ -38,7 +38,7 @@ defmodule TextServerWeb.Router do
       live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
       live "/exemplars", ExemplarLive.Index, :index
-      live "/exemplars/new", ExemplarLive.Index, :new
+      live "/exemplars/new", ExemplarLive.New, :new
       live "/exemplars/:id/edit", ExemplarLive.Index, :edit
 
       live "/exemplars/:id", ExemplarLive.Show, :show
@@ -162,7 +162,7 @@ defmodule TextServerWeb.Router do
     live_session :authenticated, on_mount: TextServerWeb.UserAuthLive do
       live "/:user_id/projects/new", ProjectLive.New, :new
       live "/projects/:id/edit", ProjectLive.Edit, :edit
-      live "/projects/:id/exemplars", ProjectLive.EditExemplars, :edit
+      live "/projects/:id/exemplars/edit", ProjectLive.EditExemplars, :edit
     end
   end
 

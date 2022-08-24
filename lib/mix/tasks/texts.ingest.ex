@@ -84,7 +84,7 @@ defmodule Mix.Tasks.Texts.Ingest do
             :crypto.hash(:md5, Enum.to_list(file_stream)) |> Base.encode16(case: :lower),
           filename: f,
           header: header_data,
-          structure: Enum.join(ref_levels || ["line"], "."),
+          structure: Enum.join(ref_levels, "."),
           language_id: language_id,
           title: get_content_from_tag(header_data, :title),
           tei_header: %{
@@ -310,7 +310,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     works_and_versions = create_works_and_versions(works_data, collection)
 
     versions =
-      Enum.flat_map(works_and_versions || [], fn wvs -> Map.get(wvs, :versions, []) end)
+      Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
 
     versions =
       if Enum.count(versions) == 0 do
@@ -464,7 +464,7 @@ defmodule Mix.Tasks.Texts.Ingest do
               Map.put(work_attrs, :text_group_id, text_group.id)
             )
           else
-            text_group =
+            {:ok, text_group} =
               TextServer.TextGroups.find_or_create_text_group(%{
                 collection_id: collection.id,
                 title: "Orphaned Work Parent Group",
@@ -518,7 +518,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     {:ok, collection} = TextServer.Collections.find_or_create_collection(collection_attrs)
 
     if File.dir?(json_dir = Path.join(dest, "cltk_json")) do
-      # ingest_json(json_dir, collection)
+      ingest_json(json_dir, collection)
     else
       ingest_xml(Path.join(dest, "data"), collection)
     end

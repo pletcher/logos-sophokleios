@@ -22,6 +22,21 @@ defmodule TextServer.Exemplars do
   end
 
   @doc """
+  Returns a list of exemplars that have not been added as
+  ProjectExemplars in the given list of `exemplar_ids`.
+
+  ## Examples
+
+  		iex> list_exemplars_except([%ProjectExemplar{}, ...])
+  		[%Exemplar{}, ...]
+  """
+  def list_exemplars_except(exemplar_ids, pagination_params \\ []) do
+    Exemplar
+    |> where([e], e.id not in ^exemplar_ids)
+    |> Repo.paginate(pagination_params)
+  end
+
+  @doc """
   Gets a single exemplar.
 
   Raises `Ecto.NoResultsError` if the Exemplar does not exist.

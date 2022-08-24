@@ -1,32 +1,77 @@
-<div>
-  <h2><%= @title %></h2>
+<article class="container mx-auto min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+	<.form
+		let={f}
+		for={@changeset}
+		id="exemplar-form"
+		class="w-full md:gap-x-4 md:grid md:grid-cols-2"
+		phx-target={@myself}
+		phx-change="validate"
+		phx-submit="save"
+	>
+		<section class="relative">
+			<h2 class="font-semibold text-l"><%= @title %></h2>
+			<div class="rounded-md -space-y-px">
+				<div>
+					<%= label(f, :title, class: "block mb-1") %>
+					<%= text_input(f, :title,
+						required: true,
+						class:
+						"appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
+						placeholder: "Titulus exemplaris"
+						) %>
+				</div>
+				<%= error_tag(f, :title) %>
+			</div>
 
-  <.form
-    let={f}
-    for={@changeset}
-    id="exemplar-form"
-    phx-target={@myself}
-    phx-change="validate"
-    phx-submit="save"
-  >
-    <%= label(f, :title) %>
-    <%= text_input(f, :title) %>
-    <%= error_tag(f, :title) %>
+			<div class="rounded-md shadow-sm -space-y-px">
+				<div>
+					<%= label(f, :description, class: "block mb-1") %>
+					<%= textarea(f, :description,
+						required: true,
+						class:
+						"appearance-none relative resize-none block w-full p-3 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
+						placeholder: "Exemplar enim describemus in paucis verbis ...",
+						rows: 4
+					) %>
+				</div>
+				<%= error_tag(f, :description) %>
+			</div>
 
-    <%= label(f, :slug) %>
-    <%= text_input(f, :slug) %>
-    <%= error_tag(f, :slug) %>
-
-    <%= label(f, :description) %>
-    <%= text_input(f, :description) %>
-    <%= error_tag(f, :description) %>
-
-    <%= label(f, :urn) %>
-    <%= text_input(f, :urn) %>
-    <%= error_tag(f, :urn) %>
-
-    <div>
-      <%= submit("Save", phx_disable_with: "Saving...") %>
-    </div>
-  </.form>
-</div>
+			<div class="rounded-md shadow-sm -space-y-px">
+				<div>
+					<%= label(f, :urn, "URN", class: "block mb-1") %>
+					<%= text_input(f, :urn,
+						required: true,
+						class:
+						"appearance-none relative resize-none w-full py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
+						placeholder: "urn:cts:open-commentaries:pausanias:exemplar.eng-3"
+						) %>
+				</div>
+				<%= error_tag(f, :urn) %>
+			</div>
+		</section>
+		<section class="relative">
+			<div
+				class="hidden cursor-pointer md:flex border border-dashed border-slate-400 md:h-full items-center justify-center rounded-md"
+				phx-drop-target={@uploads.exemplar_file.ref}>
+				<div class="font-medium text-sm text-center text-stone-400">Drop file here to upload</div>
+			</div>
+			<div class="mt-6">
+				<%= live_file_input @uploads.exemplar_file %>
+			</div>
+		</section>
+		<div class="float-left mt-6 w-full sm:col-span-1">
+			<button
+				type="submit"
+				class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-stone-600 hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"
+			>
+				<span class="absolute left-0 inset-y-0 flex items-center pl-3">
+					<!-- Heroicon name: outline/document (https://heroicons.com/) -->
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+					</svg>
+				</span> Upload exemplar
+			</button>
+		</div>
+	</.form>
+</article>

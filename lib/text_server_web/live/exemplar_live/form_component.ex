@@ -4,24 +4,47 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   alias TextServer.Exemplars
 
   @impl true
+  def mount(socket) do
+    {:ok,
+     socket
+     |> allow_upload(:exemplar_file,
+       accept: ~w(.docx .xml),
+       external: &presign_upload/2,
+       max_entries: 1
+     )
+     |> assign(:exemplar_file_candidate, nil)}
+  end
+
+  @impl true
   def update(%{exemplar: exemplar} = assigns, socket) do
     changeset = Exemplars.change_exemplar(exemplar)
 
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)
-	   |> allow_upload(:exemplar_file, accept: ~w(.docx .xml), max_entries: 1)}
+     |> assign(:changeset, changeset)}
   end
 
   @impl true
-  def handle_event("validate", %{"exemplar" => exemplar_params} = params, socket) do
+  def handle_event("validate", %{"exemplar" => exemplar_params} = _params, socket) do
     changeset =
       socket.assigns.exemplar
       |> Exemplars.change_exemplar(exemplar_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    entries = socket.assigns.uploads.exemplar_file.entries
+
+    exemplar_file_candidate =
+      if Enum.count(entries) > 0 do
+        Enum.fetch!(entries, 0)
+      else
+        nil
+      end
+
+    {:noreply,
+     socket
+     |> assign(:changeset, changeset)
+     |> assign(:exemplar_file_candidate, exemplar_file_candidate)}
   end
 
   def handle_event("save", %{"exemplar" => exemplar_params}, socket) do
@@ -52,5 +75,28 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
+  end
+
+  defp presign_upload(entry, socket) do
+    uploads = socket.assigns.uploads
+    bucket = "ktemata"
+    key = "pausanias/exemplars/#{entry.client_name}"
+
+    config = %{
+      region: "nyc3",
+      access_key_id: System.fetch_env!("S3_ACCESS_KEY"),
+      secret_access_key: System.fetch_env!("S3_SECRET_KEY")
+    }
+
+    {:ok, fields} =
+      Vendor.SimpleS3Upload.sign_form_upload(config, bucket,
+        key: key,
+        content_type: entry.client_type,
+        max_file_size: uploads[entry.upload_config].max_file_size,
+        expires_in: :timer.hours(1)
+      )
+
+    meta = %{uploader: "S3", key: key, url: "https://ktemata.nyc3.digitaloceanspaces.com", fields: fields}
+    {:ok, meta, socket}
   end
 end

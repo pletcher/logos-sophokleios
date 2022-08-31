@@ -1,7 +1,6 @@
 defmodule TextServerWeb.ExemplarLive.New do
 	use TextServerWeb, :live_view
 
-	alias TextServer.Exemplars
 	alias TextServer.Exemplars.Exemplar
 
 	@impl true

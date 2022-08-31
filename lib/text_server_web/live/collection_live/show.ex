@@ -5,7 +5,7 @@ defmodule TextServerWeb.CollectionLive.Show do
   alias TextServer.TextGroups
 
   @impl true
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
     {:ok, socket}
   end
 
@@ -23,12 +23,12 @@ defmodule TextServerWeb.CollectionLive.Show do
     assigns = [
       conn: socket,
       collection: Collections.get_collection!(collection_id),
-      page_number: page_number || 0,
-      page_size: page_size || 0,
+      page_number: page_number,
+      page_size: page_size,
       page_title: page_title(socket.assigns.live_action),
       text_groups: entries,
-      total_entries: total_entries || 0,
-      total_pages: total_pages || 0
+      total_entries: total_entries,
+      total_pages: total_pages
     ]
 
     {:noreply, assign(socket, assigns)}

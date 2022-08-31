@@ -74,11 +74,7 @@ defmodule TextServer.Ingestion do
         cref_pattern_units
       end
 
-    if is_nil(units) do
-      ["line"]
-    else
-      units
-    end
+    units
   end
 
   defp get_cref_pattern_units(header_data) do

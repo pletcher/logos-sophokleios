@@ -1,4 +1,4 @@
-<article class="container mx-auto min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<article>
 	<.form
 		let={f}
 		for={@changeset}
@@ -8,11 +8,48 @@
 		phx-change="validate"
 		phx-submit="save"
 	>
-		<section class="relative">
-			<h2 class="font-semibold text-l"><%= @title %></h2>
+		<div class="md:col-span-2 sm:col-span-1 py-12 px-4 sm:px-6 lg:px-8">
+			<div class="w-full">
+				<label class="block mb-1" for="work_search" id="work_search-label">What work is this an exemplar of?</label>
+				<input
+					class=
+						"appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm"
+					id="work_search-input"
+					list="work_search_results"
+					name="work_search"
+					phx-change="search_works"
+					phx-debounce="500"
+					placeholder="Start typing to search for a work"
+					type="text"
+				/>
+			</div>
+
+			<datalist id="work_search_results">
+				<%= for work <- @works do %>
+					<option value={work.english_title} />
+				<% end %>
+			</datalist>
+		</div>
+
+		<div class="md:col-span-2 sm:col-span-1 py-12 px-4 sm:px-6 lg:px-8">
+			<div class="w-full">
+				<label class="block mb-1" for="version_type">Is this exemplar an edition, translation, or commentary?</label>
+				<select
+					class=
+						"appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm"
+					id="version_type"
+				>
+					<option value="edition">Edition</option>
+					<option value="translation">Translation</option>
+					<option value="commentary">Commentary</option>
+				</select>
+			</div>
+		</div>
+
+		<section class="relative px-4 sm:px-6 lg:px-8">
 			<div class="rounded-md -space-y-px">
 				<div>
-					<%= label(f, :title, class: "block mb-1") %>
+					<%= label(f, :title, "Exemplar title", class: "block mb-1") %>
 					<%= text_input(f, :title,
 						required: true,
 						class:
@@ -25,7 +62,7 @@
 
 			<div class="rounded-md shadow-sm -space-y-px">
 				<div>
-					<%= label(f, :description, class: "block mb-1") %>
+					<%= label(f, :description, "Exemplar description", class: "block mb-1") %>
 					<%= textarea(f, :description,
 						required: true,
 						class:
@@ -39,7 +76,7 @@
 
 			<div class="rounded-md shadow-sm -space-y-px">
 				<div>
-					<%= label(f, :urn, "URN", class: "block mb-1") %>
+					<%= label(f, :urn, "Exemplar URN", class: "block mb-1") %>
 					<%= text_input(f, :urn,
 						required: true,
 						class:
@@ -50,7 +87,8 @@
 				<%= error_tag(f, :urn) %>
 			</div>
 		</section>
-		<section class="relative">
+
+		<section class="relative px-4 sm:px-6 lg:px-8">
 			<div
 				class="md:border md:border-dashed border-slate-400 flex h-full items-center justify-center mt-6 md:mt-0 rounded-md" id="exemplar-drop-zone"
 				phx-drop-target={@uploads.exemplar_file.ref}
@@ -72,7 +110,8 @@
 				<% end %>
 			</div>
 		</section>
-		<div class="float-left mt-6 w-full sm:col-span-1">
+
+		<div class="mt-6 sm:col-span-1 container mx-auto px-4 sm:px-6 lg:px-8">
 			<button
 				type="submit"
 				class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-stone-600 hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"

@@ -4,21 +4,31 @@ defmodule TextServer.Works do
   """
 
   import Ecto.Query, warn: false
-  alias TextServer.Repo
 
+  alias TextServer.Repo
   alias TextServer.Works.Work
 
-  @doc """
-  Returns the list of works.
+  def list_works(params \\ []) do
+    Work |> Repo.paginate(params)
+  end
 
-  ## Examples
+  def search_works(term, params \\ []) do
+  	term = Regex.replace(~r/[^[:word:][:space:]]/u, term, "")
 
-      iex> list_works()
-      [%Work{}, ...]
-
-  """
-  def list_works do
-    Repo.all(Work)
+    Work
+    |> where(
+      [q],
+      fragment("? @@ websearch_to_tsquery('english', ?)", q._search, ^term)
+    )
+    |> order_by([q],
+      asc:
+        fragment(
+          "ts_rank_cd(?, websearch_to_tsquery('english', ?), 4)",
+          q._search,
+          ^term
+        )
+    )
+    |> Repo.paginate(params)
   end
 
   @doc """
@@ -61,6 +71,15 @@ defmodule TextServer.Works do
     case Repo.one(query) do
       nil -> create_work(attrs)
       work -> {:ok, work}
+    end
+  end
+
+  def upsert_work(attrs \\ %{}) do
+    query = from(w in Work, where: w.urn == ^attrs[:urn])
+
+    case Repo.one(query) do
+      nil -> create_work(attrs)
+      work -> update_work(work, attrs)
     end
   end
 

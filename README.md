@@ -68,6 +68,24 @@ section in Pausanias).
 
 Allow writing blog posts on commentaries in progress
 
+## TODO
+
+- Global find-and-replace
+- Exemplar diffing (where in the pipeline?)
+- Need to support uploading multiple docxs
+- Show that so-and-so modified a text (important scholarly principle)
+- Different approaches for translations, editions, and commentaries
+  - Accommodate all three together, but don't enforce it
+  - Translation could be secondary to edition and commentary
+  - If the commentary is keyed to the original text (edition), translation is secondary
+  - If the commentary is keyed to the translation, the edition is secondary
+- Let the reader find the alignment between edition and translation
+- Let the commenter point to a reference text
+- Prioritize commentaries/comments --- just bring up comments
+- Aim for most people to create translations and commentaries from scratch on the platform
+- Use Perseus commentaries
+  - Pre-ingest things to show what people can do on the platform
+
 ## Learn more
 
   * Official website: https://www.phoenixframework.org/

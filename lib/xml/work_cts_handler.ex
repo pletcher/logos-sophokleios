@@ -115,7 +115,7 @@ defmodule Xml.WorkCtsHandler do
   end
 
   defp handle_title(_attributes, {_current_element, works}) do
-    {:ok, {:title, works}}
+    {:ok, {:english_title, works}}
   end
 
   defp handle_translation(attributes, {_current_element, works}) do

@@ -460,7 +460,7 @@ defmodule Mix.Tasks.Texts.Ingest do
           work_attrs = Map.take(w, Map.keys(TextServer.Works.Work.__struct__()))
 
           if text_group != nil do
-            TextServer.Works.find_or_create_work(
+            TextServer.Works.upsert_work(
               Map.put(work_attrs, :text_group_id, text_group.id)
             )
           else
@@ -472,7 +472,7 @@ defmodule Mix.Tasks.Texts.Ingest do
               })
 
             {:ok, work} =
-              TextServer.Works.find_or_create_work(
+              TextServer.Works.upsert_work(
                 Map.put(work_attrs, :text_group_id, text_group.id)
               )
 

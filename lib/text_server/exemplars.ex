@@ -53,7 +53,7 @@ defmodule TextServer.Exemplars do
   def get_exemplar!(id), do: Repo.get!(Exemplar, id)
 
   @doc """
-  Creates a exemplar.
+  Creates an exemplar.
 
   ## Examples
 
@@ -70,6 +70,28 @@ defmodule TextServer.Exemplars do
     |> Repo.insert()
   end
 
+  @doc """
+  Creates a user-uploaded exemplar with its associated file.
+
+  Wraps both insertions in a transaction.
+  ## Examples
+
+      iex> create_exemplar_with_file(%{field: value}, %{field: value})
+      {:ok, %Exemplar{}}
+
+      iex> create_exemplar_with_file(%{field: bad_value}, %{field: value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_exemplar_with_file(exemplar_attrs, file_attrs) do
+    Repo.transaction(fn ->
+      exemplar = %Exemplar{} |> Exemplar.changeset(exemplar_attrs) |> Repo.insert!()
+      _file = exemplar |> Ecto.build_assoc(:file, file_attrs) |> Repo.insert!()
+
+      {:ok, exemplar}
+    end)
+  end
+
   def find_or_create_exemplar(attrs) do
     query = from(e in Exemplar, where: e.urn == ^attrs[:urn])
 
@@ -80,7 +102,7 @@ defmodule TextServer.Exemplars do
   end
 
   @doc """
-  Updates a exemplar.
+  Updates an exemplar.
 
   ## Examples
 
@@ -98,7 +120,31 @@ defmodule TextServer.Exemplars do
   end
 
   @doc """
-  Deletes a exemplar.
+  Updates an exemplar and its associated file.
+
+  Wraps updates in a transaction.
+
+  ## Examples
+
+      iex> update_exemplar(exemplar, %{field: new_value})
+      {:ok, %Exemplar{}}
+
+      iex> update_exemplar(exemplar, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+
+  def update_exemplar_with_file(%Exemplar{} = exemplar, exemplar_attrs, file_attrs) do
+    Repo.transaction(fn ->
+      updated_exemplar = exemplar |> Exemplar.changeset(exemplar_attrs) |> Repo.update!()
+      _file = updated_exemplar |> Ecto.build_assoc(:file, file_attrs) |> Repo.update!()
+
+      {:ok, updated_exemplar}
+    end)
+  end
+
+  @doc """
+  Deletes an exemplar.
 
   ## Examples
 

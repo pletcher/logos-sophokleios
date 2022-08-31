@@ -23,4 +23,12 @@ defmodule TextServer.Ecto.Query do
       )
     )
   end
+
+  def split_text_for_tsquery(text) do
+    String.split(text, " ", trim: true)
+    |> Enum.reject(fn text -> Regex.match?(~r/\(|\)\[|\]\{|\}/, text) end)
+    |> Enum.map(fn token -> token <> ":*" end)
+    |> Enum.intersperse(" & ")
+    |> Enum.join()
+  end
 end

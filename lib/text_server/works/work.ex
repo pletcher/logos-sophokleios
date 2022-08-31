@@ -7,6 +7,7 @@ defmodule TextServer.Works.Work do
     field :english_title, :string
     field :original_title, :string
     field :urn, :string
+    field :_search, TextServer.Ecto.Types.TsVector
 
     belongs_to :text_group, TextServer.TextGroups.TextGroup
 

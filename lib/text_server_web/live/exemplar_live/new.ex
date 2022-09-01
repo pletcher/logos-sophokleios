@@ -2,14 +2,17 @@ defmodule TextServerWeb.ExemplarLive.New do
   use TextServerWeb, :live_view
 
   alias TextServer.Exemplars.Exemplar
+  alias TextServer.Projects
+  alias TextServer.Repo
   alias TextServer.Works
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     {:ok,
      socket
-     |> assign(:exemplar, %Exemplar{})
+     |> assign(:exemplar, %Exemplar{} |> Repo.preload(:language))
      |> assign(:page_title, "Create exemplar")
+     |> assign(:project, get_project!(params["id"]))
      |> assign(:selected_work, nil)
      |> assign(:works, [])}
   end
@@ -34,5 +37,9 @@ defmodule TextServerWeb.ExemplarLive.New do
 
   def handle_event("reset_work_search", _params, socket) do
   	{:noreply, socket |> assign(:works, []) |> assign(:selected_work, nil)}
+  end
+
+  defp get_project!(id) do
+  	Projects.get_project!(id)
   end
 end

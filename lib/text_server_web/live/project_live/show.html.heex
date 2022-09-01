@@ -5,16 +5,16 @@
 				ζ
 			</Components.card>
 		</div>
-
-		<%= for exemplar <- @project.project_exemplars do %>
-			<Components.small_card item={exemplar} url="/" />
-		<% end %>
 	</section>
   <div class="p-4 max-w-md w-full">
   	<%= if length(@project.project_exemplars) == 0 do %>
 	    <p>
 	    	It looks like you haven't added any exemplars to this project yet.
 	    </p>
+	  <% end %>
+
+	  <%= for exemplar <- @project.project_exemplars do %>
+	  	<Components.small_card item={exemplar} url={Routes.exemplar_show_path(@socket, :show, exemplar)} />
 	  <% end %>
 
 	  <%= if @current_user do %>

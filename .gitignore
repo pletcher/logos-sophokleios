@@ -39,4 +39,4 @@ npm-debug.log
 .envrc
 .DS_Store
 
-priv/static/uploads/exemplar_files/*.{docx,xml}
+priv/static/uploads/exemplar_files/*

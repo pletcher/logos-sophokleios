@@ -41,7 +41,7 @@ defmodule TextServerWeb.Components do
             </h3>
           </div>
         </div>
-        <div class="flex flex-1 items-end justify-between text-sm">
+        <div class="flex flex-1 justify-between text-sm">
           <p class="text-sm text-gray-500"><%= item.description %></p>
         </div>
       </div>

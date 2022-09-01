@@ -7,6 +7,7 @@ defmodule TextServer.Exemplars do
   alias TextServer.Repo
 
   alias TextServer.Exemplars.Exemplar
+  alias TextServer.Projects.Exemplar, as: ProjectExemplar
 
   @doc """
   Returns the list of exemplars.
@@ -70,26 +71,20 @@ defmodule TextServer.Exemplars do
     |> Repo.insert()
   end
 
-  @doc """
-  Creates a user-uploaded exemplar with its associated file.
+  def create_exemplar(attrs, project) do
+	  Repo.transaction(fn ->
+	  	{:ok, exemplar} =
+	  	  %Exemplar{}
+	  	  |> Exemplar.changeset(attrs)
+	  	  |> Repo.insert()
 
-  Wraps both insertions in a transaction.
-  ## Examples
+	  	{:ok, _project_exemplar} =
+	  		%ProjectExemplar{}
+	  		|> ProjectExemplar.changeset(%{exemplar_id: exemplar.id, project_id: project.id})
+	  		|> Repo.insert()
 
-      iex> create_exemplar_with_file(%{field: value}, %{field: value})
-      {:ok, %Exemplar{}}
-
-      iex> create_exemplar_with_file(%{field: bad_value}, %{field: value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_exemplar_with_file(exemplar_attrs, file_attrs) do
-    Repo.transaction(fn ->
-      exemplar = %Exemplar{} |> Exemplar.changeset(exemplar_attrs) |> Repo.insert!()
-      _file = exemplar |> Ecto.build_assoc(:file, file_attrs) |> Repo.insert!()
-
-      {:ok, exemplar}
-    end)
+	  	{:ok, exemplar}
+	  end)
   end
 
   def find_or_create_exemplar(attrs) do
@@ -117,30 +112,6 @@ defmodule TextServer.Exemplars do
     exemplar
     |> Exemplar.changeset(attrs)
     |> Repo.update()
-  end
-
-  @doc """
-  Updates an exemplar and its associated file.
-
-  Wraps updates in a transaction.
-
-  ## Examples
-
-      iex> update_exemplar(exemplar, %{field: new_value})
-      {:ok, %Exemplar{}}
-
-      iex> update_exemplar(exemplar, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-
-  def update_exemplar_with_file(%Exemplar{} = exemplar, exemplar_attrs, file_attrs) do
-    Repo.transaction(fn ->
-      updated_exemplar = exemplar |> Exemplar.changeset(exemplar_attrs) |> Repo.update!()
-      _file = updated_exemplar |> Ecto.build_assoc(:file, file_attrs) |> Repo.update!()
-
-      {:ok, updated_exemplar}
-    end)
   end
 
   @doc """

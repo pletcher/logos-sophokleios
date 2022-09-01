@@ -10,31 +10,35 @@
 	>
 		<div class="md:col-span-2 col-span-1 pt-6 px-4 sm:px-6 lg:px-8">
 			<div class="w-full">
-				<label class="block mb-1" for="version_type">Is this exemplar an commentary, edition, or translation?</label>
-				<select
-					class=
-						"appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm"
-					id="version_type"
-				>
-					<option value="commentary">Commentary</option>
-					<option value="edition" disabled>Edition</option>
-					<option value="translation" disabled>Translation</option>
-				</select>
+				<%= label(f, :version_type, "What kind of text is this exemplar?", class: "block mb-1") %>
+				<%= select(
+					f,
+					:version_type,
+					[
+						[key: "Commentary", value: "commentary"],
+						[key: "Edition", value: "edition", disabled: true],
+						[key: "Translation", value: "translation", disabled: true]
+					],
+					class: "appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm") %>
 			</div>
 		</div>
 
 		<div class="md:col-span-2 col-span-1 py-6 px-4 sm:px-6 lg:px-8">
 			<div class="w-full">
-				<label class="block mb-1" for="language">What language is the commentary in?</label>
-				<select
-					class=
-						"appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm"
-					id="language"
-				>
-					<option value="english">English</option>
-					<option value="latin" disabled>Latin</option>
-					<option value="greek" disabled>Greek</option>
-				</select>
+				<%= label(f, :language, "What language is the commentary in?", class: "block mb-1") %>
+				<%= select(
+					f,
+					:language,
+					[
+						[key: "English", value: "english"],
+						[key: "Latin", value: "latin", disabled: true],
+						[key: "Greek", value: "greek", disabled: true],
+						[key: "Spanish", value: "spanish", disabled: true],
+						[key: "French", value: "french", disabled: true],
+						[key: "German", value: "german", disabled: true],
+						[key: "Italian", value: "italian", disabled: true]
+					],
+					class: "appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm") %>
 			</div>
 		</div>
 

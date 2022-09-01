@@ -57,6 +57,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   def handle_event("save", %{"exemplar" => exemplar_params}, socket) do
     file_params =
       consume_uploaded_entries(socket, :exemplar_file, fn %{path: path}, _entry ->
+        # FIXME: (charles) Something is wrong with the name here, but the upload works
         dest =
           Path.join([
             :code.priv_dir(:text_server),
@@ -72,17 +73,21 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
         {:ok,
          %{
-           filename: dest,
-           filemd5hash: :crypto.hash(:md5, file_body) |> Base.encode16(case: :lower),
-           source: "@@exemplar/user_upload",
-           source_link:
+           "filename" => Path.basename(dest),
+           "filemd5hash" => :crypto.hash(:md5, file_body) |> Base.encode16(case: :lower),
+           "source" => "@@exemplar/user_upload",
+           "source_link" =>
              Routes.static_path(socket, "/uploads/exemplar_files/#{Path.basename(dest)}")
          }}
       end)
       |> List.first()
 
     unless is_nil(file_params) do
-      save_exemplar(socket, socket.assigns.action, exemplar_params, file_params)
+      save_exemplar(
+        socket,
+        socket.assigns.action,
+        exemplar_params |> Map.merge(file_params)
+      )
     else
       {:noreply, socket}
     end
@@ -90,11 +95,10 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
   # when we're updating an exemplar, let's assume that the work,
   # version, and language stay the same
-  defp save_exemplar(socket, :edit, exemplar_params, file_params) do
-    case Exemplars.update_exemplar_with_file(
+  defp save_exemplar(socket, :edit, exemplar_params) do
+    case Exemplars.update_exemplar(
            socket.assigns.exemplar,
-           exemplar_params,
-           file_params
+           exemplar_params
          ) do
       {:ok, _exemplar} ->
         {:noreply,
@@ -107,7 +111,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
     end
   end
 
-  defp save_exemplar(socket, :new, exemplar_params, file_params) do
+  defp save_exemplar(socket, :new, exemplar_params) do
     work = socket.assigns.work
 
     {:ok, version} =
@@ -123,11 +127,11 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
     language = Languages.get_language_by_slug(Map.get(exemplar_params, "language"))
 
-    case Exemplars.create_exemplar_with_file(
+    case Exemplars.create_exemplar(
            exemplar_params
-           |> Map.put(:version_id, version.id)
-           |> Map.put(:language_id, language.id),
-           file_params
+           |> Map.put("version_id", version.id)
+           |> Map.put("language_id", language.id),
+           socket.assigns.project
          ) do
       {:ok, _exemplar} ->
         {:noreply,

@@ -1,8 +1,24 @@
-<.live_component
-	module={TextServerWeb.ExemplarLive.FormComponent}
-	id={:new_exemplar}
-	title={@page_title}
-	action={@live_action}
-	exemplar={@exemplar}
-	return_to={Routes.exemplar_index_path(@socket, :index)}
-/>
+<article class="container mx-auto flex flex-col items-center">
+	<div class="w-full max-w-5xl py-12 px-4 sm:px-6 lg:px-8">
+		<.live_component
+			module={TextServerWeb.WorkLive.Search}
+			id={:work_search}
+			label="What work does this exemplar use?"
+			on_change="search_works"
+			on_reset="reset_work_search"
+			selected_work={@selected_work}
+			works={@works} />
+	</div>
+
+	<div class="w-full max-w-5xl">
+		<.live_component
+			module={TextServerWeb.ExemplarLive.FormComponent}
+			id={:new_exemplar}
+			title={@page_title}
+			action={@live_action}
+			exemplar={@exemplar}
+			work={@selected_work}
+			return_to={Routes.project_user_project_index_path(@socket, :index, @current_user)}
+		/>
+	</div>
+</article>

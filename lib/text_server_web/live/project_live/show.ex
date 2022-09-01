@@ -2,6 +2,8 @@ defmodule TextServerWeb.ProjectLive.Show do
   use TextServerWeb, :live_view
 
   alias TextServer.Projects
+  alias TextServerWeb.Components
+  alias TextServerWeb.Icons
 
   @impl true
   def mount(_params, _session, socket) do
@@ -9,13 +11,19 @@ defmodule TextServerWeb.ProjectLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _, socket) do
+  def handle_params(%{"id" => id}, uri, socket) do
+    %URI{
+    	authority: authority,
+    	scheme: scheme
+    } = URI.parse(uri)
+
+    project = Projects.get_project_with_exemplars(id)
+    project_url = "#{scheme}://#{project.domain}.#{authority}"
+
     {:noreply,
      socket
-     |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:project, Projects.get_project!(id))}
+     |> assign(:project_url, project_url)
+     |> assign(:page_title, project.title)
+     |> assign(:project, project)}
   end
-
-  defp page_title(:show), do: "Show Project"
-  defp page_title(:edit), do: "Edit Project"
 end

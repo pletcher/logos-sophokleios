@@ -60,7 +60,8 @@ defmodule TextServer.Versions do
   end
 
   def find_or_create_version(attrs \\ %{}) do
-    query = from(v in Version, where: v.urn == ^attrs[:urn])
+  	urn = Map.get(attrs, :urn, Map.get(attrs, "urn"))
+    query = from(v in Version, where: v.urn == ^urn)
 
     case Repo.one(query) do
       nil ->

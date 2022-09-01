@@ -6,6 +6,7 @@ defmodule TextServer.Works.Work do
     field :description, :string
     field :english_title, :string
     field :original_title, :string
+    field :title, :string, source: :english_title
     field :urn, :string
     field :_search, TextServer.Ecto.Types.TsVector
 

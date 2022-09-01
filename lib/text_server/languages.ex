@@ -37,6 +37,12 @@ defmodule TextServer.Languages do
   """
   def get_language!(id), do: Repo.get!(Language, id)
 
+  def get_language_by_slug(slug) do
+    query = from(l in Language, where: l.slug == ^slug)
+
+    Repo.one(query)
+  end
+
   @doc """
   Creates a language.
 

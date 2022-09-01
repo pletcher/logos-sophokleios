@@ -2,7 +2,10 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   use TextServerWeb, :live_component
 
   alias TextServer.Exemplars
-  alias TextServer.Works
+  alias TextServer.Languages
+  alias TextServer.Versions
+
+  alias TextServerWeb.Icons
 
   @impl true
   def mount(socket) do
@@ -12,8 +15,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
        accept: ~w(.docx .xml),
        max_entries: 1
      )
-     |> assign(:exemplar_file_candidate, nil)
-   	 |> assign(:works, [])}
+     |> assign(:exemplar_file_candidate, nil)}
   end
 
   @impl true
@@ -49,19 +51,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   end
 
   def handle_event("validate", _params, socket) do
-  	{:noreply, socket}
-  end
-
-  def handle_event("search_works", %{"work_search" => search_string}, socket) do
-  	page = Works.search_works(search_string)
-  	works = page.entries
-  	selected_work = Enum.find(works, fn w -> w.english_title == search_string end)
-
-  	if is_nil(selected_work) do
-	  	{:noreply, socket |> assign(:works, page.entries)}
-	  else
-	  	{:noreply, socket |> assign(:works, []) |> assign(:selected_work, selected_work)}
-	  end
+    {:noreply, socket}
   end
 
   def handle_event("save", %{"exemplar" => exemplar_params}, socket) do
@@ -78,14 +68,15 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
         file_body = File.read!(path)
 
-        File.write!(file_body, dest)
+        File.cp!(path, dest)
 
         {:ok,
          %{
            filename: dest,
            filemd5hash: :crypto.hash(:md5, file_body) |> Base.encode16(case: :lower),
            source: "@@exemplar/user_upload",
-           source_link: Routes.static_path(socket, "/uploads/exemplar_files/#{Path.basename(dest)}")
+           source_link:
+             Routes.static_path(socket, "/uploads/exemplar_files/#{Path.basename(dest)}")
          }}
       end)
       |> List.first()
@@ -97,6 +88,8 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
     end
   end
 
+  # when we're updating an exemplar, let's assume that the work,
+  # version, and language stay the same
   defp save_exemplar(socket, :edit, exemplar_params, file_params) do
     case Exemplars.update_exemplar_with_file(
            socket.assigns.exemplar,
@@ -115,7 +108,27 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   end
 
   defp save_exemplar(socket, :new, exemplar_params, file_params) do
-    case Exemplars.create_exemplar_with_file(exemplar_params, file_params) do
+    work = socket.assigns.work
+
+    {:ok, version} =
+      Versions.find_or_create_version(
+        exemplar_params
+        |> Map.take(["description", "urn"])
+        |> Enum.into(%{
+          "label" => Map.get(exemplar_params, "title"),
+          "version_type" => :commentary,
+          "work_id" => work.id
+        })
+      )
+
+    language = Languages.get_language_by_slug(Map.get(exemplar_params, "language"))
+
+    case Exemplars.create_exemplar_with_file(
+           exemplar_params
+           |> Map.put(:version_id, version.id)
+           |> Map.put(:language_id, language.id),
+           file_params
+         ) do
       {:ok, _exemplar} ->
         {:noreply,
          socket

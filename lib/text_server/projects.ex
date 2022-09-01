@@ -43,6 +43,12 @@ defmodule TextServer.Projects do
   """
   def get_project!(id), do: Repo.get!(Project, id)
 
+  def get_project_with_exemplars(id) do
+  	Project
+  	|> preload(:project_exemplars)
+  	|> Repo.get(id)
+  end
+
   @doc """
   Creates a project and assigns the passed-in user (generally
   the current_user) as an admin by creating a %ProjectUser{project_user_type: :admin}

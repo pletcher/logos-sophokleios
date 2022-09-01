@@ -2,7 +2,7 @@ defmodule TextServerWeb.ProjectLive.Index do
   use TextServerWeb, :live_view
 
   alias TextServer.Projects
-  alias TextServerWeb.ProjectLive.ProjectComponents
+  alias TextServerWeb.Components
 
   @impl true
   def mount(_params, _session, socket) do

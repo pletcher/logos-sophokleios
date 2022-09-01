@@ -1,28 +1,35 @@
-<h1>Show Project</h1>
+<article class="w-full md:grid md:grid-cols-2 mx-auto p-4 lg:px-8">
+	<section>
+		<div class="max-w-md max-h-md h-80">
+			<Components.card item={@project} url={@project_url}>
+				ζ
+			</Components.card>
+		</div>
 
-<%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.project_show_path(@socket, :show, @project)}>
-    <.live_component
-      module={TextServerWeb.ProjectLive.FormComponent}
-      id={@project.id}
-      title={@page_title}
-      action={@live_action}
-      project={@project}
-      return_to={Routes.project_show_path(@socket, :show, @project)}
-    />
-  </.modal>
-<% end %>
+		<%= for exemplar <- @project.project_exemplars do %>
+			<Components.small_card item={exemplar} url="/" />
+		<% end %>
+	</section>
+  <div class="p-4 max-w-md w-full">
+  	<%= if length(@project.project_exemplars) == 0 do %>
+	    <p>
+	    	It looks like you haven't added any exemplars to this project yet.
+	    </p>
+	  <% end %>
 
-<ul>
-  <li>
-    <strong>Description:</strong>
-    <%= @project.description %>
-  </li>
-
-  <li>
-    <strong>Domain:</strong>
-    <%= @project.domain %>
-  </li>
-</ul>
-
-<span><%= live_redirect("Back", to: Routes.project_index_path(@socket, :index)) %></span>
+	  <%= if @current_user do %>
+	    <div class="mt-8 max-w-sm">
+	      <a
+	        data-phx-link="patch"
+	        data-phx-link-state="push"
+	        href={Routes.exemplar_new_path(@socket, :new, @current_user, @project)}
+	        class="group relative w-full flex justify-center py-4 px-4 text-md font-medium text-stone-700"
+	      >
+	        <span class="absolute left-0 inset-y-0 flex items-center underline">
+	        	<Icons.exemplar_icon /> Create an exemplar
+	        </span>
+	      </a>
+	    </div>
+	  <% end %>
+  </div>
+</article>

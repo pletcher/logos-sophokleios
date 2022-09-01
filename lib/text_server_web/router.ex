@@ -38,8 +38,6 @@ defmodule TextServerWeb.Router do
       live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
       live "/exemplars", ExemplarLive.Index, :index
-      live "/exemplars/new", ExemplarLive.New, :new
-      live "/exemplars/:id/edit", ExemplarLive.Index, :edit
 
       live "/exemplars/:id", ExemplarLive.Show, :show
       live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
@@ -82,7 +80,12 @@ defmodule TextServerWeb.Router do
       live "/works/:id", WorkLive.Show, :show
       live "/works/:id/show/edit", WorkLive.Show, :edit
 
-      live "/:user_id/projects", ProjectLive.UserProjectIndex, :index
+      scope "/:user_id" do
+      	pipe_through :require_authenticated_user
+
+      	live "/projects", ProjectLive.UserProjectIndex, :index
+      	live "/projects/:id/exemplars/new", ExemplarLive.New, :new
+      end
     end
   end
 

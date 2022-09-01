@@ -33,11 +33,11 @@ defmodule TextServerWeb.ExemplarLive.Index do
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    exemplar = Exemplars.get_exemplar!(id)
-    {:ok, _} = Exemplars.delete_exemplar(exemplar)
+  def handle_event(event, params, socket) do
+  	IO.inspect(event)
+  	IO.inspect(params)
 
-    {:noreply, assign(socket, :exemplars, list_exemplars())}
+    {:noreply, socket}
   end
 
   defp list_exemplars do

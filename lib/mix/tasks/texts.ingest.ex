@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Texts.Ingest do
   use Mix.Task
 
+  alias TextServer.Works
+
   @shortdoc "Ingests cloned repositories of XML and JSON texts."
 
   @moduledoc """

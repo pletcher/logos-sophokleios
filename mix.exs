@@ -57,7 +57,8 @@ defmodule TextServer.MixProject do
       {:scrivener_ecto, "~> 2.7"},
       {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev},
       {:tesla, "~> 1.4"},
-      {:hackney, "~> 1.17"}
+      {:hackney, "~> 1.17"},
+      {:oban, "~> 2.13"}
     ]
   end
 

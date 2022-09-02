@@ -15,7 +15,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
        accept: ~w(.docx .xml),
        max_entries: 1
      )
-     |> assign(:exemplar_file_candidate, nil)}
+     |> assign(exemplar_file_candidate: nil)}
   end
 
   @impl true
@@ -56,30 +56,33 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
   def handle_event("save", %{"exemplar" => exemplar_params}, socket) do
     file_params =
-      consume_uploaded_entries(socket, :exemplar_file, fn %{path: path}, _entry ->
-        # FIXME: (charles) Something is wrong with the name here, but the upload works
-        dest =
-          Path.join([
-            :code.priv_dir(:text_server),
-            "static",
-            "uploads",
-            "exemplar_files",
-            Path.basename(path)
-          ])
+      consume_uploaded_entries(
+        socket,
+        :exemplar_file,
+        fn %{path: path}, %{client_name: client_name} = _entry ->
+          dest =
+            Path.join([
+              :code.priv_dir(:text_server),
+              "static",
+              "uploads",
+              "exemplar_files",
+              client_name
+            ])
 
-        file_body = File.read!(path)
+          file_body = File.read!(path)
 
-        File.cp!(path, dest)
+          File.cp!(path, dest)
 
-        {:ok,
-         %{
-           "filename" => Path.basename(dest),
-           "filemd5hash" => :crypto.hash(:md5, file_body) |> Base.encode16(case: :lower),
-           "source" => "@@exemplar/user_upload",
-           "source_link" =>
-             Routes.static_path(socket, "/uploads/exemplar_files/#{Path.basename(dest)}")
-         }}
-      end)
+          {:ok,
+           %{
+             "filename" => dest,
+             "filemd5hash" => :crypto.hash(:md5, file_body) |> Base.encode16(case: :lower),
+             "source" => "@@exemplar/user_upload",
+             "source_link" =>
+               Routes.static_path(socket, "/uploads/exemplar_files/#{Path.basename(dest)}")
+           }}
+        end
+      )
       |> List.first()
 
     unless is_nil(file_params) do
@@ -117,10 +120,11 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
     {:ok, version} =
       Versions.find_or_create_version(
         exemplar_params
-        |> Map.take(["description", "urn"])
+        |> Map.take(["description"])
         |> Enum.into(%{
           "label" => Map.get(exemplar_params, "title"),
           "version_type" => :commentary,
+          "urn" => make_exemplar_urn(work, socket.assigns.project),
           "work_id" => work.id
         })
       )
@@ -142,5 +146,9 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
+  end
+
+  defp make_exemplar_urn(work, project) do
+    "#{work.urn}.#{String.downcase(project.domain)}-en"
   end
 end

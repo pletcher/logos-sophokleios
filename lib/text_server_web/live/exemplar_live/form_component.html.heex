@@ -69,19 +69,6 @@
 				</div>
 				<%= error_tag(f, :description) %>
 			</div>
-
-			<div class="rounded-md shadow-sm -space-y-px">
-				<div>
-					<%= label(f, :urn, "Exemplar URN", class: "block mb-1") %>
-					<%= text_input(f, :urn,
-						required: true,
-						class:
-						"appearance-none relative resize-none w-full py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
-						placeholder: "urn:cts:open-commentaries:pausanias:exemplar.eng-3"
-					) %>
-				</div>
-				<%= error_tag(f, :urn) %>
-			</div>
 		</section>
 
 		<section class="relative pt-4 px-4 sm:px-6 lg:px-8">

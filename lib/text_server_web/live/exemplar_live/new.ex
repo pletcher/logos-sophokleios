@@ -10,11 +10,13 @@ defmodule TextServerWeb.ExemplarLive.New do
   def mount(params, _session, socket) do
     {:ok,
      socket
-     |> assign(:exemplar, %Exemplar{} |> Repo.preload(:language))
-     |> assign(:page_title, "Create exemplar")
-     |> assign(:project, get_project!(params["id"]))
-     |> assign(:selected_work, nil)
-     |> assign(:works, [])}
+     |> assign(
+       exemplar: %Exemplar{} |> Repo.preload(:language),
+       page_title: "Create exemplar",
+       project: get_project!(params["id"]),
+       selected_work: nil,
+       works: []
+     )}
   end
 
   @impl true
@@ -36,10 +38,10 @@ defmodule TextServerWeb.ExemplarLive.New do
   end
 
   def handle_event("reset_work_search", _params, socket) do
-  	{:noreply, socket |> assign(:works, []) |> assign(:selected_work, nil)}
+    {:noreply, socket |> assign(:works, []) |> assign(:selected_work, nil)}
   end
 
   defp get_project!(id) do
-  	Projects.get_project!(id)
+    Projects.get_project!(id)
   end
 end

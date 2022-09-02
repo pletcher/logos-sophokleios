@@ -18,6 +18,7 @@ defmodule TextServer.Application do
       TextServerWeb.Endpoint,
       # Start a worker by calling: TextServer.Worker.start_link(arg)
       # {TextServer.Worker, arg}
+      {Oban, Application.fetch_env!(:text_server, Oban)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

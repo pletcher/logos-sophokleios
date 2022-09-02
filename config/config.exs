@@ -26,6 +26,14 @@ config :text_server, TextServerWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :text_server, TextServer.Mailer, adapter: Swoosh.Adapters.Local
 
+# Configures Oban for running background jobs (like
+# parsing uploaded/changed exemplars)
+config :text_server, Oban,
+  repo: TextServer.Repo,
+  plugins: [Oban.Plugins.Pruner],
+  queues: [default: 10]
+
+
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false
 

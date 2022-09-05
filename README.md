@@ -54,9 +54,11 @@ We're leveraging Phoenix LiveView as much as possible for the front-end, but
 occasionally we need modern niceties for CSS and JS. If you need to install a
 dependency:
 
-1. Think very carefully. Do we really need this dependency? What happens if it
-   breaks?
-2. Run `npm i -D <dependency>` from within the `assets/` directory.
+1. Think very carefully.
+2. Do we really need this dependency?
+3. What happens if it breaks?
+4. Can we just use part of the dependency in the `vendor/` directory with proper attribution?
+2. If you really must install a dependency --- like `@tailwindcss/forms` ---, run `npm i -D <dependency>` from within the `assets/` directory.
 
 ## Commentaries
 

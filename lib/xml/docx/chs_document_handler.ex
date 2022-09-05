@@ -1,4 +1,4 @@
-defmodule Xml.NagyDocxExemplarHandler do
+defmodule Xml.Docx.ChsDocumentHandler do
   @behaviour Saxy.Handler
 
   @moduledoc """
@@ -17,6 +17,9 @@ defmodule Xml.NagyDocxExemplarHandler do
 
   Elements:
 
+  - w:footnote: Captures footnotes, generally in word/footnotes.xml.
+  - w15:person: Captures a person involved in preparing the document. The attribute `w15:author` has the person's name. Found in word/people.xml.
+  	- w15:presenceInfo: Child node of `w15:person` containing additional author information, such as `w15:userId`, which takes the form `S::$EMAIL::$UUID`. Thus `[_prefix, email, uuid] = String.split(user_id, "::")`.
   - w:t: Captures text. Contents should form the basic content of our TextNodes.
   - w:rStyle: Captures styles. Check `w:val` attribute for CHS-specific style names.
   - w:pStyle: Captures paragraph styles. Check `w:val` attribute for CHS-specific style names.

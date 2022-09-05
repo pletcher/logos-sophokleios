@@ -9,7 +9,6 @@ defmodule TextServer.Exemplars.Exemplar do
     field :label, :string
     field :source, :string
     field :source_link, :string
-    field :structure, :string
     field :title, :string
     field :urn, :string
 
@@ -32,7 +31,6 @@ defmodule TextServer.Exemplars.Exemplar do
       :language_id,
       :source,
       :source_link,
-      :structure,
       :title,
       :urn,
       :version_id

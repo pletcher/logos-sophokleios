@@ -25,11 +25,15 @@ defmodule TextServer.ExemplarsFixtures do
         language_id: language_fixture().id,
         title: "some title",
         urn: unique_exemplar_urn(),
-        version_id: version_fixture().id,
+        version_id: version_fixture().id
       })
       |> TextServer.Exemplars.create_exemplar()
 
     exemplar
+  end
+
+  def exemplar_with_docx_fixture(attrs \\ %{}) do
+    exemplar_fixture(attrs |> Enum.into(%{filename: Path.expand("test/support/fixtures/exemplar.docx")}))
   end
 
   defp language_fixture() do

@@ -2,10 +2,10 @@ defmodule TextServer.ExemplarsTest do
   use TextServer.DataCase
 
   alias TextServer.Exemplars
+  alias TextServer.Exemplars.Exemplar
+  alias TextServer.TextNodes
 
   describe "exemplars" do
-    alias TextServer.Exemplars.Exemplar
-
     import TextServer.ExemplarsFixtures
 
     @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
@@ -72,5 +72,20 @@ defmodule TextServer.ExemplarsTest do
       exemplar = exemplar_fixture()
       assert %Ecto.Changeset{} = Exemplars.change_exemplar(exemplar)
     end
+  end
+
+  describe "Exemplar DOCX parsing" do
+  	import TextServer.ExemplarsFixtures
+
+  	test "parse_exemplar/1 can parse a docx" do
+  		exemplar = exemplar_with_docx_fixture()
+
+  		assert {:ok, %Exemplar{} = _} = Exemplars.parse_exemplar(exemplar)
+
+  		# there should only be one text node created for now
+  		text_node = TextNodes.get_by(%{exemplar_id: exemplar.id})
+
+  		assert String.contains?(text_node.text, "This is a test")
+  	end
   end
 end

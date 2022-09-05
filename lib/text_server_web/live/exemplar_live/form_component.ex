@@ -116,25 +116,15 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
   defp save_exemplar(socket, :new, exemplar_params) do
     work = socket.assigns.work
-
-    {:ok, version} =
-      Versions.find_or_create_version(
-        exemplar_params
-        |> Map.take(["description"])
-        |> Enum.into(%{
-          "label" => Map.get(exemplar_params, "title"),
-          "version_type" => :commentary,
-          "urn" => make_exemplar_urn(work, socket.assigns.project),
-          "work_id" => work.id
-        })
-      )
-
     language = Languages.get_language_by_slug(Map.get(exemplar_params, "language"))
 
     case Exemplars.create_exemplar(
            exemplar_params
-           |> Map.put("version_id", version.id)
-           |> Map.put("language_id", language.id),
+           |> Enum.into(%{
+             "language_id" => language.id,
+             "urn" => make_exemplar_urn(work, socket.assigns.project)
+           }),
+           work,
            socket.assigns.project
          ) do
       {:ok, _exemplar} ->

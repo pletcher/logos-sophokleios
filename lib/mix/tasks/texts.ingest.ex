@@ -178,7 +178,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     description = parsed["description"]
 
     {:ok, work} =
-      TextServer.Works.find_or_create_work(%{
+      Works.find_or_create_work(%{
         description: description,
         english_title: english_title,
         original_title: original_title,
@@ -367,89 +367,18 @@ defmodule Mix.Tasks.Texts.Ingest do
                 IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
                 []
               else
-                process_exemplar_text_nodes(
+                TextServer.Exemplars.process_exemplar_text_nodes(
                   exemplar,
                   Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
                 )
 
-                process_exemplar_text_elements(exemplar, elems)
+                TextServer.Exemplars.process_exemplar_text_elements(exemplar, elems)
               end
             end
 
           f
         end)
       end)
-  end
-
-  defp process_exemplar_text_elements(exemplar, data) do
-    data
-    |> Enum.group_by(fn el -> el[:tag_name] end)
-    |> Enum.each(fn {_k, v} ->
-      [starts, ends] =
-        case Enum.group_by(v, fn x -> Map.has_key?(x, :start) end) do
-          %{true: starts, false: ends} -> [starts, ends]
-          %{true: starts} -> [starts, []]
-          %{false: ends} -> [[], ends]
-        end
-
-      indexed_starts = Enum.with_index(starts)
-
-      indexed_starts
-      |> Enum.each(fn {start, i} ->
-        matching_end =
-          case Enum.fetch(ends, i) do
-            {:ok, e} ->
-              e
-
-            :error ->
-              IO.inspect(
-                "No matching end node found! Index: #{i}\n#{inspect(start)}\nExemplar ID: #{exemplar.id}"
-              )
-
-              nil
-          end
-
-        element_type =
-          case TextServer.ElementTypes.find_or_create_element_type(%{name: start[:tag_name]}) do
-            {:ok, element_type} ->
-              element_type
-
-            {:error, reason} ->
-              IO.inspect("There was an error finding or creating an ElementType: #{reason}")
-              nil
-          end
-
-        end_node =
-          TextServer.TextNodes.get_by(%{
-            exemplar_id: exemplar.id,
-            location: matching_end[:location]
-          })
-
-        start_node =
-          TextServer.TextNodes.get_by(%{exemplar_id: exemplar.id, location: start[:location]})
-
-        unless is_nil(start_node) or is_nil(end_node) do
-          TextServer.TextElements.find_or_create_text_element(%{
-            attributes: start[:attributes],
-            element_type_id: element_type.id,
-            end_offset: matching_end[:offset] || 0,
-            end_text_node_id: end_node.id,
-            start_offset: start[:offset] || 0,
-            start_text_node_id: start_node.id
-          })
-        end
-      end)
-    end)
-  end
-
-  defp process_exemplar_text_nodes(exemplar, nodes) do
-    Enum.each(nodes, fn el ->
-      TextServer.TextNodes.find_or_create_text_node(%{
-        exemplar_id: exemplar.id,
-        location: el[:location],
-        text: el[:content]
-      })
-    end)
   end
 
   defp create_works_and_versions(data, collection) do

@@ -40,3 +40,8 @@ npm-debug.log
 .DS_Store
 
 priv/static/uploads/exemplar_files/*
+
+*.docx
+
+# make sure we don't ignore the test docx
+!test/support/fixtures/exemplar.docx

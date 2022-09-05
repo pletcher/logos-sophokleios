@@ -18,6 +18,6 @@ defmodule TextServer.Repo.Migrations.AddSearchToWorks do
   	  ALTER TABLE works DROP COLUMN _search;
   	  """
   	)
-  	create_if_not_exists index(:works, [:_search], using: "GIN", concurrently: true)
+  	create_if_not_exists index(:works, [:_search], using: "GIN")
   end
 end

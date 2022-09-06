@@ -58,8 +58,7 @@ defmodule TextServer.MixProject do
       {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev},
       {:tesla, "~> 1.4"},
       {:hackney, "~> 1.17"},
-      {:oban, "~> 2.13"},
-      {:unzip, "~> 0.7.1"}
+      {:oban, "~> 2.13"}
     ]
   end
 

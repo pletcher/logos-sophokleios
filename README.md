@@ -3,7 +3,7 @@
 ## About the schema
 
 We follow the [CTS URN spec](http://cite-architecture.github.io/ctsurn_spec/),
-which can at tims be confusing.
+which can at times be confusing.
 
 Essentially, every `collection` (which is roughly analogous to a git repository)
 contains one or more `text_group`s. It can be helpful to think of each

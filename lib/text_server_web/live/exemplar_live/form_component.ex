@@ -3,7 +3,6 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
 
   alias TextServer.Exemplars
   alias TextServer.Languages
-  alias TextServer.Versions
 
   alias TextServerWeb.Icons
 

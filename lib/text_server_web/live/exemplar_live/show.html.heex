@@ -1,36 +1,12 @@
-<h1>Show Exemplar</h1>
+<article class="container mx-auto p-4">
+	<h1 class="text-2xl font-bold"><%= @exemplar.title %></h1>
 
-<%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.exemplar_show_path(@socket, :show, @exemplar)}>
-    <.live_component
-      module={TextServerWeb.ExemplarLive.FormComponent}
-      id={@exemplar.id}
-      title={@page_title}
-      action={@live_action}
-      exemplar={@exemplar}
-      return_to={Routes.exemplar_show_path(@socket, :show, @exemplar)}
-    />
-  </.modal>
-<% end %>
+	<p><%= @exemplar.description %></p>
 
-<ul>
-  <li>
-    <strong>Title:</strong>
-    <%= @exemplar.title %>
-  </li>
+	<p><%= @exemplar.urn %></p>
 
-  <li>
-    <strong>Description:</strong>
-    <%= @exemplar.description %>
-  </li>
-
-  <li>
-    <strong>Urn:</strong>
-    <%= @exemplar.urn %>
-  </li>
-</ul>
-
-<span>
-  <%= live_patch("Edit", to: Routes.exemplar_show_path(@socket, :edit, @exemplar), class: "button") %>
-</span> |
-<span><%= live_redirect("Back", to: Routes.exemplar_index_path(@socket, :index)) %></span>
+	<h2 class="text-xl font-semibold">Text Nodes (demo):</h2>
+	<%= for text_node <- Enum.reverse(@exemplar.text_nodes) do %>
+		<div><%= Enum.join(text_node.location, ".") %>: <%= text_node.text %></div>
+	<% end %>
+</article>

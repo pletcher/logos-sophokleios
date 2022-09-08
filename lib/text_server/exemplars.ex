@@ -9,6 +9,7 @@ defmodule TextServer.Exemplars do
   alias TextServer.Versions
 
   alias TextServer.ElementTypes
+  alias TextServer.ExemplarJobRunner
   alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects.Exemplar, as: ProjectExemplar
   alias TextServer.TextElements
@@ -71,13 +72,16 @@ defmodule TextServer.Exemplars do
 
   """
   def create_exemplar(attrs) do
-    %Exemplar{}
-    |> Exemplar.changeset(attrs)
-    |> Repo.insert()
+    {:ok, exemplar} =
+      %Exemplar{}
+      |> Exemplar.changeset(attrs)
+      |> Repo.insert()
+
+    {:ok, exemplar}
   end
 
   def create_exemplar(attrs, work, project) do
-    Repo.transaction(fn ->
+    {:ok, exemplar} = Repo.transaction(fn ->
       {:ok, version} =
         Versions.find_or_create_version(
           attrs
@@ -101,10 +105,12 @@ defmodule TextServer.Exemplars do
         |> ProjectExemplar.changeset(%{exemplar_id: exemplar.id, project_id: project.id})
         |> Repo.insert()
 
-      TextServer.ExemplarJobRunner.new(%{id: exemplar.id})
-
-      {:ok, exemplar}
+      exemplar
     end)
+
+    %{id: exemplar.id}
+    |> ExemplarJobRunner.new()
+    |> Oban.insert()
   end
 
   def find_or_create_exemplar(attrs) do
@@ -242,11 +248,13 @@ defmodule TextServer.Exemplars do
   end
 
   defp parse_exemplar_docx(%Exemplar{} = exemplar) do
+    IO.puts(" ------- PARSING EXEMPLAR! #{exemplar.id} -------")
     # We're just going to open the file in memory for now,
     # but if this causes issues we can set {:cwd, 'some_tmp_dir'}
     # and just clean up the files later
     {:ok, zip_handle} = :zip.zip_open(String.to_charlist(exemplar.filename), [:memory])
 
+    IO.inspect(zip_handle)
     {:ok, doc} = parse_zipped_xml(zip_handle, "word/document.xml")
     # {:ok, endnotes} = parse_zipped_xml(zip_handle, "word/endnotes.xml")
     # {:ok, footnotes} = parse_zipped_xml(zip_handle, "word/footnotes.xml")
@@ -270,7 +278,7 @@ defmodule TextServer.Exemplars do
 
     :zip.zip_close(zip_handle)
 
-    {:ok, exemplar}
+    update_exemplar(exemplar, %{parsed_at: DateTime.utc_now()})
   end
 
   defp parse_zipped_xml(zip_handle, filename) do

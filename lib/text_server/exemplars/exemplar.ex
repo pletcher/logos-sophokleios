@@ -7,6 +7,7 @@ defmodule TextServer.Exemplars.Exemplar do
     field :filemd5hash, :string
     field :filename, :string
     field :label, :string
+    field :parsed_at, :naive_datetime
     field :source, :string
     field :source_link, :string
     field :title, :string
@@ -14,6 +15,8 @@ defmodule TextServer.Exemplars.Exemplar do
 
     belongs_to :language, TextServer.Languages.Language
     belongs_to :version, TextServer.Versions.Version
+
+    has_many :text_nodes, TextServer.TextNodes.TextNode
 
     embeds_one :tei_header, TextServer.Exemplars.TeiHeader
 
@@ -29,6 +32,7 @@ defmodule TextServer.Exemplars.Exemplar do
       :filename,
       :label,
       :language_id,
+      :parsed_at,
       :source,
       :source_link,
       :title,

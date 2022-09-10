@@ -8,7 +8,12 @@ defmodule TextServer.ImagesTest do
 
     import TextServer.ImagesFixtures
 
-    @invalid_attrs %{attribution_name: nil, attribution_source: nil, attribution_url: nil, image_url: nil}
+    @invalid_attrs %{
+      attribution_name: nil,
+      attribution_source: nil,
+      attribution_url: nil,
+      image_url: nil
+    }
 
     test "list_cover_images/0 returns all cover_images" do
       cover_image = cover_image_fixture()
@@ -21,7 +26,12 @@ defmodule TextServer.ImagesTest do
     end
 
     test "create_cover_image/1 with valid data creates a cover_image" do
-      valid_attrs = %{attribution_name: "some attribution_name", attribution_source: "some attribution_source", attribution_url: "some attribution_url", image_url: "some image_url"}
+      valid_attrs = %{
+        attribution_name: "some attribution_name",
+        attribution_source: "some attribution_source",
+        attribution_url: "some attribution_url",
+        image_url: "some image_url"
+      }
 
       assert {:ok, %CoverImage{} = cover_image} = Images.create_cover_image(valid_attrs)
       assert cover_image.attribution_name == "some attribution_name"
@@ -36,9 +46,17 @@ defmodule TextServer.ImagesTest do
 
     test "update_cover_image/2 with valid data updates the cover_image" do
       cover_image = cover_image_fixture()
-      update_attrs = %{attribution_name: "some updated attribution_name", attribution_source: "some updated attribution_source", attribution_url: "some updated attribution_url", image_url: "some updated image_url"}
 
-      assert {:ok, %CoverImage{} = cover_image} = Images.update_cover_image(cover_image, update_attrs)
+      update_attrs = %{
+        attribution_name: "some updated attribution_name",
+        attribution_source: "some updated attribution_source",
+        attribution_url: "some updated attribution_url",
+        image_url: "some updated image_url"
+      }
+
+      assert {:ok, %CoverImage{} = cover_image} =
+               Images.update_cover_image(cover_image, update_attrs)
+
       assert cover_image.attribution_name == "some updated attribution_name"
       assert cover_image.attribution_source == "some updated attribution_source"
       assert cover_image.attribution_url == "some updated attribution_url"

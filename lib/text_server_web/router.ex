@@ -81,10 +81,10 @@ defmodule TextServerWeb.Router do
       live "/works/:id/show/edit", WorkLive.Show, :edit
 
       scope "/:user_id" do
-      	pipe_through :require_authenticated_user
+        pipe_through :require_authenticated_user
 
-      	live "/projects", ProjectLive.UserProjectIndex, :index
-      	live "/projects/:id/exemplars/new", ExemplarLive.New, :new
+        live "/projects", ProjectLive.UserProjectIndex, :index
+        live "/projects/:id/exemplars/new", ExemplarLive.New, :new
       end
     end
   end

@@ -13,18 +13,18 @@ defmodule TextServer.Works do
   end
 
   def search_works(term, params \\ []) do
-  	term = Regex.replace(~r/[^[:word:][:space:]]/u, term, "")
+    term = Regex.replace(~r/[^[:word:][:space:]]/u, term, "") <> ":*"
 
     Work
     |> where(
-      [q],
-      fragment("? @@ websearch_to_tsquery('english', ?)", q._search, ^term)
+      [w],
+      fragment("? @@ websearch_to_tsquery('english', ?)", w._search, ^term)
     )
-    |> order_by([q],
+    |> order_by([w],
       asc:
         fragment(
           "ts_rank_cd(?, websearch_to_tsquery('english', ?), 4)",
-          q._search,
+          w._search,
           ^term
         )
     )

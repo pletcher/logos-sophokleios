@@ -7,18 +7,20 @@ defmodule TextServerWeb.ProjectLive.EditExemplars do
 
   @impl true
   def mount(%{"id" => id} = _params, _session, socket) do
-	  project = Projects.get_project!(id) |> Repo.preload(:project_exemplars)
-	  selected_exemplars = project.project_exemplars
-	  # NOTE: (charles) We're assuming that most projects won't have
-	  # too many exemplars.
-	  selected_exemplar_ids = Enum.map(selected_exemplars, fn ex -> ex.id end)
-	  %{
-	    entries: entries,
-	    page_number: page_number,
-	    page_size: page_size,
-	    total_entries: total_entries,
-	    total_pages: total_pages
-	  } = Exemplars.list_exemplars_except(selected_exemplar_ids)
+    project = Projects.get_project!(id) |> Repo.preload(:project_exemplars)
+    selected_exemplars = project.project_exemplars
+    # NOTE: (charles) We're assuming that most projects won't have
+    # too many exemplars.
+    selected_exemplar_ids = Enum.map(selected_exemplars, fn ex -> ex.id end)
+
+    %{
+      entries: entries,
+      page_number: page_number,
+      page_size: page_size,
+      total_entries: total_entries,
+      total_pages: total_pages
+    } = Exemplars.list_exemplars_except(selected_exemplar_ids)
+
     assigns = [
       conn: socket,
       page_number: page_number,
@@ -27,7 +29,7 @@ defmodule TextServerWeb.ProjectLive.EditExemplars do
       selected_exemplars: selected_exemplars,
       total_entries: total_entries,
       total_pages: total_pages,
-      unselected_exemplars: entries,
+      unselected_exemplars: entries
     ]
 
     {:ok, assign(socket, assigns)}

@@ -5,6 +5,7 @@ defmodule TextServer.TextGroups.TextGroup do
   schema "text_groups" do
     field :title, :string
     field :urn, :string
+    field :_search, TextServer.Ecto.Types.TsVector
 
     belongs_to :collection, TextServer.Collections.Collection
 

@@ -67,14 +67,14 @@ defmodule TextServer.ProjectsTest do
         |> Enum.map(fn w -> w.text_group_id end)
 
       collection_ids =
-      	from(t in TextGroup, where: t.id in ^text_group_ids, select: [:collection_id])
-      	|> Repo.all()
-      	|> Enum.map(fn t -> t.collection_id end)
+        from(t in TextGroup, where: t.id in ^text_group_ids, select: [:collection_id])
+        |> Repo.all()
+        |> Enum.map(fn t -> t.collection_id end)
 
       Enum.each(collection_ids, fn c_id ->
-      	Enum.each(Projects.add_collection(project, c_id), fn pe ->
-      		assert {:ok, %ProjectExemplar{}} = pe
-      	end)
+        Enum.each(Projects.add_collection(project, c_id), fn pe ->
+          assert {:ok, %ProjectExemplar{}} = pe
+        end)
       end)
     end
 

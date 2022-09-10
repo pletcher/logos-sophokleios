@@ -26,6 +26,7 @@ defmodule TextServer.Repo.Migrations.CreateTextNodes do
       ALTER TABLE text_nodes DROP COLUMN _search;
       """
     )
+
     create_if_not_exists index(:text_nodes, [:_search], using: "GIN")
 
     execute(

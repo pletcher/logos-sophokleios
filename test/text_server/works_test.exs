@@ -17,17 +17,17 @@ defmodule TextServer.WorksTest do
     }
 
     test "search_works/1 returns a paginated list of works matching the query" do
-    	work_1 = work_fixture(%{english_title: "Title", description: "bbb"})
-    	work_2 = work_fixture(%{english_title: "Another title", description: "ddd"})
+      work_1 = work_fixture(%{english_title: "Title", description: "bbb"})
+      work_2 = work_fixture(%{english_title: "Another title", description: "ddd"})
 
-    	search_results = Works.search_works("Anoth").entries
+      search_results = Works.search_works("Anoth").entries
 
-    	assert List.first(search_results) == work_2.id
+      assert List.first(search_results) == work_2.id
 
-    	search_results = Works.search_works("title").entries
+      search_results = Works.search_works("title").entries
 
-    	assert Enum.find(search_results, fn r -> r.id == work_1.id end).id == work_1.id
-    	assert Enum.find(search_results, fn r -> r.id == work_2.id end).id == work_2.id
+      assert Enum.find(search_results, fn r -> r.id == work_1.id end).id == work_1.id
+      assert Enum.find(search_results, fn r -> r.id == work_2.id end).id == work_2.id
     end
 
     test "get_work!/1 returns the work with given id" do
@@ -41,7 +41,7 @@ defmodule TextServer.WorksTest do
         english_title: "some english_title",
         original_title: "some original_title",
         text_group_id: text_group_fixture().id,
-        urn: "some urn",
+        urn: "some urn"
       }
 
       assert {:ok, %Work{} = work} = Works.create_work(valid_attrs)
@@ -63,7 +63,7 @@ defmodule TextServer.WorksTest do
         english_title: "some updated english_title",
         original_title: "some updated original_title",
         text_group_id: text_group_fixture().id,
-        urn: "some updated urn",
+        urn: "some updated urn"
       }
 
       assert {:ok, %Work{} = work} = Works.update_work(work, update_attrs)

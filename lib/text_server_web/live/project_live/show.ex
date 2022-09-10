@@ -13,8 +13,8 @@ defmodule TextServerWeb.ProjectLive.Show do
   @impl true
   def handle_params(%{"id" => id}, uri, socket) do
     %URI{
-    	authority: authority,
-    	scheme: scheme
+      authority: authority,
+      scheme: scheme
     } = URI.parse(uri)
 
     project = Projects.get_project_with_exemplars(id)

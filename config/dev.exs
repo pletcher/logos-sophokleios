@@ -34,8 +34,8 @@ config :text_server, TextServerWeb.Endpoint,
 config :text_server, Oban,
   repo: TextServer.Repo,
   plugins: [Oban.Plugins.Pruner],
-  queues: [default: 10],
-  log: :warn
+  queues: [default: 10]
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

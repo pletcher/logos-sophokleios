@@ -34,8 +34,8 @@ defmodule TextServerWeb.ExemplarLive.Index do
 
   @impl true
   def handle_event(event, params, socket) do
-  	IO.inspect(event)
-  	IO.inspect(params)
+    IO.inspect(event)
+    IO.inspect(params)
 
     {:noreply, socket}
   end

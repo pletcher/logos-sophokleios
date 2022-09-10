@@ -43,6 +43,23 @@ defmodule TextServer.TextGroups do
   end
 
   @doc """
+  Searches for TextGroups matching `term`.
+
+  Returns a list `TextGroup`s with `works` preloaded.
+  """
+  def search_text_groups(term) do
+    term = Regex.replace(~r/[^[:word:][:space:]]/u, term, "") <> ":*"
+
+    query =
+      from t in TextGroup,
+        join: w in assoc(t, :works),
+        where: fragment("? @@ websearch_to_tsquery('english', ?)", t._search, ^term),
+        preload: [works: w]
+
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single text_group.
 
   Raises `Ecto.NoResultsError` if the Text group does not exist.

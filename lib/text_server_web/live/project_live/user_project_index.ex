@@ -26,11 +26,12 @@ defmodule TextServerWeb.ProjectLive.UserProjectIndex do
   defp apply_action(socket, :index, %{"user_id" => user_id}) do
     user = Accounts.get_user!(user_id) |> TextServer.Repo.preload(:user_projects)
 
-    page_title = if socket.assigns.current_user do
-      "My Projects"
-    else
-      "#{user.email}'s Projects"
-    end
+    page_title =
+      if socket.assigns.current_user do
+        "My Projects"
+      else
+        "#{user.email}'s Projects"
+      end
 
     socket
     |> assign(:page_title, page_title)

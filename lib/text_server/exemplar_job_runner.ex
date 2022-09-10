@@ -7,23 +7,23 @@ defmodule TextServer.ExemplarJobRunner do
   # args to Oban when adding an item to the queue
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"id" => id} = _args}) do
-  	exemplar = Exemplars.get_exemplar!(id)
+    exemplar = Exemplars.get_exemplar!(id)
 
-  	IO.puts("ABOUT TO PARSE AN EXEMPLAR FROM THE QUEUE")
-  	IO.inspect(exemplar)
+    IO.puts("ABOUT TO PARSE AN EXEMPLAR FROM THE QUEUE")
+    IO.inspect(exemplar)
 
-  	parse(exemplar)
+    parse(exemplar)
   end
 
- 	defp parse(exemplar) do
- 	  # parse exemplar, saving/updating TextNodes and TextElements
- 	  case Exemplars.parse_exemplar(exemplar) do
- 	  	{:ok, exemplar} ->
- 	  		{:ok, exemplar}
+  defp parse(exemplar) do
+    # parse exemplar, saving/updating TextNodes and TextElements
+    case Exemplars.parse_exemplar(exemplar) do
+      {:ok, exemplar} ->
+        {:ok, exemplar}
 
- 	  	{:error, reason} ->
- 	  		IO.inspect(reason)
- 	  		:error
- 	  end
- 	end
+      {:error, reason} ->
+        IO.inspect(reason)
+        :error
+    end
+  end
 end

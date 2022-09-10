@@ -44,9 +44,9 @@ defmodule TextServer.Projects do
   def get_project!(id), do: Repo.get!(Project, id)
 
   def get_project_with_exemplars(id) do
-  	Project
-  	|> preload(:project_exemplars)
-  	|> Repo.get(id)
+    Project
+    |> preload(:project_exemplars)
+    |> Repo.get(id)
   end
 
   @doc """
@@ -63,23 +63,25 @@ defmodule TextServer.Projects do
 
   """
   def create_project(user, attrs \\ %{}) do
-  	Repo.transaction(fn repo ->
-  		project = %Project{created_by_id: user.id}
-  		|> Project.changeset(attrs)
-  		|> repo.insert!()
+    Repo.transaction(fn repo ->
+      project =
+        %Project{created_by_id: user.id}
+        |> Project.changeset(attrs)
+        |> repo.insert!()
 
-  		project_user_attrs = %{
-  			project_id: project.id,
-  			project_user_type: :admin,
-  			user_id: user.id
-  		}
+      project_user_attrs = %{
+        project_id: project.id,
+        project_user_type: :admin,
+        user_id: user.id
+      }
 
-  		_project_user = %ProjectUser{}
-  		|> ProjectUser.changeset(project_user_attrs)
-  		|> repo.insert!()
+      _project_user =
+        %ProjectUser{}
+        |> ProjectUser.changeset(project_user_attrs)
+        |> repo.insert!()
 
-  		project
-  	end)
+      project
+    end)
   end
 
   @doc """
@@ -91,8 +93,8 @@ defmodule TextServer.Projects do
   		{:ok, [%Project{}]}
   """
   def created_by(user) do
-  	from(p in Project, where: p.created_by_id == ^user.id)
-  	|> Repo.all()
+    from(p in Project, where: p.created_by_id == ^user.id)
+    |> Repo.all()
   end
 
   @doc """
@@ -141,21 +143,21 @@ defmodule TextServer.Projects do
   		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
   """
   def add_text_groups(project, text_group_ids) do
-  	work_ids =
-  	  from(w in Work, where: w.text_group_id in ^text_group_ids, select: [:id])
-  	  |> Repo.all()
-  	  |> Enum.map(fn w -> w.id end)
+    work_ids =
+      from(w in Work, where: w.text_group_id in ^text_group_ids, select: [:id])
+      |> Repo.all()
+      |> Enum.map(fn w -> w.id end)
 
-  	add_works(project, work_ids)
+    add_works(project, work_ids)
   end
 
   def add_versions(project, version_ids) do
-  	exemplar_ids =
-  		from(e in Exemplar, where: e.version_id in ^ version_ids, select: [:id])
-  		|> Repo.all()
-  		|> Enum.map(fn e -> e.id end)
+    exemplar_ids =
+      from(e in Exemplar, where: e.version_id in ^version_ids, select: [:id])
+      |> Repo.all()
+      |> Enum.map(fn e -> e.id end)
 
-  	add_exemplars(project, exemplar_ids)
+    add_exemplars(project, exemplar_ids)
   end
 
   @doc """
@@ -167,12 +169,12 @@ defmodule TextServer.Projects do
   		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
   """
   def add_works(project, work_ids) do
-  	version_ids =
-  		from(v in Version, where: v.work_id in ^work_ids, select: [:id])
-  		|> Repo.all()
-  		|> Enum.map(fn v -> v.id end)
+    version_ids =
+      from(v in Version, where: v.work_id in ^work_ids, select: [:id])
+      |> Repo.all()
+      |> Enum.map(fn v -> v.id end)
 
-  	add_versions(project, version_ids)
+    add_versions(project, version_ids)
   end
 
   @doc """

@@ -75,17 +75,17 @@ defmodule TextServer.ExemplarsTest do
   end
 
   describe "Exemplar DOCX parsing" do
-  	import TextServer.ExemplarsFixtures
+    import TextServer.ExemplarsFixtures
 
-  	test "parse_exemplar/1 can parse a docx" do
-  		exemplar = exemplar_with_docx_fixture()
+    test "parse_exemplar/1 can parse a docx" do
+      exemplar = exemplar_with_docx_fixture()
 
-  		assert {:ok, %Exemplar{} = _} = Exemplars.parse_exemplar(exemplar)
+      assert {:ok, %Exemplar{} = _} = Exemplars.parse_exemplar(exemplar)
 
-  		# there should only be one text node created for now
-  		text_node = TextNodes.get_by(%{exemplar_id: exemplar.id})
+      # there should only be one text node created for now
+      text_node = TextNodes.get_by(%{exemplar_id: exemplar.id})
 
-  		assert String.contains?(text_node.text, "This is a test")
-  	end
+      assert String.contains?(text_node.text, "This is a test")
+    end
   end
 end

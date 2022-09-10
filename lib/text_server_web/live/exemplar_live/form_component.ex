@@ -121,7 +121,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
            exemplar_params
            |> Enum.into(%{
              "language_id" => language.id,
-             "urn" => make_exemplar_urn(work, socket.assigns.project)
+             "urn" => make_exemplar_urn(exemplar_params, work, socket.assigns.project)
            }),
            work,
            socket.assigns.project
@@ -137,7 +137,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
     end
   end
 
-  defp make_exemplar_urn(work, project) do
-    "#{work.urn}.#{String.downcase(project.domain)}-en"
+  defp make_exemplar_urn(%{"title" => title} = _exemplar_params, work, project) do
+    "#{work.urn}.#{String.downcase(project.domain)}.#{Recase.to_kebab(title)}-en"
   end
 end

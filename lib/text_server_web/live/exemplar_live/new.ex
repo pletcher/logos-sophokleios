@@ -4,6 +4,7 @@ defmodule TextServerWeb.ExemplarLive.New do
   alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects
   alias TextServer.Repo
+  alias TextServer.TextGroups
   alias TextServer.Works
 
   @impl true
@@ -28,10 +29,14 @@ defmodule TextServerWeb.ExemplarLive.New do
   def handle_event("search_works", %{"value" => search_string}, socket) do
     page = Works.search_works(search_string)
     works = page.entries
+    text_groups = TextGroups.search_text_groups(search_string)
+    text_group_works = Enum.flat_map(text_groups, & &1.works)
+    works = Enum.concat(works, text_group_works)
+    IO.inspect(Enum.map(works, & &1.english_title))
     selected_work = Enum.find(works, fn w -> w.english_title == search_string end)
 
     if is_nil(selected_work) do
-      {:noreply, socket |> assign(:works, page.entries)}
+      {:noreply, socket |> assign(:works, works)}
     else
       {:noreply, socket |> assign(:works, []) |> assign(:selected_work, selected_work)}
     end

@@ -16,7 +16,7 @@ defmodule TextServer.TextGroupsFixtures do
     {:ok, text_group} =
       attrs
       |> Enum.into(%{
-      	collection_id: collection_fixture().id,
+        collection_id: collection_fixture().id,
         title: "some title",
         urn: "some urn"
       })

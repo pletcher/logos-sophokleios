@@ -7,7 +7,8 @@ defmodule TextServer.ImagesFixtures do
   @doc """
   Generate a unique cover_image attribution_url.
   """
-  def unique_cover_image_attribution_url, do: "some attribution_url#{System.unique_integer([:positive])}"
+  def unique_cover_image_attribution_url,
+    do: "some attribution_url#{System.unique_integer([:positive])}"
 
   @doc """
   Generate a cover_image.

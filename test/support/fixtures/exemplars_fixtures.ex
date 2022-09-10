@@ -33,7 +33,10 @@ defmodule TextServer.ExemplarsFixtures do
   end
 
   def exemplar_with_docx_fixture(attrs \\ %{}) do
-    exemplar_fixture(attrs |> Enum.into(%{filename: Path.expand("test/support/fixtures/exemplar.docx")}))
+    exemplar_fixture(
+      attrs
+      |> Enum.into(%{filename: Path.expand("test/support/fixtures/exemplar.docx")})
+    )
   end
 
   defp language_fixture() do

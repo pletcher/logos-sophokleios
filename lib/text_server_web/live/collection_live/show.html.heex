@@ -66,8 +66,8 @@
     to: Routes.collection_show_path(@socket, :edit, @collection),
     class: "button"
   ) %>
-</span> |
-<span><%= live_redirect("Back", to: Routes.collection_index_path(@socket, :index)) %></span>
+</span>
+| <span><%= live_redirect("Back", to: Routes.collection_index_path(@socket, :index)) %></span>
 <%= if @total_pages > 1 do %>
   <nav class="border-t border-gray-200">
     <ul class="flex my-2">

@@ -62,9 +62,7 @@ defmodule Xml.Docx.ChsDocumentHandler do
   end
 
   def handle_chars(chars, state) do
-  	# It's possible for a node to be started before
-  	# the location is parsed. We'll need to fix this
-  	# for the first node
+    # FIXME: (charles) Location appears to be behind by one for each node
     location_marker = Regex.run(@location_regex, chars)
 
     current_location =

@@ -33,7 +33,6 @@ config :text_server, Oban,
   plugins: [Oban.Plugins.Pruner],
   queues: [default: 10]
 
-
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false
 

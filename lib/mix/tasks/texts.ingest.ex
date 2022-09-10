@@ -311,8 +311,7 @@ defmodule Mix.Tasks.Texts.Ingest do
 
     works_and_versions = create_works_and_versions(works_data, collection)
 
-    versions =
-      Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
+    versions = Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
 
     versions =
       if Enum.count(versions) == 0 do
@@ -391,9 +390,7 @@ defmodule Mix.Tasks.Texts.Ingest do
           work_attrs = Map.take(w, Map.keys(TextServer.Works.Work.__struct__()))
 
           if text_group != nil do
-            TextServer.Works.upsert_work(
-              Map.put(work_attrs, :text_group_id, text_group.id)
-            )
+            TextServer.Works.upsert_work(Map.put(work_attrs, :text_group_id, text_group.id))
           else
             {:ok, text_group} =
               TextServer.TextGroups.find_or_create_text_group(%{
@@ -403,9 +400,7 @@ defmodule Mix.Tasks.Texts.Ingest do
               })
 
             {:ok, work} =
-              TextServer.Works.upsert_work(
-                Map.put(work_attrs, :text_group_id, text_group.id)
-              )
+              TextServer.Works.upsert_work(Map.put(work_attrs, :text_group_id, text_group.id))
 
             work
           end

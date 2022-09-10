@@ -81,32 +81,33 @@ defmodule TextServer.Exemplars do
   end
 
   def create_exemplar(attrs, work, project) do
-    {:ok, exemplar} = Repo.transaction(fn ->
-      {:ok, version} =
-        Versions.find_or_create_version(
-          attrs
-          |> Map.take(["description", "urn"])
-          |> Enum.into(%{
-            "label" => Map.get(attrs, "title"),
-            # FIXME: (charles) Eventually we'll want to be more
-            # flexible on the version_type
-            "version_type" => :commentary,
-            "work_id" => work.id
-          })
-        )
+    {:ok, exemplar} =
+      Repo.transaction(fn ->
+        {:ok, version} =
+          Versions.find_or_create_version(
+            attrs
+            |> Map.take(["description", "urn"])
+            |> Enum.into(%{
+              "label" => Map.get(attrs, "title"),
+              # FIXME: (charles) Eventually we'll want to be more
+              # flexible on the version_type
+              "version_type" => :commentary,
+              "work_id" => work.id
+            })
+          )
 
-      {:ok, exemplar} =
-        %Exemplar{}
-        |> Exemplar.changeset(attrs |> Map.put("version_id", version.id))
-        |> Repo.insert()
+        {:ok, exemplar} =
+          %Exemplar{}
+          |> Exemplar.changeset(attrs |> Map.put("version_id", version.id))
+          |> Repo.insert()
 
-      {:ok, _project_exemplar} =
-        %ProjectExemplar{}
-        |> ProjectExemplar.changeset(%{exemplar_id: exemplar.id, project_id: project.id})
-        |> Repo.insert()
+        {:ok, _project_exemplar} =
+          %ProjectExemplar{}
+          |> ProjectExemplar.changeset(%{exemplar_id: exemplar.id, project_id: project.id})
+          |> Repo.insert()
 
-      exemplar
-    end)
+        exemplar
+      end)
 
     %{id: exemplar.id}
     |> ExemplarJobRunner.new()

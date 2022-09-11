@@ -47,6 +47,8 @@ defmodule TextServer.Works do
   """
   def get_work!(id), do: Repo.get!(Work, id)
 
+  def get_work(id), do: Repo.get(Work, id)
+
   @doc """
   Creates a work.
 

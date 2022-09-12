@@ -46,6 +46,8 @@ defmodule TextServerWeb.WorkLive.Search do
           {:noreply, socket |> assign(:works, works)}
 
         work ->
+          send(self(), {:selected_work, work})
+
           {:noreply,
            socket
            |> assign(works: [], selected_work: work)}

@@ -6,7 +6,7 @@ defmodule TextServer.Repo.Migrations.CreateTextNodes do
       add :location, {:array, :integer}, null: false
       add :normalized_text, :text
       add :text, :text, null: false
-      add :exemplar_id, references(:exemplars, on_delete: :restrict)
+      add :exemplar_id, references(:exemplars, on_delete: :delete_all)
 
       timestamps()
     end

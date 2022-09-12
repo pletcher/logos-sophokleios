@@ -82,10 +82,19 @@ defmodule TextServer.ExemplarsTest do
 
       assert {:ok, %Exemplar{} = _} = Exemplars.parse_exemplar(exemplar)
 
-      # there should only be one text node created for now
-      text_node = TextNodes.get_by(%{exemplar_id: exemplar.id})
+      text_node = TextNodes.get_by(%{exemplar_id: exemplar.id, location: [1, 1, 1]})
 
-      assert String.contains?(text_node.text, "This is a test")
+      assert String.contains?(
+               text_node.text,
+               "This is a test document for TextServer.Exemplars.parse_xml/1"
+             )
+
+      text_node = TextNodes.get_by(%{exemplar_id: exemplar.id, location: [1, 2, 1]})
+
+      assert String.contains?(
+               text_node.text,
+               "Now we want to test inline styles and TextElements."
+             )
     end
   end
 end

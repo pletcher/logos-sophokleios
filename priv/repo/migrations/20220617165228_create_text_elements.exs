@@ -7,8 +7,8 @@ defmodule TextServer.Repo.Migrations.CreateTextElements do
       add :end_offset, :integer, default: 0
       add :start_offset, :integer, default: 0
       add :element_type_id, references(:element_types, on_delete: :nothing), null: false
-      add :end_text_node_id, references(:text_nodes, on_delete: :nothing), null: false
-      add :start_text_node_id, references(:text_nodes, on_delete: :nothing), null: false
+      add :end_text_node_id, references(:text_nodes, on_delete: :delete_all), null: false
+      add :start_text_node_id, references(:text_nodes, on_delete: :delete_all), null: false
 
       timestamps()
     end

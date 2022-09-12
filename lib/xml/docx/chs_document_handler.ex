@@ -21,11 +21,12 @@ defmodule Xml.Docx.ChsDocumentHandler do
   - w15:person: Captures a person involved in preparing the document. The attribute `w15:author` has the person's name. Found in word/people.xml.
   	- w15:presenceInfo: Child node of `w15:person` containing additional author information, such as `w15:userId`, which takes the form `S::$EMAIL::$UUID`. Thus `[_prefix, email, uuid] = String.split(user_id, "::")`.
   - w:t: Captures text. Contents should form the basic content of our TextNodes.
+  - w:b: Captures bold text (inline style).
   - w:rStyle: Captures styles. Check `w:val` attribute for CHS-specific style names.
   - w:pStyle: Captures paragraph styles. Check `w:val` attribute for CHS-specific style names.
   """
 
-  @location_regex ~r/\{\d{1,2}\.\d{1,2}\.\d{1,2}\}/
+  @location_regex ~r/\{\d+\.\d+\.\d+\}/
 
   def handle_event(:start_document, _prolog, state) do
     {:ok, Map.put(state, :location, [0])}
@@ -49,70 +50,63 @@ defmodule Xml.Docx.ChsDocumentHandler do
      ])}
   end
 
-  def handle_event(:characters, chars, state) do
-    if String.trim(chars) == "" do
-      {:ok, state}
-    else
-      handle_chars(chars, state)
-    end
-  end
+  def handle_event(:characters, chars, state), do: handle_chars(chars, state)
 
   def handle_event(:cdata, _cdata, state) do
     {:ok, state}
   end
 
-  def handle_chars(chars, state) do
-    # FIXME: (charles) Location appears to be behind by one for each node
+  def get_location(chars, state) do
     location_marker = Regex.run(@location_regex, chars)
 
-    current_location =
-      if is_nil(location_marker) do
-        state[:location]
-      else
-        parse_location_marker(location_marker)
-      end
+    if is_nil(location_marker) do
+      state[:location]
+    else
+      parse_location_marker(location_marker)
+    end
+  end
 
-    IO.inspect(current_location)
-    chars = String.replace(chars, @location_regex, "")
+  def get_text(chars) do
+    chars
+    |> String.replace(@location_regex, "")
+  end
 
-    chars =
-      if is_nil(location_marker) do
-        chars
-      else
-        String.trim_leading(chars)
-      end
-
+  def handle_chars(chars, state) do
+    current_location = get_location(chars, state)
+    text = get_text(chars)
     current_els = state[:text_elements]
 
     existing_text_node_index =
-      Enum.find_index(current_els, fn el ->
-        Map.has_key?(el, :content) and el[:location] == current_location
-      end)
+      Enum.find_index(
+        current_els,
+        &(&1.location == current_location && Map.has_key?(&1, :content))
+      )
 
     els =
-      unless is_nil(existing_text_node_index) do
-        # NOTE: (charles) We're not looking for the error case here because parsing
-        # should fail if we can't find this node.
+      if is_nil(existing_text_node_index) do
+        [node | nodes] = current_els
+        new_node = node |> Map.merge(%{content: text, location: current_location})
+        [new_node | nodes]
+      else
         {:ok, text_node} = Enum.fetch(current_els, existing_text_node_index)
-        content = text_node[:content]
-
+        content = text_node[:content] || ""
+        # dbg(content <> text)
         List.replace_at(
           current_els,
           existing_text_node_index,
-          Map.put(text_node, :content, content <> chars)
+          Map.put(text_node, :content, content <> text)
         )
-      else
-        [node | nodes] = current_els
-        [Map.put(node, :content, chars) | nodes]
       end
 
     current_offset = Map.get(state, :offset, 0)
 
     new_state =
       state
-      |> Map.put(:text_elements, els)
-      |> Map.put(:offset, current_offset + String.length(chars))
-      |> Map.put(:location, current_location)
+      |> Map.merge(%{
+        location: current_location,
+        offset: current_offset + String.length(text),
+        text_elements: els
+      })
 
     {:ok, new_state}
   end
@@ -135,6 +129,8 @@ defmodule Xml.Docx.ChsDocumentHandler do
         tag_name: name,
         start: name,
         attributes: Map.new(attrs),
+        # location is going to be off for w:t elements
+        # at times
         location: state[:location],
         offset: state[:offset]
       }

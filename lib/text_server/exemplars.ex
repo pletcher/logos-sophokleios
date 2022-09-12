@@ -249,13 +249,10 @@ defmodule TextServer.Exemplars do
   end
 
   defp parse_exemplar_docx(%Exemplar{} = exemplar) do
-    IO.puts(" ------- PARSING EXEMPLAR! #{exemplar.id} -------")
     # We're just going to open the file in memory for now,
     # but if this causes issues we can set {:cwd, 'some_tmp_dir'}
     # and just clean up the files later
     {:ok, zip_handle} = :zip.zip_open(String.to_charlist(exemplar.filename), [:memory])
-
-    IO.inspect(zip_handle)
     {:ok, doc} = parse_zipped_xml(zip_handle, "word/document.xml")
     # {:ok, endnotes} = parse_zipped_xml(zip_handle, "word/endnotes.xml")
     # {:ok, footnotes} = parse_zipped_xml(zip_handle, "word/footnotes.xml")

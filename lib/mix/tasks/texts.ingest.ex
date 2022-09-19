@@ -313,15 +313,8 @@ defmodule Mix.Tasks.Texts.Ingest do
 
     versions = Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
 
-    versions =
-      if Enum.count(versions) == 0 do
-        TextServer.Versions.list_versions_in_collection(collection.id)
-      else
-        versions
-      end
-
     _exemplars =
-      Enum.map(versions, fn v ->
+      Enum.map(versions || [], fn v ->
         urn = String.split(v.urn, ":") |> List.last()
         # ingestion_exemplars = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
         exemplar_files = Path.wildcard("#{dir}/**/#{urn}.xml")

@@ -10,6 +10,8 @@ defmodule TextServer.TextNodes.TextNode do
 
     belongs_to :exemplar, TextServer.Exemplars.Exemplar
 
+    has_many :text_elements, TextServer.TextElements.TextElement, foreign_key: :start_text_node_id
+
     timestamps()
   end
 

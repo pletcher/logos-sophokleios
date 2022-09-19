@@ -18,7 +18,19 @@ defmodule TextServer.TextNodes do
 
   """
   def list_text_nodes do
-    Repo.all(TextNode)
+    Repo.paginate(TextNode)
+  end
+
+  def list_text_nodes_by_exemplar_id(exemplar_id, params \\ []) do
+    query =
+      from(
+        t in TextNode,
+        where: t.exemplar_id == ^exemplar_id,
+        order_by: [asc: t.location],
+        preload: [text_elements: :element_type]
+      )
+
+    Repo.paginate(query, params)
   end
 
   @doc """
@@ -103,6 +115,16 @@ defmodule TextServer.TextNodes do
   """
   def delete_text_node(%TextNode{} = text_node) do
     Repo.delete(text_node)
+  end
+
+  def delete_text_nodes_by_exemplar_id(exemplar_id) do
+    query =
+      from(
+        t in TextNode,
+        where: t.exemplar_id == ^exemplar_id
+      )
+
+    Repo.delete_all(query)
   end
 
   @doc """

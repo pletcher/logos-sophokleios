@@ -24,6 +24,21 @@ defmodule Xml.Docx.ChsDocumentHandler do
   - w:b: Captures bold text (inline style).
   - w:rStyle: Captures styles. Check `w:val` attribute for CHS-specific style names.
   - w:pStyle: Captures paragraph styles. Check `w:val` attribute for CHS-specific style names.
+  - w:r: Short for "Run," which can contain pretty much any text --- see https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.run?view=openxml-2.8.1
+  - w:rPr: "Run Properties" --- look for these tags inside of <w:r> --- for example:
+
+  ```openxml
+  <w:r w:rsidRPr="00DC4B78">
+    <w:rPr>
+      <w:i/>
+      <w:iCs/>
+    </w:rPr>
+    <w:t>This</w:t>
+  </w:r>
+  ```
+
+  in the above run, the Run Properties contain an "Italic" and "Italic Complex Script"
+  tag. These apply to the text within the <w:t> tags.
   """
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
@@ -46,7 +61,13 @@ defmodule Xml.Docx.ChsDocumentHandler do
 
     {:ok,
      Map.put(state, :text_elements, [
-       %{tag_name: name, end: name, location: location, offset: offset} | text_elements
+       %{
+         tag_name: name,
+         end: name,
+         location: location,
+         offset: offset
+       }
+       | text_elements
      ])}
   end
 
@@ -69,49 +90,79 @@ defmodule Xml.Docx.ChsDocumentHandler do
   def get_text(chars) do
     chars
     |> String.replace(@location_regex, "")
+    |> String.trim()
   end
 
   def handle_chars(chars, state) do
     current_location = get_location(chars, state)
     text = get_text(chars)
-    current_els = state[:text_elements]
+    [node | nodes] = state[:text_nodes]
 
-    existing_text_node_index =
-      Enum.find_index(
-        current_els,
-        &(&1.location == current_location && Map.has_key?(&1, :content))
-      )
+    new_node =
+      Map.merge(node, %{
+        location: current_location,
+        text: node[:text] <> text
+      })
 
-    els =
-      if is_nil(existing_text_node_index) do
-        [node | nodes] = current_els
-        new_node = node |> Map.merge(%{content: text, location: current_location})
-        [new_node | nodes]
-      else
-        {:ok, text_node} = Enum.fetch(current_els, existing_text_node_index)
-        content = text_node[:content] || ""
-        # dbg(content <> text)
-        List.replace_at(
-          current_els,
-          existing_text_node_index,
-          Map.put(text_node, :content, content <> text)
-        )
-      end
-
-    current_offset = Map.get(state, :offset, 0)
+    new_nodes = [new_node | nodes]
 
     new_state =
       state
       |> Map.merge(%{
         location: current_location,
-        offset: current_offset + String.length(text),
-        text_elements: els
+        offset: Map.get(state, :offset, 0) + String.length(text),
+        text_nodes: new_nodes
       })
 
     {:ok, new_state}
   end
 
-  defp handle_element(name, attributes, state) do
+  @doc """
+  Parses an element and adds it to the appropriate
+  list in `state`. The following elements are parsed
+  (this list might grow):
+
+  - <w:p>: a paragraph element. I think we can treat
+  paragraphs as TextNodes.
+  - <w:r>: a "run" element. Run elements in OpenOffice XML
+  contain styling (w:rPr) and text (w:t)
+  - <w:rPr>: a run styling element. These contain information
+  about the styles that apply to a run, and should probably
+  be stored as TextElements.
+  - <w:t> a text element. These appear inside of runs.
+
+  Elements that aren't handled here are just prepended
+  to the `:text_elements` list in `state`.
+  """
+  def handle_element("w:p", attributes, state) do
+    text_nodes = Map.get(state, :text_nodes, [])
+    attr_map = Map.new(attributes)
+    new_node = Map.merge(attr_map, %{text: ""})
+
+    {:ok,
+     state
+     |> Map.merge(%{
+       offset: 0,
+       text_nodes: [new_node | text_nodes]
+     })}
+  end
+
+  def handle_element("w:r", _attributes, state) do
+    # not sure we need to do anything with runs yet
+    {:ok, state}
+  end
+
+  def handle_element("w:rPr", _attributes, state) do
+    {:ok, state}
+  end
+
+  def handle_element("w:t", attributes, state) do
+    [node | nodes] = Map.get(state, :text_nodes)
+    new_node = Map.merge(node, Map.new(attributes))
+    {:ok, Map.put(state, :text_nodes, [new_node | nodes])}
+  end
+
+  def handle_element(name, attributes, state) do
     {:ok, prepend_element(state, name, attributes)}
   end
 
@@ -129,8 +180,6 @@ defmodule Xml.Docx.ChsDocumentHandler do
         tag_name: name,
         start: name,
         attributes: Map.new(attrs),
-        # location is going to be off for w:t elements
-        # at times
         location: state[:location],
         offset: state[:offset]
       }

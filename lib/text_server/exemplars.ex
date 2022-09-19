@@ -170,7 +170,13 @@ defmodule TextServer.Exemplars do
     Exemplar.changeset(exemplar, attrs)
   end
 
+  def clear_text_nodes(%Exemplar{} = exemplar) do
+    TextNodes.delete_text_nodes_by_exemplar_id(exemplar.id)
+  end
+
   def parse_exemplar(%Exemplar{} = exemplar) do
+    clear_text_nodes(exemplar)
+
     if String.ends_with?(exemplar.filename, ".docx") do
       parse_exemplar_docx(exemplar)
     else
@@ -222,7 +228,11 @@ defmodule TextServer.Exemplars do
             location: matching_end[:location]
           })
 
-        start_node = TextNodes.get_by(%{exemplar_id: exemplar.id, location: start[:location]})
+        start_node =
+          TextNodes.get_by(%{
+            exemplar_id: exemplar.id,
+            location: start[:location]
+          })
 
         unless is_nil(start_node) or is_nil(end_node) do
           TextElements.find_or_create_text_element(%{
@@ -240,11 +250,11 @@ defmodule TextServer.Exemplars do
 
   def process_exemplar_text_nodes(exemplar, nodes) do
     Enum.each(nodes, fn el ->
-      TextNodes.find_or_create_text_node(%{
-        exemplar_id: exemplar.id,
-        location: el[:location],
-        text: el[:content]
-      })
+      TextNodes.find_or_create_text_node(
+        Map.merge(el, %{
+          exemplar_id: exemplar.id
+        })
+      )
     end)
   end
 
@@ -263,16 +273,20 @@ defmodule TextServer.Exemplars do
         doc,
         Xml.Docx.ChsDocumentHandler,
         %{
-          text_elements: []
+          text_elements: [],
+          text_nodes: []
         }
       )
 
     process_exemplar_text_nodes(
       exemplar,
-      Enum.filter(parsed_doc[:text_elements], fn el -> Map.has_key?(el, :content) end)
+      Map.get(parsed_doc, :text_nodes, [])
     )
 
-    process_exemplar_text_elements(exemplar, parsed_doc[:text_elements])
+    process_exemplar_text_elements(
+      exemplar,
+      Map.get(parsed_doc, :text_elements)
+    )
 
     :zip.zip_close(zip_handle)
 
@@ -280,7 +294,11 @@ defmodule TextServer.Exemplars do
   end
 
   defp parse_zipped_xml(zip_handle, filename) do
-    {:ok, {_name, binary}} = :zip.zip_get(String.to_charlist(filename), zip_handle)
+    {:ok, {_name, binary}} =
+      :zip.zip_get(
+        String.to_charlist(filename),
+        zip_handle
+      )
 
     {:ok, binary}
   end

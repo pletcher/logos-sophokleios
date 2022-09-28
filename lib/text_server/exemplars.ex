@@ -15,6 +15,8 @@ defmodule TextServer.Exemplars do
   alias TextServer.TextElements
   alias TextServer.TextNodes
 
+  @location_regex ~r/\{\d+\.\d+\.\d+\}/
+
   @doc """
   Returns the list of exemplars.
 
@@ -177,130 +179,266 @@ defmodule TextServer.Exemplars do
   def parse_exemplar(%Exemplar{} = exemplar) do
     clear_text_nodes(exemplar)
 
-    if String.ends_with?(exemplar.filename, ".docx") do
-      parse_exemplar_docx(exemplar)
-    else
-      parse_exemplar_xml(exemplar)
+    result =
+      if String.ends_with?(exemplar.filename, ".docx") do
+        parse_exemplar_docx(exemplar)
+      else
+        parse_exemplar_xml(exemplar)
+      end
+
+    case result do
+      {:ok, _} ->
+        update_exemplar(exemplar, %{parsed_at: NaiveDateTime.utc_now()})
+
+      {:error, error} ->
+        IO.puts("There was an error parsing exemplar ##{exemplar.id}:")
+        IO.inspect(error)
+        {:error, error}
     end
   end
 
-  def process_exemplar_text_elements(exemplar, data) do
-    data
-    |> Enum.group_by(fn el -> el[:tag_name] end)
-    |> Enum.each(fn {_k, v} ->
-      [starts, ends] =
-        case Enum.group_by(v, fn x -> Map.has_key?(x, :start) end) do
-          %{true: starts, false: ends} -> [starts, ends]
-          %{true: starts} -> [starts, []]
-          %{false: ends} -> [[], ends]
-        end
+  def parse_exemplar_docx(%Exemplar{} = exemplar) do
+    # `track_changes: "all"` catches comments; see example below
+    {:ok, ast} = Panpipe.ast(input: exemplar.filename, track_changes: "all")
+    fragments = Map.get(ast, :children, []) |> Enum.map(&collect_fragments/1)
+    serialized_fragments = fragments |> Enum.map(&serialize_for_database/1)
 
-      indexed_starts = Enum.with_index(starts)
-
-      indexed_starts
-      |> Enum.each(fn {start, i} ->
-        matching_end =
-          case Enum.fetch(ends, i) do
-            {:ok, e} ->
-              e
-
-            :error ->
-              IO.inspect(
-                "No matching end node found! Index: #{i}\n#{inspect(start)}\nExemplar ID: #{exemplar.id}"
-              )
-
-              nil
-          end
-
-        element_type =
-          case ElementTypes.find_or_create_element_type(%{name: start[:tag_name]}) do
-            {:ok, element_type} ->
-              element_type
-
-            {:error, reason} ->
-              IO.inspect("There was an error finding or creating an ElementType: #{reason}")
-              nil
-          end
-
-        end_node =
-          TextNodes.get_by(%{
+    nodes =
+      serialized_fragments
+      |> Enum.map(fn {location, text, elements} ->
+        {:ok, text_node} =
+          TextNodes.find_or_create_text_node(%{
             exemplar_id: exemplar.id,
-            location: matching_end[:location]
+            location: location,
+            text: text
           })
 
-        start_node =
-          TextNodes.get_by(%{
-            exemplar_id: exemplar.id,
-            location: start[:location]
-          })
+        elements
+        |> Enum.map(fn el ->
+          {:ok, element_type} =
+            ElementTypes.find_or_create_element_type(%{name: Atom.to_string(el[:type])})
 
-        unless is_nil(start_node) or is_nil(end_node) do
-          TextElements.find_or_create_text_element(%{
-            attributes: start[:attributes],
-            element_type_id: element_type.id,
-            end_offset: matching_end[:offset] || 0,
-            end_text_node_id: end_node.id,
-            start_offset: start[:offset] || 0,
-            start_text_node_id: start_node.id
-          })
-        end
+          {:ok, text_element} =
+            TextElements.find_or_create_text_element(
+              el
+              |> Map.delete(:type)
+              |> Map.merge(%{
+                element_type_id: element_type.id,
+                end_text_node_id: text_node.id,
+                start_text_node_id: text_node.id
+              })
+              |> Map.put_new(:attributes, %{})
+              |> Map.put_new(:end_offset, el[:start_offset])
+            )
+
+          {:ok, {element_type, text_element}}
+        end)
+
+        {:ok, text_node}
       end)
-    end)
+
+    {:ok, nodes}
   end
 
-  def process_exemplar_text_nodes(exemplar, nodes) do
-    Enum.each(nodes, fn el ->
-      TextNodes.find_or_create_text_node(
-        Map.merge(el, %{
-          exemplar_id: exemplar.id
-        })
-      )
-    end)
+  def serialize_for_database(list) do
+    # TODO: (charles) filter for locations first
+    [location | list] = set_location(list)
+    text = list |> Enum.reduce("", &flatten_string/2) |> String.trim_leading()
+
+    # if getting the location has left the node starting with a single space,
+    # pop that element off the node entirely. This helps to avoid off-by-one
+    # errors in offsets. An assumption is made that a node that begins with
+    # more than a single space character does so for a reason, so we maintain
+    # that string
+    list =
+      if List.first(list) == {:string, " "} do
+        tl(list)
+      else
+        list
+      end
+
+    {text_elements, _final_offset} = list |> Enum.reduce({[], 0}, &tag_elements/2)
+
+    {location, text, text_elements}
   end
 
-  defp parse_exemplar_docx(%Exemplar{} = exemplar) do
-    # We're just going to open the file in memory for now,
-    # but if this causes issues we can set {:cwd, 'some_tmp_dir'}
-    # and just clean up the files later
-    {:ok, zip_handle} = :zip.zip_open(String.to_charlist(exemplar.filename), [:memory])
-    {:ok, doc} = parse_zipped_xml(zip_handle, "word/document.xml")
-    # {:ok, endnotes} = parse_zipped_xml(zip_handle, "word/endnotes.xml")
-    # {:ok, footnotes} = parse_zipped_xml(zip_handle, "word/footnotes.xml")
-    # {:ok, people} = parse_zipped_xml(zip_handle, "word/people.xml")
+  def set_location(list) do
+    [maybe_location_fragment | rest] = list
 
-    {:ok, parsed_doc} =
-      Saxy.parse_string(
-        doc,
-        Xml.Docx.ChsDocumentHandler,
-        %{
-          text_elements: [],
-          text_nodes: []
-        }
-      )
+    maybe_location_string = get_maybe_location_string(maybe_location_fragment) || ""
 
-    process_exemplar_text_nodes(
-      exemplar,
-      Map.get(parsed_doc, :text_nodes, [])
-    )
+    location =
+      case Regex.run(@location_regex, maybe_location_string) do
+        regex_list when is_list(regex_list) -> parse_location_marker(regex_list)
+        _ -> maybe_location_fragment
+      end
 
-    process_exemplar_text_elements(
-      exemplar,
-      Map.get(parsed_doc, :text_elements)
-    )
-
-    :zip.zip_close(zip_handle)
-
-    update_exemplar(exemplar, %{parsed_at: DateTime.utc_now()})
+    [location | rest]
   end
 
-  defp parse_zipped_xml(zip_handle, filename) do
-    {:ok, {_name, binary}} =
-      :zip.zip_get(
-        String.to_charlist(filename),
-        zip_handle
-      )
+  def get_maybe_location_string(fragment) do
+    case fragment do
+      [string: string] ->
+        string
 
-    {:ok, binary}
+      {:string, string} ->
+        string
+
+      {_, maybe_list} when is_list(maybe_list) ->
+        maybe_list |> Enum.find_value(&get_maybe_location_string/1)
+
+      _ ->
+        false
+    end
+  end
+
+  defp parse_location_marker(regex_list) do
+    List.first(regex_list)
+    |> String.replace("{", "")
+    |> String.replace("}", "")
+    |> String.split(".")
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def tag_elements(fragment, {elements, offset}) do
+    case fragment do
+      [string: text] ->
+        {elements, offset + String.length(text)}
+
+      {:string, text} ->
+        {elements, offset + String.length(text)}
+
+      {:comment, comment} ->
+        {elements ++
+           [
+             %{
+               attributes: Map.get(comment, :attributes),
+               content: Map.get(comment, :content, []) |> Enum.reduce("", &flatten_string/2),
+               start_offset: offset,
+               type: :comment
+             }
+           ], offset}
+
+      {:emph, emph} ->
+        s = emph |> Enum.reduce("", &flatten_string/2)
+        end_offset = offset + String.length(s)
+
+        {elements ++
+           [
+             %{
+               content: s,
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :emph
+             }
+           ], end_offset}
+
+      {:note, note} ->
+        {elements ++
+           [
+             %{
+               content: note |> Enum.reduce("", &flatten_string/2),
+               start_offset: offset,
+               type: :note
+             }
+           ], offset}
+
+      {:strong, strong} ->
+        s = strong |> Enum.reduce("", &flatten_string/2)
+        end_offset = offset + String.length(s)
+
+        {elements ++
+           [
+             %{
+               content: s,
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :strong
+             }
+           ], end_offset}
+
+      {:underline, underline} ->
+        s = underline |> Enum.reduce("", &flatten_string/2)
+        end_offset = offset + String.length(s)
+
+        {elements ++
+           [
+             %{
+               content: s,
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :underline
+             }
+           ], end_offset}
+
+      _ ->
+        {elements, offset}
+    end
+  end
+
+  def flatten_string(fragment, string \\ "") do
+    s =
+      case fragment do
+        [string: text] -> text
+        {:string, text} -> text
+        {:comment, _} -> nil
+        {:note, _} -> nil
+        {_k, v} -> Enum.reduce(v, "", &flatten_string/2)
+        _ -> nil
+      end
+
+    "#{string}#{s}"
+  end
+
+  def collect_attributes(node) do
+    node |> Map.get(:attr, %{}) |> Map.take([:classes, :key_value_pairs])
+  end
+
+  def collect_fragments(node),
+    do: collect_fragments(node, :children)
+
+  def collect_fragments(node, attr) do
+    Map.get(node, attr, []) |> Enum.map(fn n -> handle_fragment(n) end) |> List.flatten()
+  end
+
+  def handle_fragment(%Panpipe.AST.Emph{} = fragment),
+    do: {:emph, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Note{} = fragment),
+    do: {:note, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Para{} = fragment),
+    do: collect_fragments(fragment)
+
+  def handle_fragment(%Panpipe.AST.Str{} = fragment),
+    do: {:string, Map.get(fragment, :string, "")}
+
+  def handle_fragment(%Panpipe.AST.Space{} = _fragment),
+    do: {:string, " "}
+
+  def handle_fragment(%Panpipe.AST.Span{} = fragment),
+    do:
+      {:comment,
+       %{
+         attributes: collect_attributes(fragment),
+         content: collect_fragments(fragment)
+       }}
+
+  def handle_fragment(%Panpipe.AST.Strong{} = fragment),
+    do: {:strong, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Underline{} = fragment),
+    do: {:underline, collect_fragments(fragment)}
+
+  def handle_fragment(fragment) do
+    name =
+      fragment.__struct__
+      |> Module.split()
+      |> List.last()
+      |> String.downcase()
+      |> String.to_atom()
+
+    {name, collect_fragments(fragment)}
   end
 
   defp parse_exemplar_xml(%Exemplar{} = exemplar) do

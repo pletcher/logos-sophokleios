@@ -6,6 +6,7 @@ defmodule TextServer.TextNodes do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
+  alias TextServer.TextElements.TextElement
   alias TextServer.TextNodes.TextNode
 
   @doc """
@@ -21,13 +22,14 @@ defmodule TextServer.TextNodes do
     Repo.paginate(TextNode)
   end
 
-  def list_text_nodes_by_exemplar_id(exemplar_id, params \\ []) do
+  def list_text_nodes_by_exemplar_id(exemplar_id, params \\ [page_size: 20]) do
+    text_elements_query = from te in TextElement, order_by: te.start_offset
     query =
       from(
         t in TextNode,
         where: t.exemplar_id == ^exemplar_id,
         order_by: [asc: t.location],
-        preload: [text_elements: :element_type]
+        preload: [text_elements: ^{text_elements_query, [:element_type]}]
       )
 
     Repo.paginate(query, params)

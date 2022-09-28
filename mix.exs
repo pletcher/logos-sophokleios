@@ -7,7 +7,7 @@ defmodule TextServer.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
+      compilers: [:gettext] ++ Mix.compilers() ++ [:rambo],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -40,7 +40,7 @@ defmodule TextServer.MixProject do
       {:postgrex, "~> 0.16.3"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.17.5"},
+      {:phoenix_live_view, "~> 0.18"},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.6"},
       {:esbuild, "~> 0.3", runtime: Mix.env() == :dev},
@@ -58,7 +58,9 @@ defmodule TextServer.MixProject do
       {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev},
       {:tesla, "~> 1.4"},
       {:hackney, "~> 1.17"},
-      {:oban, "~> 2.13"}
+      {:oban, "~> 2.13"},
+      {:panpipe, "~> 0.2"},
+      {:rambo, "~> 0.3.4"}
     ]
   end
 

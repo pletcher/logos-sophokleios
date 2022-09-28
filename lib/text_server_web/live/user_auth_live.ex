@@ -2,6 +2,7 @@
 # _Programming Phoenix LiveView_, pp. 57--58
 
 defmodule TextServerWeb.UserAuthLive do
+  import Phoenix.Component
   import Phoenix.LiveView
 
   alias TextServer.Accounts

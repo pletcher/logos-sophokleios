@@ -5,10 +5,12 @@
 
   <p><%= @exemplar.urn %></p>
 
-  <h2 class="text-xl font-semibold">Text Nodes (demo):</h2>
-  <%= for text_node <- @text_nodes do %>
-    <div>
-      <%= Enum.join(text_node.location, ".") %>: <%= text_node.text %>
-    </div>
-  <% end %>
+  <h2 class="text-xl font-semibold">
+    Reader (demo):
+  </h2>
+  <.live_component
+    id={:reader}
+    module={TextServerWeb.ReadingEnvironment.Reader}
+    text_nodes={@text_nodes}
+  />
 </article>

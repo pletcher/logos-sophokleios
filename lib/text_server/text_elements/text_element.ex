@@ -4,6 +4,7 @@ defmodule TextServer.TextElements.TextElement do
 
   schema "text_elements" do
     field :attributes, :map
+    field :content, :string
     field :end_offset, :integer
     field :start_offset, :integer
 
@@ -19,6 +20,7 @@ defmodule TextServer.TextElements.TextElement do
     text_element
     |> cast(attrs, [
       :attributes,
+      :content,
       :element_type_id,
       :end_offset,
       :end_text_node_id,

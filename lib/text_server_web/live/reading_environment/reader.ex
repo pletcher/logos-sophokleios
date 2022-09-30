@@ -117,6 +117,8 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         end
       end)
 
+    # NOTE: (charles) It's important, unfortunately, for the `for` statement
+    # to be on one line so that we don't get extra spaces around elements.
     ~H"""
     <p>
       <%= for {graphemes, tags} <- grouped_graphemes do %><.text_element tags={tags} text={Enum.join(graphemes)} /><% end %>

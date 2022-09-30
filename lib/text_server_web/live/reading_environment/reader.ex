@@ -73,8 +73,6 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     elements = node.text_elements
     text = node.text
 
-    dbg(node)
-
     # turn the bare graphemes list into a list of tuples
     # representing the grapheme and associated inline metadata
     # Sort of akin to what ProseMirror does: https://prosemirror.net/docs/guide/#doc

@@ -241,7 +241,6 @@ defmodule TextServer.Exemplars do
   end
 
   def serialize_for_database(list) do
-    # TODO: (charles) filter for locations first
     [location | list] = set_location(list)
     text = list |> Enum.reduce("", &flatten_string/2) |> String.trim_leading()
 
@@ -320,6 +319,7 @@ defmodule TextServer.Exemplars do
            ], offset}
 
       {:emph, emph} ->
+        IO.inspect(emph)
         s = emph |> Enum.reduce("", &flatten_string/2)
         end_offset = offset + String.length(s)
 

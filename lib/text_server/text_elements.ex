@@ -60,7 +60,9 @@ defmodule TextServer.TextElements do
       from(t in TextElement,
         where:
           t.element_type_id == ^attrs[:element_type_id] and
+            t.end_offset == ^attrs[:end_offset] and
             t.end_text_node_id == ^attrs[:end_text_node_id] and
+            t.start_offset == ^attrs[:start_offset] and
             t.start_text_node_id == ^attrs[:start_text_node_id]
       )
 

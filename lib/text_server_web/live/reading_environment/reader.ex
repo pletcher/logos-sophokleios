@@ -28,14 +28,6 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   `offset`. If the `element` spans multiple `node`s, it can still
   visually apply to every `node` in between its start and end
   `nodes`.
-
-  Something like this:
-
-  ```html
-  <Node {assigns_to_attributes(assigns, [:visible])}>
-    <Element offset={0}>Some <Element offset={4}>inner text</Element>.</Element>
-  </Node>
-  ```
   """
   def update(%{text_nodes: _text_nodes} = assigns, socket) do
     {:ok, socket |> assign(assigns)}
@@ -55,15 +47,18 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   attr :text, :string
 
   def text_element(assigns) do
-    classes = assigns[:tags] |> Enum.map(fn tag ->
-      case tag do
-        "comment" -> "bg-blue-300"
-        "emph" -> "italic"
-        "strong" -> "font-bold"
-        "underline" -> "underline"
-        _ -> tag
-      end
-    end) |> Enum.join(" ")
+    classes =
+      assigns[:tags]
+      |> Enum.map(fn tag ->
+        case tag do
+          "comment" -> "bg-blue-300"
+          "emph" -> "italic"
+          "strong" -> "font-bold"
+          "underline" -> "underline"
+          _ -> tag
+        end
+      end)
+      |> Enum.join(" ")
 
     ~H"<span class={classes}><%= @text %></span>"
   end
@@ -78,22 +73,27 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     elements = node.text_elements
     text = node.text
 
+    dbg(node)
+
     # turn the bare graphemes list into a list of tuples
     # representing the grapheme and associated inline metadata
     # Sort of akin to what ProseMirror does: https://prosemirror.net/docs/guide/#doc
-    graphemes = String.graphemes(text) |> Enum.map(fn g -> {g, []} end) |> Enum.with_index()
+    graphemes =
+      String.graphemes(text)
+      |> Enum.with_index()
+      |> Enum.map(fn {g, i} -> {i, g, []} end)
 
     tagged_graphemes =
       Enum.reduce(elements, graphemes, fn el, gs ->
         tagged =
           gs
           |> Enum.map(fn g ->
-            {{g, tags}, i} = g
+            {i, g, tags} = g
 
             if i >= el.start_offset && i < el.end_offset do
-              {{g, tags ++ [el.element_type.name]}, i}
+              {i, g, tags ++ [el.element_type.name]}
             else
-              {{g, tags}, i}
+              {i, g, tags}
             end
           end)
 
@@ -103,7 +103,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     grouped_graphemes =
       tagged_graphemes
       |> Enum.reduce([], fn tagged_grapheme, acc ->
-        {{g, tags}, _i} = tagged_grapheme
+        {_i, g, tags} = tagged_grapheme
         last = List.last(acc)
 
         if last == nil do
@@ -118,8 +118,6 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
           end
         end
       end)
-
-    dbg(grouped_graphemes)
 
     ~H"""
     <p>

@@ -1,7 +1,7 @@
 defmodule TextServerWeb.ReadingEnvironment.Reader do
   use TextServerWeb, :live_component
 
-  @doc """
+  @moduledoc """
   Every screen of TextNodes can be represented as a map of
   List<nodes> and List<elements>.
 
@@ -29,6 +29,13 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   visually apply to every `node` in between its start and end
   `nodes`.
   """
+
+  defmodule Tag do
+    @enforce_keys [:name]
+
+    defstruct [:name, :metadata]
+  end
+
   def update(%{text_nodes: _text_nodes} = assigns, socket) do
     {:ok, socket |> assign(assigns)}
   end
@@ -50,56 +57,65 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     classes =
       assigns[:tags]
       |> Enum.map(fn tag ->
-        case tag do
-          "comment" -> "bg-blue-300"
+        case tag.name do
+          "comment" -> "bg-blue-200"
           "emph" -> "italic"
           "strong" -> "font-bold"
           "underline" -> "underline"
-          _ -> tag
+          _ -> tag.name
         end
       end)
       |> Enum.join(" ")
 
-    ~H"<span class={classes}><%= @text %></span>"
-  end
+    comment_start_data = Enum.find_value(assigns[:tags], fn tag ->
+      if String.contains?(tag.name, "comment-start") do
+        tag.metadata
+      end
+    end) || %{}
 
-  # BUGS: Comments aren't showing up correctly,
-  # styles are occasionally lost
+    comment_start_id =
+      comment_start_data
+      |> Map.get("key_value_pairs", %{})
+      |> Map.get("id", nil)
+
+    comment_end_data = Enum.find_value(assigns[:tags], fn tag ->
+      if String.contains?(tag.name, "comment-end") do
+        tag.metadata
+      end
+    end) || %{}
+
+    comment_end_id =
+      comment_end_data
+      |> Map.get("key_value_pairs", %{})
+      |> Map.get("id", nil)
+
+    ~H"<span
+        class={classes}
+        data-comment-end={comment_end_id}
+        data-comment-start={comment_start_id}
+      ><%= @text %></span>"
+  end
 
   attr :text_node, :map, required: true
 
   def text_node(assigns) do
     node = assigns[:text_node]
-    elements = node.text_elements
+    elements = node.text_elements |> Enum.filter(fn e -> e.element_type.name != "comment" end)
+    comments = node.text_elements |> Enum.filter(fn e -> e.element_type.name == "comment" end)
     text = node.text
 
-    # turn the bare graphemes list into a list of tuples
+    # turn the bare graphemes list into an indexed list of tuples
     # representing the grapheme and associated inline metadata
     # Sort of akin to what ProseMirror does: https://prosemirror.net/docs/guide/#doc
     graphemes =
       String.graphemes(text)
-      |> Enum.with_index()
-      |> Enum.map(fn {g, i} -> {i, g, []} end)
+      |> Enum.with_index(fn g, i -> {i, g, []} end)
 
-    tagged_graphemes =
-      Enum.reduce(elements, graphemes, fn el, gs ->
-        tagged =
-          gs
-          |> Enum.map(fn g ->
-            {i, g, tags} = g
-
-            if i >= el.start_offset && i < el.end_offset do
-              {i, g, tags ++ [el.element_type.name]}
-            else
-              {i, g, tags}
-            end
-          end)
-
-        tagged
-      end)
+    tagged_graphemes = apply_tags(elements, graphemes)
+    commented_graphemes = apply_comments(comments, tagged_graphemes)
 
     grouped_graphemes =
-      tagged_graphemes
+      commented_graphemes
       |> Enum.reduce([], fn tagged_grapheme, acc ->
         {_i, g, tags} = tagged_grapheme
         last = List.last(acc)
@@ -112,6 +128,10 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
           if last_tags == tags do
             List.replace_at(acc, -1, {g_list ++ [g], tags})
           else
+            # This might be a good place to start if we need
+            # to improve speed at some point --- concatenation
+            # traverses the entire list each time. Not a big deal
+            # at the moment (2022-09-30), though.
             acc ++ [{[g], tags}]
           end
         end
@@ -125,4 +145,69 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     </p>
     """
   end
+
+  defp apply_tags(elements, graphemes) do
+    Enum.reduce(elements, graphemes, fn el, gs ->
+      tagged =
+        gs
+        |> Enum.map(fn g ->
+          {i, g, tags} = g
+
+          if i >= el.start_offset && i < el.end_offset do
+            {i, g, tags ++ [%Tag{name: el.element_type.name}]}
+          else
+            {i, g, tags}
+          end
+        end)
+
+      tagged
+    end)
+  end
+
+  defp apply_comments(comments, graphemes) do
+    ranged_comments = comments |> Enum.group_by(fn c ->
+      comment_id(c)
+    end, fn c ->
+      id = comment_id(c)
+      author = comment_author(c)
+      date = comment_date(c)
+      Map.new(
+        id: id,
+        author: author,
+        content: c.content,
+        date: date,
+        offset: c.start_offset
+      )
+    end) |> Enum.map(fn {_id, start_and_end} ->
+      [h | t] = start_and_end
+      t = hd(t)
+      range = h.offset..(t.offset - 1)
+
+      Map.put(h, :range, range)
+    end)
+
+    graphemes |> Enum.map(fn g ->
+      {i, g, tags} = g
+
+      applicable_comments =
+        ranged_comments
+        |> Enum.filter(fn c -> i in c.range end)
+        |> Enum.map(fn c -> %Tag{name: "comment", metadata: c} end)
+      {i, g, tags ++ applicable_comments}
+    end)
+  end
+
+  defp comment_kv_pairs(comment), do: Map.get(comment.attributes, "key_value_pairs", %{})
+  defp comment_author(comment), do: comment_kv_pairs(comment) |> Map.get("author")
+
+  defp comment_date(comment) do
+    try do
+      {:ok, date} = comment_kv_pairs(comment) |> Map.get("date") |> DateTime.from_iso8601()
+      date
+    rescue
+      _ -> nil
+    end
+  end
+
+  defp comment_id(comment), do: comment_kv_pairs(comment) |> Map.get("id")
 end

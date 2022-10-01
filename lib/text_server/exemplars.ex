@@ -313,13 +313,13 @@ defmodule TextServer.Exemplars do
              %{
                attributes: Map.get(comment, :attributes),
                content: Map.get(comment, :content, []) |> Enum.reduce("", &flatten_string/2),
+               end_offset: offset,
                start_offset: offset,
                type: :comment
              }
            ], offset}
 
       {:emph, emph} ->
-        IO.inspect(emph)
         s = emph |> Enum.reduce("", &flatten_string/2)
         end_offset = offset + String.length(s)
 

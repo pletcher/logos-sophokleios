@@ -23,6 +23,23 @@ defmodule TextServerWeb.Components do
     """
   end
 
+  attr :click_away, :string, required: true
+  attr :comments, :list, default: []
+
+  def floating_comments(%{comments: comments, click_away: click_away} = assigns) do
+    ~H"""
+    <div class="overflow-scroll bg-white shadow sm:rounded-lg" phx-click-away={click_away}>
+      <div class="px-4 py-5 sm:px-6">
+        <%= for c <- comments do %>
+          <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
+          <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
+          <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
   def small_card(%{item: item, url: url} = assigns) do
     ~H"""
     <div class="flex py-6">

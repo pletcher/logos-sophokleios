@@ -37,6 +37,11 @@ defmodule TextServer.TextElements do
   """
   def get_text_element!(id), do: Repo.get!(TextElement, id)
 
+  def get_text_elements(ids \\ []) do
+    query = from(t in TextElement, where: t.id in ^ids)
+    Repo.all(query)
+  end
+
   @doc """
   Creates a text_element.
 

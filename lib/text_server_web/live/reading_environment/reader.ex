@@ -54,11 +54,12 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   attr :text, :string
 
   def text_element(assigns) do
+    tags = assigns[:tags]
     classes =
-      assigns[:tags]
+      tags
       |> Enum.map(fn tag ->
         case tag.name do
-          "comment" -> "bg-blue-200"
+          "comment" -> "bg-blue-200 cursor-pointer"
           "emph" -> "italic"
           "strong" -> "font-bold"
           "underline" -> "underline"
@@ -67,33 +68,19 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
       end)
       |> Enum.join(" ")
 
-    comment_start_data = Enum.find_value(assigns[:tags], fn tag ->
-      if String.contains?(tag.name, "comment-start") do
-        tag.metadata
-      end
-    end) || %{}
+    if Enum.member?(tags |> Enum.map(&(&1.name)), "comment") do
+      comments =
+        tags
+        |> Enum.filter(&(&1.name == "comment"))
+        |> Enum.map(&(&1.metadata[:id]))
+        |> Jason.encode!()
 
-    comment_start_id =
-      comment_start_data
-      |> Map.get("key_value_pairs", %{})
-      |> Map.get("id", nil)
-
-    comment_end_data = Enum.find_value(assigns[:tags], fn tag ->
-      if String.contains?(tag.name, "comment-end") do
-        tag.metadata
-      end
-    end) || %{}
-
-    comment_end_id =
-      comment_end_data
-      |> Map.get("key_value_pairs", %{})
-      |> Map.get("id", nil)
-
-    ~H"<span
-        class={classes}
-        data-comment-end={comment_end_id}
-        data-comment-start={comment_start_id}
-      ><%= @text %></span>"
+      ~H"""
+      <span class={classes} phx-click="show-comments" phx-value-comments={comments}><%= @text %></span>
+      """
+    else
+      ~H"<span class={classes}><%= @text %></span>"
+    end
   end
 
   attr :text_node, :map, required: true
@@ -168,11 +155,10 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     ranged_comments = comments |> Enum.group_by(fn c ->
       comment_id(c)
     end, fn c ->
-      id = comment_id(c)
       author = comment_author(c)
       date = comment_date(c)
       Map.new(
-        id: id,
+        id: Integer.to_string(c.id),
         author: author,
         content: c.content,
         date: date,

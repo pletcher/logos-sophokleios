@@ -13,13 +13,34 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
+    text_nodes = TextNodes.list_text_nodes_by_exemplar_id(id)
+    comments =
+      text_nodes
+      |> Enum.map(fn tn -> tn.text_elements end)
+      |> List.flatten()
+      |> Enum.filter(fn te -> te.element_type.name == "comment" end)
+      |> Enum.map(fn c ->
+        kv_pairs = Map.get(c, :attributes) |> Map.get("key_value_pairs")
+        author = kv_pairs["author"]
+        {:ok, date, _} = unless kv_pairs["date"] == nil do
+          DateTime.from_iso8601(kv_pairs["date"])
+        else
+          {:ok, "No date", :fallback}
+        end
+        Map.new(
+          author: author,
+          content: c.content,
+          date: date
+        )
+      end)
+
     {:noreply,
      socket
      |> assign(
        page_title: page_title(socket.assigns.live_action),
        exemplar: Exemplars.get_exemplar!(id),
-       text_nodes: TextNodes.list_text_nodes_by_exemplar_id(id),
-       shown_comments: []
+       text_nodes: text_nodes,
+       shown_comments: comments
      )}
   end
 

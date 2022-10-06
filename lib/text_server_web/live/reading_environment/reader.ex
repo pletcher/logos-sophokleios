@@ -124,10 +124,13 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         end
       end)
 
+    location = Enum.join(node.location, ".")
+
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
-    <p>
+    <p class="mb-4" title={"Location: #{location}"}>
+      <span class="text-slate-500"><%= location %></span>
       <%= for {graphemes, tags} <- grouped_graphemes do %><.text_element tags={tags} text={Enum.join(graphemes)} /><% end %>
     </p>
     """
@@ -166,8 +169,13 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
       )
     end) |> Enum.map(fn {_id, start_and_end} ->
       [h | t] = start_and_end
-      t = hd(t)
-      range = h.offset..(t.offset - 1)
+
+      range = unless t == [] do
+        t = hd(t)
+        h.offset..(t.offset - 1)
+      else
+        h.offset..Enum.count(graphemes)
+      end
 
       Map.put(h, :range, range)
     end)

@@ -31,9 +31,11 @@ defmodule TextServerWeb.Components do
     <div class="overflow-scroll bg-white shadow sm:rounded-lg" phx-click-away={click_away}>
       <div class="px-4 py-5 sm:px-6">
         <%= for c <- comments do %>
-          <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
-          <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
-          <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
+          <div class="my-4">
+            <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
+            <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
+            <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
+          </div>
         <% end %>
       </div>
     </div>

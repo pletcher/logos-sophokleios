@@ -205,6 +205,7 @@ defmodule TextServer.Exemplars do
 
     nodes =
       serialized_fragments
+      |> Enum.filter(fn {_location, text, _elements} -> String.trim(text) != "" end)
       |> Enum.map(fn {location, text, elements} ->
         {:ok, text_node} =
           TextNodes.find_or_create_text_node(%{
@@ -269,6 +270,7 @@ defmodule TextServer.Exemplars do
     location =
       case Regex.run(@location_regex, maybe_location_string) do
         regex_list when is_list(regex_list) -> parse_location_marker(regex_list)
+        nil -> [0]
         _ -> maybe_location_fragment
       end
 

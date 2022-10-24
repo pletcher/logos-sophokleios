@@ -52,31 +52,33 @@ defmodule TextServer.Exemplars do
   end
 
   def get_exemplar_page(exemplar_id, page_number \\ 1) do
-    total_pages_query = from(
-      p in Page,
-      where: p.exemplar_id == ^exemplar_id,
-      select: max(p.page_number)
-    )
+    total_pages_query =
+      from(
+        p in Page,
+        where: p.exemplar_id == ^exemplar_id,
+        select: max(p.page_number)
+      )
 
     total_pages = Repo.one(total_pages_query)
 
-    n = if page_number > total_pages do
-      total_pages
-    else
-      page_number
-    end
+    n =
+      if page_number > total_pages do
+        total_pages
+      else
+        page_number
+      end
 
     page =
       Page
       |> where([p], p.exemplar_id == ^exemplar_id and p.page_number == ^n)
       |> Repo.one()
 
-
-    text_nodes = TextNodes.get_text_nodes_by_exemplar_between_locations(
-      exemplar_id,
-      page.start_location,
-      page.end_location
-    )
+    text_nodes =
+      TextNodes.get_text_nodes_by_exemplar_between_locations(
+        exemplar_id,
+        page.start_location,
+        page.end_location
+      )
 
     %ExemplarPage{
       exemplar_id: exemplar_id,
@@ -478,6 +480,8 @@ defmodule TextServer.Exemplars do
         {:string, text} -> text
         {:comment, _} -> nil
         {:note, _} -> nil
+        {:change, _} -> nil
+        {:span, _} -> nil
         {_k, v} -> Enum.reduce(v, "", &flatten_string/2)
         _ -> nil
       end
@@ -511,13 +515,27 @@ defmodule TextServer.Exemplars do
   def handle_fragment(%Panpipe.AST.Space{} = _fragment),
     do: {:string, " "}
 
-  def handle_fragment(%Panpipe.AST.Span{} = fragment),
-    do:
-      {:comment,
-       %{
-         attributes: collect_attributes(fragment),
-         content: collect_fragments(fragment)
-       }}
+  def handle_fragment(%Panpipe.AST.Span{} = fragment) do
+    attributes = collect_attributes(fragment)
+    classes = Map.get(attributes, :classes, [])
+
+    fragment_type =
+      cond do
+        Enum.member?(classes, "deletion") -> :change
+        Enum.member?(classes, "insertion") -> :change
+        Enum.member?(classes, "paragraph-deletion") -> :change
+        Enum.member?(classes, "paragraph-insertion") -> :change
+        Enum.member?(classes, "comment-end") -> :comment
+        Enum.member?(classes, "comment-start") -> :comment
+        true -> :span
+      end
+
+    {fragment_type,
+     %{
+       attributes: attributes,
+       content: collect_fragments(fragment)
+     }}
+  end
 
   def handle_fragment(%Panpipe.AST.Strong{} = fragment),
     do: {:strong, collect_fragments(fragment)}

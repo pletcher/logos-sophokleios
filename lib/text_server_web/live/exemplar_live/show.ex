@@ -12,17 +12,53 @@ defmodule TextServerWeb.ExemplarLive.Show do
   end
 
   @impl true
-  def handle_params(%{"id" => id}, _, socket) do
-    text_nodes = TextNodes.list_text_nodes_by_exemplar_id(id)
+  def handle_params(%{"id" => id, "page" => page_number}, _, socket) do
+    %{comments: comments, page: page} = get_page(id, page_number)
+
+    {:noreply,
+     socket
+     |> assign(
+       comments: comments,
+       exemplar: Exemplars.get_exemplar!(id),
+       highlighted_comments: [],
+       page: page,
+       page_title: page_title(socket.assigns.live_action),
+       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes()
+     )}
+  end
+
+  def handle_params(params, session, socket) do
+    handle_params(
+      params |> Enum.into(%{"page" => 1}),
+      session,
+      socket
+    )
+  end
+
+  @impl true
+  def handle_event("highlight-comments", %{"comments" => comment_ids}, socket) do
+    ids =
+      comment_ids
+      |> Jason.decode!()
+      |> Enum.map(&String.to_integer/1)
+
+    {:noreply, socket |> assign(highlighted_comments: ids)}
+  end
+
+  defp get_page(exemplar_id, page_number) do
+    page = Exemplars.get_exemplar_page(exemplar_id, page_number)
 
     comments =
-      text_nodes
+      page.text_nodes
       |> Enum.map(fn tn -> tn.text_elements end)
       |> List.flatten()
       |> Enum.filter(fn te ->
-        kv_pairs = Map.get(te, :attributes) |> Map.get("key_value_pairs")
+        attrs = Map.get(te, :attributes)
+        kv_pairs = Map.get(attrs, "key_value_pairs")
+        classes = Map.get(attrs, "classes", [])
 
-        te.element_type.name == "comment" && kv_pairs["date"] != nil
+        te.element_type.name == "comment" &&
+          kv_pairs["date"] != nil
       end)
       |> Enum.map(fn c ->
         kv_pairs = Map.get(c, :attributes) |> Map.get("key_value_pairs")
@@ -37,25 +73,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
         })
       end)
 
-    {:noreply,
-     socket
-     |> assign(
-       page_title: page_title(socket.assigns.live_action),
-       exemplar: Exemplars.get_exemplar!(id),
-       text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
-       comments: comments,
-       highlighted_comments: []
-     )}
-  end
-
-  @impl true
-  def handle_event("highlight-comments", %{"comments" => comment_ids}, socket) do
-    ids =
-      comment_ids
-      |> Jason.decode!()
-      |> Enum.map(&String.to_integer/1)
-
-    {:noreply, socket |> assign(highlighted_comments: ids)}
+    %{comments: comments, page: page}
   end
 
   defp page_title(:show), do: "Show Exemplar"

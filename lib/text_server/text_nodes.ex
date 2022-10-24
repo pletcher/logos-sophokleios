@@ -58,6 +58,22 @@ defmodule TextServer.TextNodes do
     Repo.paginate(query, params)
   end
 
+  def get_text_nodes_by_exemplar_between_locations(exemplar_id, start_location, end_location) do
+    text_elements_query = from te in TextElement, order_by: te.start_offset
+
+    query =
+      from(
+        t in TextNode,
+        where: t.exemplar_id == ^exemplar_id and
+          t.location >= ^start_location and
+          t.location <= ^end_location,
+        order_by: [asc: t.location],
+        preload: [text_elements: ^{text_elements_query, [:element_type]}]
+      )
+
+    Repo.all(query)
+  end
+
   def tag_text_nodes(text_nodes \\ []) do
     Enum.map(text_nodes, &TextNode.tag_graphemes/1)
   end

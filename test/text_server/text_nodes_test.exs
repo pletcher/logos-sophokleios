@@ -71,6 +71,23 @@ defmodule TextServer.TextNodesTest do
       text_node = text_node_fixture()
       assert %Ecto.Changeset{} = TextNodes.change_text_node(text_node)
     end
+
+    test "get_text_nodes_by_exemplar_between_locations/3 returns text nodes between the given locations" do
+      exemplar = TextServer.ExemplarsFixtures.exemplar_fixture()
+
+      Enum.each(1..5, fn i ->
+        text_node_fixture(%{exemplar_id: exemplar.id, text: "Text #{i}", location: [1, i]})
+      end)
+
+      text_nodes = TextNodes.get_text_nodes_by_exemplar_between_locations(exemplar.id, [1, 2], [1, 4])
+      locations = Enum.map(text_nodes, &(&1.location))
+
+      assert Enum.member?(locations, [1, 2])
+      assert Enum.member?(locations, [1, 3])
+      assert Enum.member?(locations, [1, 4])
+      refute Enum.member?(locations, [1, 1])
+      refute Enum.member?(locations, [1, 5])
+    end
   end
 
   describe "TextNode" do

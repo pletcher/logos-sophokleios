@@ -7,6 +7,7 @@ defmodule TextServer.ExemplarsTest do
 
   describe "exemplars" do
     import TextServer.ExemplarsFixtures
+    import TextServer.TextNodesFixtures
 
     @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
 
@@ -18,6 +19,26 @@ defmodule TextServer.ExemplarsTest do
     test "get_exemplar!/1 returns the exemplar with given id" do
       exemplar = exemplar_fixture()
       assert Exemplars.get_exemplar!(exemplar.id) == exemplar
+    end
+
+    test "get_exemplar_page/2 returns TextNodes for the given exemplar_id and page_number" do
+      exemplar = exemplar_fixture()
+
+      Enum.each(1..5, fn i ->
+        text_node_fixture(%{
+          exemplar_id: exemplar.id,
+          location: [1, i, 1]
+        })
+      end)
+
+      Exemplars.paginate_exemplar(exemplar)
+
+      page = Exemplars.get_exemplar_page(exemplar.id, 2)
+      text_nodes = page.text_nodes
+      text_node = List.first(text_nodes)
+
+      assert page.page_number == 2
+      assert text_node.location == [1, 2, 1]
     end
 
     test "create_exemplar/1 with valid data creates a exemplar" do

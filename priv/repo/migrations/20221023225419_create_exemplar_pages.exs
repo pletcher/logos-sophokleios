@@ -12,5 +12,6 @@ defmodule TextServer.Repo.Migrations.CreateExemplarPages do
     end
 
     create index(:exemplar_pages, [:exemplar_id])
+    create unique_index(:exemplar_pages, [:exemplar_id, :page_number])
   end
 end

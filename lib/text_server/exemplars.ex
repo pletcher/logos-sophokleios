@@ -10,13 +10,18 @@ defmodule TextServer.Exemplars do
 
   alias TextServer.ElementTypes
   alias TextServer.ExemplarJobRunner
-  alias TextServer.Exemplars.Page, as: ExemplarPage
+  alias TextServer.Exemplars.Page
   alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects.Exemplar, as: ProjectExemplar
   alias TextServer.TextElements
   alias TextServer.TextNodes
+  alias TextServer.TextNodes.TextNode
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
+
+  defmodule ExemplarPage do
+    defstruct [:exemplar_id, :page_number, :text_nodes, :total_pages]
+  end
 
   @doc """
   Returns the list of exemplars.
@@ -44,6 +49,84 @@ defmodule TextServer.Exemplars do
     Exemplar
     |> where([e], e.id not in ^exemplar_ids)
     |> Repo.paginate(pagination_params)
+  end
+
+  def get_exemplar_page(exemplar_id, page_number \\ 1) do
+    total_pages_query = from(
+      p in Page,
+      where: p.exemplar_id == ^exemplar_id,
+      select: max(p.page_number)
+    )
+
+    total_pages = Repo.one(total_pages_query)
+
+    n = if page_number > total_pages do
+      total_pages
+    else
+      page_number
+    end
+
+    page =
+      Page
+      |> where([p], p.exemplar_id == ^exemplar_id and p.page_number == ^n)
+      |> Repo.one()
+
+
+    text_nodes = TextNodes.get_text_nodes_by_exemplar_between_locations(
+      exemplar_id,
+      page.start_location,
+      page.end_location
+    )
+
+    %ExemplarPage{
+      exemplar_id: exemplar_id,
+      page_number: n,
+      text_nodes: text_nodes,
+      total_pages: total_pages
+    }
+  end
+
+  @doc """
+  Groups an Exemplar's TextNodes into Pages by location.
+  Returns {:ok, total_pages} on success.
+  """
+
+  def paginate_exemplar(exemplar) do
+    q =
+      from(
+        t in TextNode,
+        where: t.exemplar_id == ^exemplar.id,
+        order_by: [asc: t.location]
+      )
+
+    grouped_text_nodes =
+      Repo.all(q)
+      |> Enum.filter(fn tn -> tn.location != [0] end)
+      |> Enum.group_by(fn tn ->
+        [first | tail] = tn.location
+        [second | _rest] = tail
+
+        {first, second}
+      end)
+
+    keys = Map.keys(grouped_text_nodes) |> Enum.sort()
+
+    keys
+    |> Enum.with_index()
+    |> Enum.each(fn {k, i} ->
+      text_nodes = Map.get(grouped_text_nodes, k)
+      first_node = List.first(text_nodes)
+      last_node = List.last(text_nodes)
+
+      create_page(%{
+        end_location: last_node.location,
+        exemplar_id: exemplar.id,
+        page_number: i + 1,
+        start_location: first_node.location
+      })
+    end)
+
+    {:ok, length(keys)}
   end
 
   @doc """
@@ -85,8 +168,8 @@ defmodule TextServer.Exemplars do
 
   def create_page(attrs) do
     {:ok, page} =
-      %ExemplarPage{}
-      |> ExemplarPage.changeset(attrs)
+      %Page{}
+      |> Page.changeset(attrs)
       |> Repo.insert()
 
     {:ok, page}

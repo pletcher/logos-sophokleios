@@ -1,10 +1,7 @@
 defmodule Mix.Tasks.Exemplars.Paginate do
-  import Ecto.Query
-
   use Mix.Task
 
-  alias TextServer.Repo
-  alias TextServer.TextNodes.TextNode
+  alias TextServer.Exemplars
 
   def run(args) do
     Mix.Task.run("app.start")
@@ -13,7 +10,7 @@ defmodule Mix.Tasks.Exemplars.Paginate do
 
     exemplar_id = Keyword.get(parsed, :id)
 
-    paginate_pausanias(exemplar_id)
+    paginate(exemplar_id)
 
     #   # pagination is actually not as straightforward as one might think:
     #   # for something that only has one level of reference,
@@ -24,39 +21,7 @@ defmodule Mix.Tasks.Exemplars.Paginate do
     #   # to the second element in the location array
   end
 
-  defp paginate_pausanias(exemplar_id) do
-    q =
-      from(
-        t in TextNode,
-        where: t.exemplar_id == ^exemplar_id,
-        order_by: [asc: t.location]
-      )
-
-    grouped_text_nodes =
-      Repo.all(q)
-      |> Enum.filter(fn tn -> tn.location != [0] end)
-      |> Enum.group_by(fn tn ->
-        [first | tail] = tn.location
-        [second | _rest] = tail
-
-        {first, second}
-      end)
-
-    keys = Map.keys(grouped_text_nodes) |> Enum.sort()
-
-    keys
-    |> Enum.with_index()
-    |> Enum.each(fn {k, i} ->
-      text_nodes = Map.get(grouped_text_nodes, k)
-      first_node = List.first(text_nodes)
-      last_node = List.last(text_nodes)
-
-      TextServer.Exemplars.create_page(%{
-        end_location: last_node.location,
-        exemplar_id: exemplar_id,
-        page_number: i + 1,
-        start_location: first_node.location
-      })
-    end)
+  defp paginate(exemplar_id) do
+    Exemplars.paginate_exemplar(exemplar_id)
   end
 end

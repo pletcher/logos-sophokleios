@@ -27,5 +27,6 @@ defmodule TextServer.Exemplars.Page do
       :start_location
     ])
     |> assoc_constraint(:exemplar)
+    |> unique_constraint([:exemplar_id, :page_number])
   end
 end

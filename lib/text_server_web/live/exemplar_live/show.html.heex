@@ -19,8 +19,11 @@
     </div>
 
     <div class="max-w-lg w-lg flex-grow">
-      <%= if length(@shown_comments) > 0 do %>
-        <Components.floating_comments click_away="hide-comments" comments={@shown_comments} />
+      <%= if length(@comments) > 0 do %>
+        <Components.floating_comments
+          comments={@comments}
+          highlighted_comments={@highlighted_comments}
+        />
       <% end %>
     </div>
   </div>

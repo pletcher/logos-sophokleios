@@ -10,6 +10,7 @@ defmodule TextServer.Exemplars do
 
   alias TextServer.ElementTypes
   alias TextServer.ExemplarJobRunner
+  alias TextServer.Exemplars.Page, as: ExemplarPage
   alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects.Exemplar, as: ProjectExemplar
   alias TextServer.TextElements
@@ -80,6 +81,15 @@ defmodule TextServer.Exemplars do
       |> Repo.insert()
 
     {:ok, exemplar}
+  end
+
+  def create_page(attrs) do
+    {:ok, page} =
+      %ExemplarPage{}
+      |> ExemplarPage.changeset(attrs)
+      |> Repo.insert()
+
+    {:ok, page}
   end
 
   def create_exemplar(attrs, work, project) do

@@ -66,6 +66,11 @@ Comments get as specific as possible (e.g., up to a specific lemma); but if that
 fails, specificity falls back up the citation chain (e.g., on the specific
 section in Pausanias).
 
+## Funding
+
+https://research.fas.harvard.edu/deans-competitive-fund-promising-scholarship
+
+
 ## TODO: Blog posts
 
 Allow writing blog posts on commentaries in progress

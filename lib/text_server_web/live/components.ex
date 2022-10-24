@@ -23,33 +23,41 @@ defmodule TextServerWeb.Components do
     """
   end
 
-  attr :click_away, :string, required: true
   attr :comments, :list, default: []
+  attr :highlighted_comments, :list, default: []
 
-  def floating_comments(%{comments: comments, click_away: click_away} = assigns) do
+  def floating_comments(
+        %{
+          comments: comments,
+          highlighted_comments: highlighted_comments
+        } = assigns
+      ) do
     ~H"""
-    <div class="overflow-scroll bg-white shadow sm:rounded-lg" phx-click-away={click_away}>
-      <div class="px-4 py-5 sm:px-6">
-        <%= for c <- comments do %>
-          <div class="my-4">
-            <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
-            <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
-            <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
-          </div>
-        <% end %>
-      </div>
+    <div class="overflow-scroll bg-white shadow sm:rounded-lg">
+      <%= for c <- comments do %>
+        <div class={comment_class(c, highlighted_comments)}>
+          <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
+          <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
+          <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
+        </div>
+      <% end %>
     </div>
     """
+  end
+
+  defp comment_class(comment, highlighted_comments) do
+    if Enum.member?(highlighted_comments, Map.get(comment, :id, nil)) do
+      "border-2 border-stone-800 my-4 p-4"
+    else
+      "my-4 p-4"
+    end
   end
 
   def small_card(%{item: item, url: url} = assigns) do
     ~H"""
     <div class="flex py-6">
       <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-        <img
-          src="https://www.fillmurray.com/480/480"
-          class="h-full w-full object-cover object-center"
-        />
+        <img src="https://www.fillmurray.com/480/480" class="h-full w-full object-cover object-center" />
       </div>
 
       <div class="ml-4 flex flex-1 flex-col">

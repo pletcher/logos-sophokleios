@@ -30,21 +30,17 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   `nodes`.
   """
 
-  defmodule Tag do
-    @enforce_keys [:name]
-
-    defstruct [:name, :metadata]
-  end
-
   def update(%{text_nodes: _text_nodes} = assigns, socket) do
     {:ok, socket |> assign(assigns)}
   end
+
+  attr :text_nodes, :list, required: true
 
   def reading_page(assigns) do
     ~H"""
     <article>
       <%= for text_node <- @text_nodes do %>
-        <.text_node text_node={text_node} />
+        <.text_node graphemes_with_tags={text_node.graphemes_with_tags} location={text_node.location} />
       <% end %>
     </article>
     """
@@ -55,153 +51,49 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
 
   def text_element(assigns) do
     tags = assigns[:tags]
+
     classes =
       tags
-      |> Enum.map(fn tag ->
-        case tag.name do
-          "comment" -> "bg-blue-200 cursor-pointer"
-          "emph" -> "italic"
-          "strong" -> "font-bold"
-          "underline" -> "underline"
-          _ -> tag.name
-        end
-      end)
+      |> Enum.map(&tag_classes/1)
       |> Enum.join(" ")
 
-    if Enum.member?(tags |> Enum.map(&(&1.name)), "comment") do
+    if Enum.member?(tags |> Enum.map(& &1.name), "comment") do
       comments =
         tags
         |> Enum.filter(&(&1.name == "comment"))
-        |> Enum.map(&(&1.metadata[:id]))
+        |> Enum.map(& &1.metadata[:id])
         |> Jason.encode!()
 
       ~H"""
-      <span class={classes} phx-click="show-comments" phx-value-comments={comments}><%= @text %></span>
+      <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
       """
     else
       ~H"<span class={classes}><%= @text %></span>"
     end
   end
 
-  attr :text_node, :map, required: true
+  attr :graphemes_with_tags, :list, required: true
+  attr :location, :integer, required: true
 
   def text_node(assigns) do
-    node = assigns[:text_node]
-    elements = node.text_elements |> Enum.filter(fn e -> e.element_type.name != "comment" end)
-    comments = node.text_elements |> Enum.filter(fn e -> e.element_type.name == "comment" end)
-    text = node.text
-
-    # turn the bare graphemes list into an indexed list of tuples
-    # representing the grapheme and associated inline metadata
-    # Sort of akin to what ProseMirror does: https://prosemirror.net/docs/guide/#doc
-    graphemes =
-      String.graphemes(text)
-      |> Enum.with_index(fn g, i -> {i, g, []} end)
-
-    tagged_graphemes = apply_tags(elements, graphemes)
-    commented_graphemes = apply_comments(comments, tagged_graphemes)
-
-    grouped_graphemes =
-      commented_graphemes
-      |> Enum.reduce([], fn tagged_grapheme, acc ->
-        {_i, g, tags} = tagged_grapheme
-        last = List.last(acc)
-
-        if last == nil do
-          [{[g], tags}]
-        else
-          {g_list, last_tags} = last
-
-          if last_tags == tags do
-            List.replace_at(acc, -1, {g_list ++ [g], tags})
-          else
-            # This might be a good place to start if we need
-            # to improve speed at some point --- concatenation
-            # traverses the entire list each time. Not a big deal
-            # at the moment (2022-09-30), though.
-            acc ++ [{[g], tags}]
-          end
-        end
-      end)
-
-    location = Enum.join(node.location, ".")
-
+    location = assigns[:location] |> Enum.join(".")
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
     <p class="mb-4" title={"Location: #{location}"}>
       <span class="text-slate-500"><%= location %></span>
-      <%= for {graphemes, tags} <- grouped_graphemes do %><.text_element tags={tags} text={Enum.join(graphemes)} /><% end %>
+      <%= for {graphemes, tags} <- @graphemes_with_tags do %><.text_element tags={tags} text={Enum.join(graphemes)} /><% end %>
     </p>
     """
   end
 
-  defp apply_tags(elements, graphemes) do
-    Enum.reduce(elements, graphemes, fn el, gs ->
-      tagged =
-        gs
-        |> Enum.map(fn g ->
-          {i, g, tags} = g
-
-          if i >= el.start_offset && i < el.end_offset do
-            {i, g, tags ++ [%Tag{name: el.element_type.name}]}
-          else
-            {i, g, tags}
-          end
-        end)
-
-      tagged
-    end)
-  end
-
-  defp apply_comments(comments, graphemes) do
-    ranged_comments = comments |> Enum.group_by(fn c ->
-      comment_id(c)
-    end, fn c ->
-      author = comment_author(c)
-      date = comment_date(c)
-      Map.new(
-        id: Integer.to_string(c.id),
-        author: author,
-        content: c.content,
-        date: date,
-        offset: c.start_offset
-      )
-    end) |> Enum.map(fn {_id, start_and_end} ->
-      [h | t] = start_and_end
-
-      range = unless t == [] do
-        t = hd(t)
-        h.offset..(t.offset - 1)
-      else
-        h.offset..Enum.count(graphemes)
-      end
-
-      Map.put(h, :range, range)
-    end)
-
-    graphemes |> Enum.map(fn g ->
-      {i, g, tags} = g
-
-      applicable_comments =
-        ranged_comments
-        |> Enum.filter(fn c -> i in c.range end)
-        |> Enum.map(fn c -> %Tag{name: "comment", metadata: c} end)
-      {i, g, tags ++ applicable_comments}
-    end)
-  end
-
-  defp comment_kv_pairs(comment), do: Map.get(comment.attributes, "key_value_pairs", %{})
-  defp comment_author(comment), do: comment_kv_pairs(comment) |> Map.get("author")
-
-  defp comment_date(comment) do
-    try do
-      {:ok, date} = comment_kv_pairs(comment) |> Map.get("date") |> DateTime.from_iso8601()
-      date
-    rescue
-      _ -> nil
+  defp tag_classes(tag) do
+    case tag.name do
+      "comment" -> "bg-blue-200 cursor-pointer"
+      "emph" -> "italic"
+      "strong" -> "font-bold"
+      "underline" -> "underline"
+      _ -> tag.name
     end
   end
-
-  defp comment_id(comment), do: comment_kv_pairs(comment) |> Map.get("id")
 end

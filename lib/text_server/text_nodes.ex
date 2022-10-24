@@ -22,8 +22,31 @@ defmodule TextServer.TextNodes do
     Repo.paginate(TextNode)
   end
 
+  @doc """
+  Returns a paginated list of text_nodes with their text_elements,
+  based on exemplar_id.
+
+  This function is especially useful for the ReadingEnvironment.
+
+  ## Examples
+
+      iex> list_text_nodes_by_exemplar_id(1, [page_size: 20, page: 2])
+      %Scrivener.Page{
+        entries: [
+          %TextNode{
+            text_elements: [%TextElement{}, ...],
+            ...
+          },
+          ...
+        ],
+        page_number: 2,
+        page_size: 20,
+        total_pages: 4
+      }
+  """
   def list_text_nodes_by_exemplar_id(exemplar_id, params \\ [page_size: 20]) do
     text_elements_query = from te in TextElement, order_by: te.start_offset
+
     query =
       from(
         t in TextNode,
@@ -33,6 +56,10 @@ defmodule TextServer.TextNodes do
       )
 
     Repo.paginate(query, params)
+  end
+
+  def tag_text_nodes(text_nodes \\ []) do
+    Enum.map(text_nodes, &TextNode.tag_graphemes/1)
   end
 
   @doc """

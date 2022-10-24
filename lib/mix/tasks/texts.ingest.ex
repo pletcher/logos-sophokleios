@@ -332,7 +332,7 @@ defmodule Mix.Tasks.Texts.Ingest do
         |> Enum.map(fn f ->
           exemplar_data = parse_exemplar_xml(f)
 
-          exemplar =
+          _exemplar =
             if is_nil(exemplar_data) do
               IO.inspect("Unable to parse exemplar file #{f}")
               nil
@@ -351,22 +351,22 @@ defmodule Mix.Tasks.Texts.Ingest do
           # refers to anything contained in an exemplar's body, including
           # TextNodes. TextNodes are differentiated from TextElements by
           # containing a :content key.
-          _text_elements =
-            unless is_nil(exemplar) do
-              elems = exemplar_data[:body][:text_elements]
+          # _text_elements =
+          #   unless is_nil(exemplar) do
+          #     elems = exemplar_data[:body][:text_elements]
 
-              if is_nil(elems) do
-                IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
-                []
-              else
-                TextServer.Exemplars.process_exemplar_text_nodes(
-                  exemplar,
-                  Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
-                )
+          #     if is_nil(elems) do
+          #       IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
+          #       []
+          #     else
+          #       TextServer.Exemplars.process_exemplar_text_nodes(
+          #         exemplar,
+          #         Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
+          #       )
 
-                TextServer.Exemplars.process_exemplar_text_elements(exemplar, elems)
-              end
-            end
+          #       TextServer.Exemplars.process_exemplar_text_elements(exemplar, elems)
+          #     end
+          #   end
 
           f
         end)

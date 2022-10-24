@@ -47,9 +47,9 @@ defmodule TextServerWeb.Components do
 
   defp comment_class(comment, highlighted_comments) do
     if Enum.member?(highlighted_comments, Map.get(comment, :id, nil)) do
-      "border-2 border-stone-800 my-4 p-4"
+      "border-2 border-stone-800 p-4 rounded-lg"
     else
-      "my-4 p-4"
+      "p-4"
     end
   end
 

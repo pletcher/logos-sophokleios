@@ -21,7 +21,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
        comments: comments,
        exemplar: Exemplars.get_exemplar!(id),
        highlighted_comments: [],
-       page: page,
+       page: Map.delete(page, :text_nodes),
        page_title: page_title(socket.assigns.live_action),
        text_nodes: page.text_nodes |> TextNodes.tag_text_nodes()
      )}
@@ -29,7 +29,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
   def handle_params(params, session, socket) do
     handle_params(
-      params |> Enum.into(%{"page" => 1}),
+      params |> Enum.into(%{"page" => "1"}),
       session,
       socket
     )
@@ -46,7 +46,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
   end
 
   defp get_page(exemplar_id, page_number) do
-    page = Exemplars.get_exemplar_page(exemplar_id, page_number)
+    page = Exemplars.get_exemplar_page(exemplar_id, String.to_integer(page_number))
 
     comments =
       page.text_nodes
@@ -55,13 +55,13 @@ defmodule TextServerWeb.ExemplarLive.Show do
       |> Enum.filter(fn te ->
         attrs = Map.get(te, :attributes)
         kv_pairs = Map.get(attrs, "key_value_pairs")
-        classes = Map.get(attrs, "classes", [])
 
         te.element_type.name == "comment" &&
           kv_pairs["date"] != nil
       end)
       |> Enum.map(fn c ->
-        kv_pairs = Map.get(c, :attributes) |> Map.get("key_value_pairs")
+        attrs = Map.get(c, :attributes)
+        kv_pairs = Map.get(attrs, "key_value_pairs")
         author = kv_pairs["author"]
 
         {:ok, date, _} = DateTime.from_iso8601(kv_pairs["date"])

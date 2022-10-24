@@ -2,12 +2,11 @@ defmodule TextServer.TextNodesTest do
   use TextServer.DataCase
 
   alias TextServer.TextNodes
+  alias TextServer.TextNodes.TextNode
+
+  import TextServer.TextNodesFixtures
 
   describe "text_nodes" do
-    alias TextServer.TextNodes.TextNode
-
-    import TextServer.TextNodesFixtures
-
     @invalid_attrs %{index: nil, location: nil, normalized_text: nil, text: nil}
 
     test "list_text_nodes/0 returns all text_nodes" do
@@ -71,6 +70,39 @@ defmodule TextServer.TextNodesTest do
     test "change_text_node/1 returns a text_node changeset" do
       text_node = text_node_fixture()
       assert %Ecto.Changeset{} = TextNodes.change_text_node(text_node)
+    end
+  end
+
+  describe "TextNode" do
+    import TextServer.TextElementsFixtures
+
+    test "tag_graphemes/1 with valid data returns tagged text_node graphmes" do
+      start_offset = 1
+      end_offset = 3
+      text = "test tagging"
+      text_node = text_node_fixture(%{text: text})
+
+      text_element =
+        text_element_fixture(%{
+          start_offset: start_offset,
+          start_text_node_id: text_node.id,
+          end_text_node_id: text_node.id,
+          end_offset: end_offset
+        })
+
+      page = TextNodes.list_text_nodes_by_exemplar_id(text_node.exemplar_id)
+      node = List.first(page.entries)
+      tagged = TextNode.tag_graphemes(node)
+
+      assert tagged.location == text_node.location
+      assert length(tagged.graphemes_with_tags) == 3
+
+      {tagged_text, tags} = Enum.fetch!(tagged.graphemes_with_tags, 1)
+      tag = List.first(tags)
+      element_type = TextServer.ElementTypes.get_element_type!(text_element.element_type_id)
+
+      assert tag.name == element_type.name
+      assert Enum.join(tagged_text, "") == String.slice(text, start_offset, end_offset - 1)
     end
   end
 end

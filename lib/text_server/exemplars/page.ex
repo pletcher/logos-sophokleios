@@ -4,10 +4,10 @@ defmodule TextServer.Exemplars.Page do
 
   schema "exemplar_pages" do
     field :page_number, :integer
+    field :end_location, {:array, :integer}
+    field :start_location, {:array, :integer}
 
-    belongs_to :end_text_node, TextServer.TextNodes.TextNode
     belongs_to :exemplar, TextServer.Exemplars.Exemplar
-    belongs_to :start_text_node, TextServer.TextNodes.TextNode
 
     timestamps()
   end
@@ -16,16 +16,16 @@ defmodule TextServer.Exemplars.Page do
   def changeset(page, attrs) do
     page
     |> cast(attrs, [
-      :end_text_node_id,
+      :end_location,
       :exemplar_id,
       :page_number,
-      :start_text_node_id
+      :start_location
     ])
     |> validate_required([
-      :end_text_node_id,
-      :exemplar_id,
+      :end_location,
       :page_number,
-      :start_text_node_id
+      :start_location
     ])
+    |> assoc_constraint(:exemplar)
   end
 end

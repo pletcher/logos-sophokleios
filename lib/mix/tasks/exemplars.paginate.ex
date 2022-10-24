@@ -52,10 +52,10 @@ defmodule Mix.Tasks.Exemplars.Paginate do
       last_node = List.last(text_nodes)
 
       TextServer.Exemplars.create_page(%{
-        end_text_node_id: last_node.id,
+        end_location: last_node.location,
         exemplar_id: exemplar_id,
         page_number: i + 1,
-        start_text_node_id: first_node.id
+        start_location: first_node.location
       })
     end)
   end

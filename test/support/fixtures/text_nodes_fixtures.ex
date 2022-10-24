@@ -12,12 +12,17 @@ defmodule TextServer.TextNodesFixtures do
       attrs
       |> Enum.into(%{
         index: 42,
-        location: [],
+        location: [1, 1],
         normalized_text: "some normalized_text",
-        text: "some text"
+        text: "some text",
+        exemplar_id: exemplar_fixture().id
       })
       |> TextServer.TextNodes.create_text_node()
 
     text_node
+  end
+
+  defp exemplar_fixture do
+    TextServer.ExemplarsFixtures.exemplar_fixture()
   end
 end

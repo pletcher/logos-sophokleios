@@ -3,6 +3,9 @@ defmodule TextServer.TextNodes.TextNode do
   import Ecto.Changeset
 
   schema "text_nodes" do
+    # FIXME: (charles) Eventually, location will need to
+    # be an array of strings, not integers. Consider citations for
+    # Plato, Aristotle, etc.
     field :location, {:array, :integer}
     field :normalized_text, :string
     field :text, :string

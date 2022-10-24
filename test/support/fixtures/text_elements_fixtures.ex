@@ -12,10 +12,17 @@ defmodule TextServer.TextElementsFixtures do
       attrs
       |> Enum.into(%{
         attributes: %{},
-        end_urn: "some end_urn"
+        content: "Some content",
+        start_offset: 1,
+        end_offset: 5,
+        element_type_id: element_type_fixture().id
       })
       |> TextServer.TextElements.create_text_element()
 
     text_element
+  end
+
+  defp element_type_fixture() do
+    TextServer.ElementTypesFixtures.element_type_fixture()
   end
 end

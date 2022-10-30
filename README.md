@@ -77,6 +77,8 @@ Allow writing blog posts on commentaries in progress
 
 ## TODO
 
+- Scaife viewer-like URN navigation
+- Mobile/responsive layout optimizations
 - Global find-and-replace
 - Exemplar diffing (where in the pipeline?)
 - Need to support uploading multiple docxs

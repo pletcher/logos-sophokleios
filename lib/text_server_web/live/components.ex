@@ -75,4 +75,308 @@ defmodule TextServerWeb.Components do
     </div>
     """
   end
+
+  attr :current_page, :integer, required: true
+  attr :total_pages, :integer, required: true
+
+  def pagination(assigns) do
+    current_page = assigns[:current_page]
+    total_pages = assigns[:total_pages]
+
+    ~H"""
+    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+      <div class="sm:flex sm:justify-between mx-auto">
+        <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+          <.first_page_button current_page={current_page} />
+          <.prev_button current_page={current_page} />
+          <!-- Current: "z-10 bg-stone-50 border-stone-500 text-stone-600", Default: "bg-white border-gray-300 text-gray-500 hover:bg-gray-50" -->
+          <.numbered_buttons current_page={current_page} total_pages={total_pages} />
+          <.next_button current_page={current_page} total_pages={total_pages} />
+          <.last_page_button current_page={current_page} total_pages={total_pages} />
+        </nav>
+      </div>
+    </div>
+    """
+  end
+
+  attr :current_page, :integer, required: true
+
+  defp first_page_button(assigns) do
+    current_page = assigns[:current_page]
+
+    classes = if current_page == 1 do
+      ~w(
+        relative
+        inline-flex
+        items-center
+        rounded-l-md
+        border
+        border-y-gray-300
+        border-l-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-100
+        cursor-default
+      )
+    else
+      ~w(
+        relative
+        inline-flex
+        items-center
+        rounded-l-md
+        border
+        border-y-gray-300
+        border-l-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-500
+        hover:bg-gray-50
+      )
+    end
+
+    ~H"""
+    <.link patch={"?page=1"} class={classes}>
+      <span class="sr-only">First page</span>
+      <!-- Heroicon name: mini/chevron-double-left -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+      </svg>
+    </.link>
+    """
+  end
+
+  attr :current_page, :integer, required: true
+  attr :total_pages, :integer, required: true
+
+  defp last_page_button(assigns) do
+    current_page = assigns[:current_page]
+    total_pages = assigns[:total_pages]
+
+    classes = if current_page == total_pages do
+      ~w(
+        relative
+        inline-flex
+        items-center
+        rounded-r-md
+        border
+        border-y-gray-300
+        border-r-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-100
+        cursor-default
+      )
+    else
+      ~w(
+        relative
+        inline-flex
+        items-center
+        rounded-r-md
+        border
+        border-y-gray-300
+        border-r-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-500
+        hover:bg-gray-50
+      )
+    end
+
+    ~H"""
+    <.link patch={"?page=#{total_pages}"} class={classes}>
+      <span class="sr-only">Last page</span>
+      <!-- Heroicon name: mini/chevron-double-right -->
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+      </svg>
+    </.link>
+    """
+  end
+
+  attr :current_page, :integer, required: true
+  attr :total_pages, :integer, required: true
+
+  defp next_button(assigns) do
+    current_page = assigns[:current_page]
+    total_pages = assigns[:total_pages]
+
+    classes = if current_page == total_pages do
+      ~w(
+        relative
+        inline-flex
+        items-center
+        border
+        border-y-gray-300
+        border-r-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-100
+        cursor-default
+      )
+    else
+      ~w(
+        relative
+        inline-flex
+        items-center
+        border
+        border-y-gray-300
+        border-r-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-500
+        hover:bg-gray-50
+      )
+    end
+
+    next_page = if current_page + 1 == total_pages do
+      total_pages
+    else
+      current_page + 1
+    end
+
+    ~H"""
+    <.link patch={"?page=#{next_page}"} class={classes}>
+      <span class="sr-only">Next</span>
+      <!-- Heroicon name: mini/chevron-right -->
+      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+      </svg>
+    </.link>
+    """
+  end
+
+  attr :current_page, :integer, required: true
+  attr :max_buttons, :integer, default: 6
+  attr :total_pages, :integer, required: true
+
+  defp numbered_buttons(assigns) do
+    current_page = assigns[:current_page]
+    max_buttons = assigns[:max_buttons]
+    total_pages = assigns[:total_pages]
+    halfway = Integer.floor_div(max_buttons, 2)
+
+    {start_n, end_n} = cond do
+      current_page - halfway <= 0 -> {1, max_buttons}
+      current_page + halfway - 1 > total_pages -> {total_pages - max_buttons + 1, total_pages}
+      true -> {current_page - halfway, current_page + halfway - 1}
+    end
+
+    ~H"""
+    <%= for i <- start_n..end_n do %>
+      <a
+        href={"?page=#{i}"}
+        aria-current="page"
+        class={numbered_button_classes(current_page, i)}><%= i %></a>
+    <% end %>
+    """
+  end
+
+  defp numbered_button_classes(current_page, i) do
+    if current_page == i do
+      ~w(
+        relative
+        z-10
+        inline-flex
+        items-center
+        border
+        border-stone-500
+        bg-stone-100
+        px-4
+        py-2
+        text-sm
+        font-medium
+        text-stone-600
+        z-20
+      )
+    else
+      ~w(
+        relative
+        z-10
+        inline-flex
+        items-center
+        border
+        border-gray-300
+        bg-white
+        px-4
+        py-2
+        text-sm
+        font-medium
+        text-gray-500
+      )
+    end
+  end
+
+  attr :current_page, :integer, required: true
+
+  defp prev_button(assigns) do
+    current_page = assigns[:current_page]
+
+    classes = if current_page == 1 do
+      ~w(
+        relative
+        inline-flex
+        items-center
+        border
+        border-y-gray-300
+        border-l-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-100
+        cursor-default
+      )
+    else
+      ~w(
+        relative
+        inline-flex
+        items-center
+        border
+        border-y-gray-300
+        border-l-gray-300
+        bg-white
+        px-2
+        py-2
+        text-sm
+        font-medium
+        text-gray-500
+        hover:bg-gray-50
+      )
+    end
+
+    previous_page = if current_page - 1 <= 0 do
+      1
+    else
+      current_page - 1
+    end
+
+    ~H"""
+    <.link patch={"?page=#{previous_page}"} class={classes}>
+      <span class="sr-only">Previous</span>
+      <!-- Heroicon name: mini/chevron-left -->
+      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+      </svg>
+    </.link>
+    """
+  end
 end

@@ -1,6 +1,5 @@
 defmodule TextServerWeb.LiveHelpers do
   import Phoenix.Component
-  import Phoenix.LiveView
   import Phoenix.LiveView.Helpers
 
   alias Phoenix.LiveView.JS

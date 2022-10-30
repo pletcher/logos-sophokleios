@@ -1,3 +1,7 @@
 <article>
   <.reading_page page={@page} text_nodes={@text_nodes} />
+
+  <Components.footnotes footnotes={@footnotes} />
+
+  <Components.pagination current_page={@page.page_number} total_pages={@page.total_pages} />
 </article>

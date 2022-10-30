@@ -45,19 +45,8 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
       <%= for text_node <- @text_nodes do %>
         <.text_node graphemes_with_tags={text_node.graphemes_with_tags} location={text_node.location} />
       <% end %>
-      <.pagination page={@page} />
     </section>
     """
-  end
-
-  attr :page, :map, required: true
-
-  def pagination(assigns) do
-    page = assigns[:page]
-    current_page = page.page_number
-    total_pages = page.total_pages
-
-    ~H"<Components.pagination current_page={current_page} total_pages={total_pages} />"
   end
 
   attr :tags, :list, default: []
@@ -71,18 +60,26 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
       |> Enum.map(&tag_classes/1)
       |> Enum.join(" ")
 
-    if Enum.member?(tags |> Enum.map(& &1.name), "comment") do
-      comments =
-        tags
-        |> Enum.filter(&(&1.name == "comment"))
-        |> Enum.map(& &1.metadata[:id])
-        |> Jason.encode!()
+    cond do
+      Enum.member?(tags |> Enum.map(& &1.name), "comment") ->
+        comments =
+          tags
+          |> Enum.filter(&(&1.name == "comment"))
+          |> Enum.map(& &1.metadata[:id])
+          |> Jason.encode!()
 
-      ~H"""
-      <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
-      """
-    else
-      ~H"<span class={classes}><%= @text %></span>"
+        ~H"""
+        <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
+        """
+      Enum.member?(tags |> Enum.map(& &1.name), "note") ->
+        footnote = tags |> Enum.find(&(&1.name == "note"))
+        meta = footnote.metadata
+
+        ~H"""
+        <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
+        """
+      true ->
+        ~H"<span class={classes}><%= @text %></span>"
     end
   end
 

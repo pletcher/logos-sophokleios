@@ -478,8 +478,8 @@ defmodule TextServer.Exemplars do
       case fragment do
         [string: text] -> text
         {:string, text} -> text
-        {:comment, _} -> nil
         {:note, _} -> nil
+        {:comment, _} -> nil
         {:change, _} -> nil
         {:span, _} -> nil
         {_k, v} -> Enum.reduce(v, "", &flatten_string/2)

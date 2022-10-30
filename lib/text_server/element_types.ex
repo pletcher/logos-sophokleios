@@ -55,6 +55,12 @@ defmodule TextServer.ElementTypes do
     |> Repo.insert()
   end
 
+  def find_element_type(attrs) do
+    query = from(e in ElementType, where: e.name == ^attrs[:name])
+
+    Repo.one(query)
+  end
+
   def find_or_create_element_type(attrs) do
     query = from(e in ElementType, where: e.name == ^attrs[:name])
 

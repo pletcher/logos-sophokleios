@@ -13,13 +13,14 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
   @impl true
   def handle_params(%{"id" => id, "page" => page_number}, _, socket) do
-    %{comments: comments, page: page} = get_page(id, page_number)
+    %{comments: comments, footnotes: footnotes, page: page} = get_page(id, page_number)
 
     {:noreply,
      socket
      |> assign(
        comments: comments,
        exemplar: Exemplars.get_exemplar!(id),
+       footnotes: footnotes,
        highlighted_comments: [],
        page: Map.delete(page, :text_nodes),
        page_title: page_title(socket.assigns.live_action),
@@ -47,11 +48,12 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
   defp get_page(exemplar_id, page_number) do
     page = Exemplars.get_exemplar_page(exemplar_id, String.to_integer(page_number))
-
-    comments =
-      page.text_nodes
+    elements = page.text_nodes
       |> Enum.map(fn tn -> tn.text_elements end)
       |> List.flatten()
+
+    comments =
+      elements
       |> Enum.filter(fn te ->
         attrs = Map.get(te, :attributes)
         kv_pairs = Map.get(attrs, "key_value_pairs")
@@ -73,7 +75,12 @@ defmodule TextServerWeb.ExemplarLive.Show do
         })
       end)
 
-    %{comments: comments, page: page}
+    footnotes =
+      elements
+      |> Enum.filter(fn te -> te.element_type.name == "note" end)
+
+
+    %{comments: comments, footnotes: footnotes, page: page}
   end
 
   defp page_title(:show), do: "Show Exemplar"

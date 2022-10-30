@@ -3,16 +3,15 @@
 
   <p><%= @exemplar.description %></p>
 
-  <p><%= @exemplar.urn %></p>
+  <p class="mb-4"><%= @exemplar.urn %></p>
 
-  <h2 class="text-xl font-semibold my-4">
-    Reader (demo)
-  </h2>
+  <hr class="mb-4" />
 
   <div class="flex">
     <div class="max-w-xl pr-4 text-justify">
       <.live_component
         id={:reader}
+        footnotes={@footnotes}
         module={TextServerWeb.ReadingEnvironment.Reader}
         page={@page}
         text_nodes={@text_nodes}

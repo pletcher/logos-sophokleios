@@ -84,10 +84,15 @@ defmodule TextServer.TextNodes.TextNode do
         |> Enum.map(fn g ->
           {i, g, tags} = g
 
-          if i >= el.start_offset && i < el.end_offset do
-            {i, g, tags ++ [%Tag{name: el.element_type.name}]}
-          else
-            {i, g, tags}
+          cond do
+            el.element_type.name == "note" && i == el.start_offset - 1 ->
+              {i, g, tags ++ [%Tag{name: el.element_type.name, metadata: %{content: el.content, id: el.id}}]}
+
+            i >= el.start_offset && i < el.end_offset ->
+              {i, g, tags ++ [%Tag{name: el.element_type.name}]}
+
+            true ->
+              {i, g, tags}
           end
         end)
 

@@ -49,8 +49,21 @@ defmodule TextServerWeb.Components do
     if Enum.member?(highlighted_comments, Map.get(comment, :id, nil)) do
       "border-2 border-stone-800 p-4 rounded-lg"
     else
-      "p-4"
+      "border-2 rounded-lg p-4"
     end
+  end
+
+  attr :footnotes, :list, default: []
+
+  def footnotes(assigns) do
+    ~H"""
+    <%= for {footnote, i} <- Enum.with_index(@footnotes) do %>
+      <p class="text-stone-500">
+        <a href={"#_fn-ref-#{footnote.id}"} id={"_fn-#{footnote.id}"}><sup><%= i + 1%></sup></a>
+        <span><%= footnote.content %></span>
+      </p>
+    <% end %>
+    """
   end
 
   def small_card(%{item: item, url: url} = assigns) do

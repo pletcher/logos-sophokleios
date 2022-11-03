@@ -75,9 +75,14 @@ https://research.fas.harvard.edu/deans-competitive-fund-promising-scholarship
 
 Allow writing blog posts on commentaries in progress
 
-## TODO
+## TODO (and notes)
 
-- Scaife viewer-like URN navigation
+- [ ] Scaife viewer-like URN navigation
+- Tags and/as index (#example-tag)
+- Anchor comments (ask for what these are) --- longer comments that fall under
+  a given tag. Can be divided into parts, sorted by text location order
+  when viewing a given tag's page.
+- Named-entity recognition from Neil Smith and Chris Blackwell
 - Mobile/responsive layout optimizations
 - Global find-and-replace
 - Exemplar diffing (where in the pipeline?)

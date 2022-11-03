@@ -20,7 +20,7 @@ defmodule TextServer.Exemplars do
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
 
   defmodule ExemplarPage do
-    defstruct [:exemplar_id, :page_number, :text_nodes, :total_pages]
+    defstruct [:exemplar_id, :page, :page_number, :text_nodes, :total_pages]
   end
 
   @doc """
@@ -52,14 +52,7 @@ defmodule TextServer.Exemplars do
   end
 
   def get_exemplar_page(exemplar_id, page_number \\ 1) do
-    total_pages_query =
-      from(
-        p in Page,
-        where: p.exemplar_id == ^exemplar_id,
-        select: max(p.page_number)
-      )
-
-    total_pages = Repo.one(total_pages_query)
+    total_pages = get_total_pages(exemplar_id)
 
     n =
       if page_number > total_pages do
@@ -82,10 +75,46 @@ defmodule TextServer.Exemplars do
 
     %ExemplarPage{
       exemplar_id: exemplar_id,
-      page_number: n,
+      page: page,
+      page_number: page.page_number,
       text_nodes: text_nodes,
       total_pages: total_pages
     }
+  end
+
+  def get_exemplar_page_by_location(exemplar_id, location) when is_list(location) do
+    page =
+      Page
+      |> where([p], p.exemplar_id == ^exemplar_id
+          and p.start_location <= ^location
+          and p.end_location >= ^location)
+      |> Repo.one()
+
+    text_nodes =
+      TextNodes.get_text_nodes_by_exemplar_between_locations(
+        exemplar_id,
+        page.start_location,
+        page.end_location
+      )
+
+    %ExemplarPage{
+      exemplar_id: exemplar_id,
+      page: page,
+      page_number: page.page_number,
+      text_nodes: text_nodes,
+      total_pages: get_total_pages(exemplar_id)
+    }
+  end
+
+  def get_total_pages(exemplar_id) do
+    total_pages_query =
+      from(
+        p in Page,
+        where: p.exemplar_id == ^exemplar_id,
+        select: max(p.page_number)
+      )
+
+    Repo.one(total_pages_query)
   end
 
   @doc """

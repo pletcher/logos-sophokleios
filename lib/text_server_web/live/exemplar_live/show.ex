@@ -28,6 +28,24 @@ defmodule TextServerWeb.ExemplarLive.Show do
      )}
   end
 
+  def handle_params(%{"id" => id, "location" => raw_location}, _session, socket) do
+    location = raw_location |> String.split(".") |> Enum.map(&String.to_integer/1)
+
+    %{comments: comments, footnotes: footnotes, page: page} = get_page_by_location(id, location)
+
+    {:noreply,
+     socket
+     |> assign(
+       comments: comments,
+       exemplar: Exemplars.get_exemplar!(id),
+       footnotes: footnotes,
+       highlighted_comments: [],
+       page: Map.delete(page, :text_nodes),
+       page_title: page_title(socket.assigns.live_action),
+       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes()
+     )}
+  end
+
   def handle_params(params, session, socket) do
     handle_params(
       params |> Enum.into(%{"page" => "1"}),
@@ -46,9 +64,24 @@ defmodule TextServerWeb.ExemplarLive.Show do
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
 
+  defp get_page(exemplar_id, page_number) when is_binary(page_number),
+    do: get_page(exemplar_id, String.to_integer(page_number))
+
   defp get_page(exemplar_id, page_number) do
     page = Exemplars.get_exemplar_page(exemplar_id, String.to_integer(page_number))
-    elements = page.text_nodes
+
+    organize_page(page)
+  end
+
+  defp get_page_by_location(exemplar_id, location) when is_list(location) do
+    page = Exemplars.get_exemplar_page_by_location(exemplar_id, location)
+
+    organize_page(page)
+  end
+
+  defp organize_page(page) do
+    elements =
+      page.text_nodes
       |> Enum.map(fn tn -> tn.text_elements end)
       |> List.flatten()
 
@@ -78,7 +111,6 @@ defmodule TextServerWeb.ExemplarLive.Show do
     footnotes =
       elements
       |> Enum.filter(fn te -> te.element_type.name == "note" end)
-
 
     %{comments: comments, footnotes: footnotes, page: page}
   end

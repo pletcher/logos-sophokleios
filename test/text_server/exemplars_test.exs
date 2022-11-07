@@ -93,6 +93,25 @@ defmodule TextServer.ExemplarsTest do
       exemplar = exemplar_fixture()
       assert %Ecto.Changeset{} = Exemplars.change_exemplar(exemplar)
     end
+
+    test "get_table_of_contents/1 returns the table of contents for the given exemplar" do
+      exemplar = exemplar_fixture()
+
+      Enum.each(1..5, fn i ->
+        text_node_fixture(%{
+          exemplar_id: exemplar.id,
+          location: [i, 1, 1]
+        })
+      end)
+
+      toc = Exemplars.get_table_of_contents(exemplar.id)
+
+      assert Map.get(toc, 1) == %{1 => [1]}
+      assert Map.get(toc, 2) == %{1 => [1]}
+      assert Map.get(toc, 3) == %{1 => [1]}
+      assert Map.get(toc, 4) == %{1 => [1]}
+      assert Map.get(toc, 5) == %{1 => [1]}
+    end
   end
 
   describe "Exemplar DOCX parsing" do

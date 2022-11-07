@@ -85,9 +85,12 @@ defmodule TextServer.Exemplars do
   def get_exemplar_page_by_location(exemplar_id, location) when is_list(location) do
     page =
       Page
-      |> where([p], p.exemplar_id == ^exemplar_id
-          and p.start_location <= ^location
-          and p.end_location >= ^location)
+      |> where(
+        [p],
+        p.exemplar_id == ^exemplar_id and
+          p.start_location <= ^location and
+          p.end_location >= ^location
+      )
       |> Repo.one()
 
     text_nodes =
@@ -106,6 +109,14 @@ defmodule TextServer.Exemplars do
     }
   end
 
+  @doc """
+  Returns the total number of pages for a given exemplar.
+
+  ## Examples
+    iex> get_total_pages(1)
+    20
+  """
+
   def get_total_pages(exemplar_id) do
     total_pages_query =
       from(
@@ -115,6 +126,49 @@ defmodule TextServer.Exemplars do
       )
 
     Repo.one(total_pages_query)
+  end
+
+  @doc """
+  Returns a table of contents represented by a(n unordered) map of maps.
+
+  ## Examples
+    iex> get_table_of_contents(1)
+    %{7 => %{1 => [1, 2, 3], 4 => [1, 2], 2 => [1, 2, 3], ...}, ...}
+  """
+
+  def get_table_of_contents(exemplar_id) do
+    locations = TextNodes.list_locations_by_exemplar_id(exemplar_id)
+
+    locations |> Enum.reduce(%{}, &nest_location/2)
+  end
+
+  defp nest_location(l, acc) when length(l) == 3 do
+    [x | rest] = l
+    [y | z] = rest
+
+    curr =
+      case acc do
+        %{^x => %{^y => value}} -> value
+        _ -> []
+      end
+
+    put_in(acc, Enum.map([x, y], &Access.key(&1, %{})), curr ++ z)
+  end
+
+  defp nest_location(l, acc) when length(l) == 2 do
+    [x | y] = l
+
+    curr =
+      case acc do
+        %{^x => value} -> value
+        _ -> []
+      end
+
+    put_in(acc, x, curr ++ y)
+  end
+
+  defp nest_location(l, acc) when length(l) == 1 do
+    acc
   end
 
   @doc """

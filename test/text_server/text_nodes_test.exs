@@ -5,6 +5,7 @@ defmodule TextServer.TextNodesTest do
   alias TextServer.TextNodes.TextNode
 
   import TextServer.TextNodesFixtures
+  import TextServer.ExemplarsFixtures
 
   describe "text_nodes" do
     @invalid_attrs %{index: nil, location: nil, normalized_text: nil, text: nil}
@@ -73,20 +74,34 @@ defmodule TextServer.TextNodesTest do
     end
 
     test "get_text_nodes_by_exemplar_between_locations/3 returns text nodes between the given locations" do
-      exemplar = TextServer.ExemplarsFixtures.exemplar_fixture()
+      exemplar = exemplar_fixture()
 
       Enum.each(1..5, fn i ->
         text_node_fixture(%{exemplar_id: exemplar.id, text: "Text #{i}", location: [1, i]})
       end)
 
-      text_nodes = TextNodes.get_text_nodes_by_exemplar_between_locations(exemplar.id, [1, 2], [1, 4])
-      locations = Enum.map(text_nodes, &(&1.location))
+      text_nodes =
+        TextNodes.get_text_nodes_by_exemplar_between_locations(exemplar.id, [1, 2], [1, 4])
+
+      locations = Enum.map(text_nodes, & &1.location)
 
       assert Enum.member?(locations, [1, 2])
       assert Enum.member?(locations, [1, 3])
       assert Enum.member?(locations, [1, 4])
       refute Enum.member?(locations, [1, 1])
       refute Enum.member?(locations, [1, 5])
+    end
+
+    test "list_locations_by_exemplar_id/1 returns all TextNode locations for the given exemplar" do
+      exemplar = exemplar_fixture()
+
+      Enum.each(1..5, fn i ->
+        text_node_fixture(%{exemplar_id: exemplar.id, text: "Text #{i}", location: [1, i]})
+      end)
+
+      locations = TextNodes.list_locations_by_exemplar_id(exemplar.id)
+
+      assert locations == [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5]]
     end
   end
 

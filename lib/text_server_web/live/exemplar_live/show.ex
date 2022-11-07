@@ -68,7 +68,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
     do: get_page(exemplar_id, String.to_integer(page_number))
 
   defp get_page(exemplar_id, page_number) do
-    page = Exemplars.get_exemplar_page(exemplar_id, String.to_integer(page_number))
+    page = Exemplars.get_exemplar_page(exemplar_id, page_number)
 
     organize_page(page)
   end

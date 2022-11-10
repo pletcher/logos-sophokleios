@@ -1,7 +1,10 @@
 <article>
-  <.reading_location location={List.first(@text_nodes).location} toc={@toc} />
+  <.reading_location
+    top_level_toc={@top_level_toc}
+    second_level_toc={@second_level_toc}
+  />
 
-  <.reading_page page={@page} text_nodes={@text_nodes} />
+  <.reading_page text_nodes={@text_nodes} />
 
   <Components.footnotes footnotes={@footnotes} />
 

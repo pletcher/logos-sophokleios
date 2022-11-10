@@ -36,29 +36,15 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     {:ok, socket |> assign(assigns)}
   end
 
-  attr :location, :list, required: true
-  attr :toc, :map, required: true
+  attr :top_level_toc, :list, required: true
+  attr :second_level_toc, :list, required: true
 
   def reading_location(assigns) do
-    location = assigns[:location]
-    toc = assigns[:toc]
-    top_level_location = List.first(location)
-    second_level_location = Enum.at(location, 1)
-
-    top_level_toc =
-      Map.keys(toc)
-      |> Enum.sort()
-      |> Enum.map(&([key: "Book #{&1}" , value: &1, selected: &1 == top_level_location]))
-    second_level_toc =
-      Map.get(toc, top_level_location)
-      |> Map.keys() |> Enum.sort()
-      |> Enum.map(&([key: "Chapter #{&1}", value: &1, selected: &1 == second_level_location]))
-
     ~H"""
     <.form :let={f} for={:location} phx-change="location-select-change">
       <section class="flex">
-        <%= select f, :top_level_location, top_level_toc, class: top_level_css_classes() %>
-        <%= select f, :second_level_location, second_level_toc, class: second_level_css_classes() %>
+        <%= select f, :top_level_location, @top_level_toc, class: top_level_css_classes() %>
+        <%= select f, :second_level_location, @second_level_toc, class: second_level_css_classes() %>
       </section>
     </.form>
     """

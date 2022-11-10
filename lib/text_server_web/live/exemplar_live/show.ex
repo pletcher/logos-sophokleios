@@ -13,45 +13,13 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
   @impl true
   def handle_params(%{"id" => id, "page" => page_number}, _, socket) do
-    %{comments: comments, footnotes: footnotes, page: page} = get_page(id, page_number)
-
-    exemplar = Exemplars.get_exemplar!(id)
-    toc = Exemplars.get_table_of_contents(id)
-
-    {:noreply,
-     socket
-     |> assign(
-       comments: comments,
-       exemplar: exemplar,
-       footnotes: footnotes,
-       highlighted_comments: [],
-       page: Map.delete(page, :text_nodes),
-       page_title: page_title(socket.assigns.live_action),
-       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes(),
-       toc: toc
-     )}
+    create_reply(socket, id, get_page(id, page_number))
   end
 
   def handle_params(%{"id" => id, "location" => raw_location}, _session, socket) do
     location = raw_location |> String.split(".") |> Enum.map(&String.to_integer/1)
 
-    %{comments: comments, footnotes: footnotes, page: page} = get_page_by_location(id, location)
-
-    exemplar = Exemplars.get_exemplar!(id)
-    toc = Exemplars.get_table_of_contents(id)
-
-    {:noreply,
-     socket
-     |> assign(
-       comments: comments,
-       exemplar: exemplar,
-       footnotes: footnotes,
-       highlighted_comments: [],
-       page: Map.delete(page, :text_nodes),
-       page_title: page_title(socket.assigns.live_action),
-       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes(),
-       toc: toc
-     )}
+    create_reply(socket, id, get_page_by_location(id, location))
   end
 
   def handle_params(params, session, socket) do
@@ -60,6 +28,46 @@ defmodule TextServerWeb.ExemplarLive.Show do
       session,
       socket
     )
+  end
+
+  defp create_reply(socket, exemplar_id, page) do
+    %{comments: comments, footnotes: footnotes, page: page} = page
+
+    exemplar = Exemplars.get_exemplar!(exemplar_id)
+    toc = Exemplars.get_table_of_contents(exemplar_id)
+    text_nodes = page.text_nodes
+    location = List.first(text_nodes).location
+    top_level_location = List.first(location)
+    second_level_location = Enum.at(location, 1)
+
+    top_level_toc =
+      Map.keys(toc)
+      |> Enum.sort()
+      |> Enum.map(&[key: "Book #{&1}", value: &1, selected: &1 == top_level_location])
+
+    second_level_toc =
+      Map.get(toc, top_level_location)
+      |> Map.keys()
+      |> Enum.sort()
+      |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == second_level_location])
+
+    {:noreply,
+     socket
+     |> assign(
+       comments: comments,
+       exemplar: exemplar,
+       footnotes: footnotes,
+       highlighted_comments: [],
+       location: %{
+         top_level_location: top_level_location,
+         second_level_location: second_level_location
+       },
+       page: Map.delete(page, :text_nodes),
+       page_title: page_title(socket.assigns.live_action),
+       text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
+       top_level_toc: top_level_toc,
+       second_level_toc: second_level_toc
+     )}
   end
 
   @impl true

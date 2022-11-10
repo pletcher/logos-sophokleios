@@ -357,22 +357,23 @@ defmodule TextServer.Exemplars do
   def parse_exemplar(%Exemplar{} = exemplar) do
     clear_text_nodes(exemplar)
 
-    result =
+    _result =
       if String.ends_with?(exemplar.filename, ".docx") do
         parse_exemplar_docx(exemplar)
       else
         parse_exemplar_xml(exemplar)
       end
 
-    case result do
-      {:ok, _} ->
-        update_exemplar(exemplar, %{parsed_at: NaiveDateTime.utc_now()})
+    update_exemplar(exemplar, %{parsed_at: NaiveDateTime.utc_now()})
+    # case result do
+    #   {:ok, _} ->
 
-      {:error, error} ->
-        IO.puts("There was an error parsing exemplar ##{exemplar.id}:")
-        IO.inspect(error)
-        {:error, error}
-    end
+
+    #   # {:error, error} ->
+    #   #   IO.puts("There was an error parsing exemplar ##{exemplar.id}:")
+    #   #   IO.inspect(error)
+    #   #   {:error, error}
+    # end
   end
 
   def parse_exemplar_docx(%Exemplar{} = exemplar) do
@@ -449,7 +450,7 @@ defmodule TextServer.Exemplars do
       case Regex.run(@location_regex, maybe_location_string) do
         regex_list when is_list(regex_list) -> parse_location_marker(regex_list)
         nil -> [0]
-        _ -> maybe_location_fragment
+        # _ -> maybe_location_fragment
       end
 
     [location | rest]

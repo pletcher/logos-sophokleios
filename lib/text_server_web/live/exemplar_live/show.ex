@@ -15,16 +15,20 @@ defmodule TextServerWeb.ExemplarLive.Show do
   def handle_params(%{"id" => id, "page" => page_number}, _, socket) do
     %{comments: comments, footnotes: footnotes, page: page} = get_page(id, page_number)
 
+    exemplar = Exemplars.get_exemplar!(id)
+    toc = Exemplars.get_table_of_contents(id)
+
     {:noreply,
      socket
      |> assign(
        comments: comments,
-       exemplar: Exemplars.get_exemplar!(id),
+       exemplar: exemplar,
        footnotes: footnotes,
        highlighted_comments: [],
        page: Map.delete(page, :text_nodes),
        page_title: page_title(socket.assigns.live_action),
-       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes()
+       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes(),
+       toc: toc
      )}
   end
 
@@ -33,16 +37,20 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
     %{comments: comments, footnotes: footnotes, page: page} = get_page_by_location(id, location)
 
+    exemplar = Exemplars.get_exemplar!(id)
+    toc = Exemplars.get_table_of_contents(id)
+
     {:noreply,
      socket
      |> assign(
        comments: comments,
-       exemplar: Exemplars.get_exemplar!(id),
+       exemplar: exemplar,
        footnotes: footnotes,
        highlighted_comments: [],
        page: Map.delete(page, :text_nodes),
        page_title: page_title(socket.assigns.live_action),
-       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes()
+       text_nodes: page.text_nodes |> TextNodes.tag_text_nodes(),
+       toc: toc
      )}
   end
 
@@ -62,6 +70,15 @@ defmodule TextServerWeb.ExemplarLive.Show do
       |> Enum.map(&String.to_integer/1)
 
     {:noreply, socket |> assign(highlighted_comments: ids)}
+  end
+
+  def handle_event("location-select-change", %{"location" => location}, socket) do
+    top_level = Map.get(location, "top_level_location")
+    second_level = Map.get(location, "second_level_location")
+    exemplar = socket.assigns.exemplar
+    location_s = "#{top_level}.#{second_level}.1"
+
+    {:noreply, socket |> push_patch(to: "/exemplars/#{exemplar.id}?location=#{location_s}")}
   end
 
   defp get_page(exemplar_id, page_number) when is_binary(page_number),

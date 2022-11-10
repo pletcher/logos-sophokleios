@@ -79,6 +79,7 @@ Allow writing blog posts on commentaries in progress
 
 - [ ] Scaife viewer-like URN navigation
 - Tags and/as index (#example-tag)
+- Logging for error reports
 - Anchor comments (ask for what these are) --- longer comments that fall under
   a given tag. Can be divided into parts, sorted by text location order
   when viewing a given tag's page.

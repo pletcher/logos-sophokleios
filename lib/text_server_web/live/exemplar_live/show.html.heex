@@ -9,6 +9,74 @@
 
   <div class="flex">
     <div class="max-w-xl pr-4 text-justify">
+      <.form :let={f} for={:location} phx-submit="change-location">
+        <section class="flex">
+          <%= select(
+            f, 
+            :top_level_location, 
+            @top_level_toc, 
+            class: ~w(
+              appearance-none
+              relative
+              resize-none
+              flex-1
+              py-2
+              mb-4
+              border
+              border-gray-300
+              placeholder-gray-500
+              text-gray-900
+              focus:outline-none
+              focus:ring-stone-500
+              focus:border-stone-500
+              focus:z-10
+              sm:text-sm
+            ),
+            "phx-change": "top-level-location-change"
+        ) %>
+          <%= select(
+            f, 
+            :second_level_location, 
+            @second_level_toc, 
+            class: ~w(
+              appearance-none
+              relative
+              resize-none
+              flex-1
+              py-2
+              mb-4
+              ml-4
+              border
+              border-gray-300
+              placeholder-gray-500
+              text-gray-900
+              focus:outline-none
+              focus:ring-stone-500
+              focus:border-stone-500
+              focus:z-10
+              sm:text-sm
+            ) 
+          ) %>
+
+          <%= submit "Go", class: ~w(
+            mb-4
+            ml-2
+            px-4 
+            border 
+            border-transparent 
+            text-sm 
+            font-medium 
+            text-white 
+            bg-stone-600 
+            hover:bg-stone-700 
+            focus:outline-none 
+            focus:ring-2 
+            focus:ring-offset-2 
+            focus:ring-stone-500
+          ) %>
+        </section>
+       </.form>
+
       <.live_component
         id={:reader}
         footnotes={@footnotes}

@@ -36,61 +36,6 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     {:ok, socket |> assign(assigns)}
   end
 
-  attr :top_level_toc, :list, required: true
-  attr :second_level_toc, :list, required: true
-
-  def reading_location(assigns) do
-    ~H"""
-    <.form :let={f} for={:location} phx-change="location-select-change">
-      <section class="flex">
-        <%= select f, :top_level_location, @top_level_toc, class: top_level_css_classes() %>
-        <%= select f, :second_level_location, @second_level_toc, class: second_level_css_classes() %>
-      </section>
-    </.form>
-    """
-  end
-
-  defp top_level_css_classes do
-    ~w(
-      appearance-none
-      relative
-      resize-none
-      flex-1
-      py-2
-      mb-4
-      border
-      border-gray-300
-      placeholder-gray-500
-      text-gray-900
-      focus:outline-none
-      focus:ring-stone-500
-      focus:border-stone-500
-      focus:z-10
-      sm:text-sm
-    )
-  end
-
-  defp second_level_css_classes do
-    ~w(
-      appearance-none
-      relative
-      resize-none
-      flex-1
-      py-2
-      mb-4
-      ml-4
-      border
-      border-gray-300
-      placeholder-gray-500
-      text-gray-900
-      focus:outline-none
-      focus:ring-stone-500
-      focus:border-stone-500
-      focus:z-10
-      sm:text-sm
-    )
-  end
-
   attr :text_nodes, :list, required: true
 
   def reading_page(assigns) do
@@ -125,6 +70,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         ~H"""
         <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
         """
+
       Enum.member?(tags |> Enum.map(& &1.name), "note") ->
         footnote = tags |> Enum.find(&(&1.name == "note"))
         meta = footnote.metadata
@@ -132,6 +78,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         ~H"""
         <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
         """
+
       true ->
         ~H"<span class={classes}><%= @text %></span>"
     end
@@ -147,10 +94,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     ~H"""
     <p class="mb-4" title={"Location: #{location}"}>
       <span class="text-slate-500"><%= location %></span>
-      <%= for {graphemes, tags} <- @graphemes_with_tags do %><.text_element
-        tags={tags}
-        text={Enum.join(graphemes)}
-      /><% end %>
+      <%= for {graphemes, tags} <- @graphemes_with_tags do %><.text_element tags={tags} text={Enum.join(graphemes)} /><% end %>
     </p>
     """
   end

@@ -34,11 +34,35 @@ defmodule TextServerWeb.ExemplarLive.Show do
     %{comments: comments, footnotes: footnotes, page: page} = page
 
     exemplar = Exemplars.get_exemplar!(exemplar_id)
-    toc = Exemplars.get_table_of_contents(exemplar_id)
     text_nodes = page.text_nodes
     location = List.first(text_nodes).location
     top_level_location = List.first(location)
     second_level_location = Enum.at(location, 1)
+
+    {top_level_toc, second_level_toc} =
+      format_toc(exemplar_id, top_level_location, second_level_location)
+
+    {:noreply,
+     socket
+     |> assign(
+       comments: comments,
+       exemplar: exemplar,
+       footnotes: footnotes,
+       highlighted_comments: [],
+       location: %{
+         "top_level_location" => top_level_location,
+         "second_level_location" => second_level_location
+       },
+       page: Map.delete(page, :text_nodes),
+       page_title: page_title(socket.assigns.live_action),
+       text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
+       top_level_toc: top_level_toc,
+       second_level_toc: second_level_toc
+     )}
+  end
+
+  defp format_toc(exemplar_id, top_level_location, second_level_location) do
+    toc = Exemplars.get_table_of_contents(exemplar_id)
 
     top_level_toc =
       Map.keys(toc)
@@ -51,23 +75,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
       |> Enum.sort()
       |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == second_level_location])
 
-    {:noreply,
-     socket
-     |> assign(
-       comments: comments,
-       exemplar: exemplar,
-       footnotes: footnotes,
-       highlighted_comments: [],
-       location: %{
-         top_level_location: top_level_location,
-         second_level_location: second_level_location
-       },
-       page: Map.delete(page, :text_nodes),
-       page_title: page_title(socket.assigns.live_action),
-       text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
-       top_level_toc: top_level_toc,
-       second_level_toc: second_level_toc
-     )}
+    {top_level_toc, second_level_toc}
   end
 
   @impl true
@@ -80,7 +88,16 @@ defmodule TextServerWeb.ExemplarLive.Show do
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
 
-  def handle_event("location-select-change", %{"location" => location}, socket) do
+  def handle_event("top-level-location-change", %{"location" => location}, socket) do
+    exemplar = socket.assigns.exemplar
+    top_level = Map.get(location, "top_level_location") |> String.to_integer()
+
+    {top_level_toc, second_level_toc} = format_toc(exemplar.id, top_level, 1)
+
+    {:noreply, socket |> assign(top_level_toc: top_level_toc, second_level_toc: second_level_toc)}
+  end
+
+  def handle_event("change-location", %{"location" => location}, socket) do
     top_level = Map.get(location, "top_level_location")
     second_level = Map.get(location, "second_level_location")
     exemplar = socket.assigns.exemplar

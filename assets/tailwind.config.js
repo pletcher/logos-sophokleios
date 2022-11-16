@@ -7,6 +7,8 @@ module.exports = {
       backgroundImage: {
         "alexandria-scrolls":
           "linear-gradient(180deg,rgba(0,0,0,.8) 0,rgba(0,0,0,.6) 30%,rgba(0,0,0,.3)), url('/images/alexandria_scrolls_commentaries.jpg')",
+        "pausanias":
+          "url('https://iiif.mused.org/iris.jpg/square/350,/0/default.jpg')"
       },
     },
   },

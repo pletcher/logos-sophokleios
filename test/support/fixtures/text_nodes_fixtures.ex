@@ -9,16 +9,24 @@ defmodule TextServer.TextNodesFixtures do
   """
   def text_node_fixture(attrs \\ %{}) do
     {:ok, text_node} =
-      attrs
-      |> Enum.into(%{
-        index: 42,
-        location: [1, 1],
-        normalized_text: "some normalized_text",
-        text: "some text",
-        exemplar_id: exemplar_fixture().id
-      })
-      |> TextServer.TextNodes.create_text_node()
-
+      
+      if Map.get(attrs, :exemplar_id) do
+        TextServer.TextNodes.create_text_node(%{
+          index: 42,
+          location: [1, 1],
+          normalized_text: "some normalized_text",
+          text: "some text",
+          exemplar_id: Map.get(attrs, :exemplar_id)
+        })
+      else
+        TextServer.TextNodes.create_text_node(%{
+          index: 42,
+          location: [1, 1],
+          normalized_text: "some normalized_text",
+          text: "some text",
+          exemplar_id: exemplar_fixture().id
+        })
+      end
     text_node
   end
 

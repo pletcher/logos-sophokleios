@@ -29,6 +29,10 @@ defmodule TextServer.ExemplarsFixtures do
       })
       |> TextServer.Exemplars.create_exemplar()
 
+    # it should not be possible to create an exemplar
+    # without at least one text node
+    text_node_fixture(exemplar)
+    
     exemplar
   end
 
@@ -41,6 +45,10 @@ defmodule TextServer.ExemplarsFixtures do
 
   defp language_fixture() do
     TextServer.LanguagesFixtures.language_fixture()
+  end
+
+  defp text_node_fixture(exemplar) do
+    TextServer.TextNodesFixtures.text_node_fixture(%{exemplar_id: exemplar.id})
   end
 
   defp version_fixture() do

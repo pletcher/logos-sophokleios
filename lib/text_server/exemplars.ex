@@ -72,20 +72,26 @@ defmodule TextServer.Exemplars do
       |> where([p], p.exemplar_id == ^exemplar_id and p.page_number == ^n)
       |> Repo.one()
 
-    text_nodes =
-      TextNodes.get_text_nodes_by_exemplar_between_locations(
-        exemplar_id,
-        page.start_location,
-        page.end_location
-      )
+    if is_nil(page) do
+      ex = get_exemplar!(exemplar_id)
+      paginate_exemplar(ex)
+      get_exemplar_page(exemplar_id, page_number)
+    else
+      text_nodes =
+        TextNodes.get_text_nodes_by_exemplar_between_locations(
+          exemplar_id,
+          page.start_location,
+          page.end_location
+        )
 
-    %ExemplarPage{
-      exemplar_id: exemplar_id,
-      page: page,
-      page_number: page.page_number,
-      text_nodes: text_nodes,
-      total_pages: total_pages
-    }
+      %ExemplarPage{
+        exemplar_id: exemplar_id,
+        page: page,
+        page_number: page.page_number,
+        text_nodes: text_nodes,
+        total_pages: total_pages
+      }
+    end
   end
 
   def get_exemplar_page_by_location(exemplar_id, location) when is_list(location) do
@@ -164,13 +170,7 @@ defmodule TextServer.Exemplars do
   defp nest_location(l, acc) when length(l) == 2 do
     [x | y] = l
 
-    curr =
-      case acc do
-        %{^x => value} -> value
-        _ -> []
-      end
-
-    put_in(acc, x, curr ++ y)
+    Map.update(acc, x, y, fn arr -> arr ++ y end)
   end
 
   defp nest_location(l, acc) when length(l) == 1 do
@@ -190,16 +190,23 @@ defmodule TextServer.Exemplars do
         order_by: [asc: t.location]
       )
 
+    text_nodes = Repo.all(q)
+    
     grouped_text_nodes =
-      Repo.all(q)
+      text_nodes
       |> Enum.filter(fn tn -> tn.location != [0] end)
       |> Enum.group_by(fn tn ->
-        [first | tail] = tn.location
-        [second | _rest] = tail
-
-        {first, second}
+        location = tn.location
+        
+        if length(tn.location) > 1 do
+          Enum.take(location, length(tn.location) - 1)
+        else
+          line = List.first(location)
+          
+          Integer.floor_div(line, 20)
+        end
       end)
-
+    
     keys = Map.keys(grouped_text_nodes) |> Enum.sort()
 
     keys

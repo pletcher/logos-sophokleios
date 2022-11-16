@@ -34,29 +34,31 @@
             ),
             "phx-change": "top-level-location-change"
         ) %>
-          <%= select(
-            f, 
-            :second_level_location, 
-            @second_level_toc, 
-            class: ~w(
-              appearance-none
-              relative
-              resize-none
-              flex-1
-              py-2
-              mb-4
-              ml-4
-              border
-              border-gray-300
-              placeholder-gray-500
-              text-gray-900
-              focus:outline-none
-              focus:ring-stone-500
-              focus:border-stone-500
-              focus:z-10
-              sm:text-sm
-            ) 
-          ) %>
+          <%= unless is_nil(@second_level_toc) do %>
+            <%= select(
+              f, 
+              :second_level_location, 
+              @second_level_toc, 
+              class: ~w(
+                appearance-none
+                relative
+                resize-none
+                flex-1
+                py-2
+                mb-4
+                ml-4
+                border
+                border-gray-300
+                placeholder-gray-500
+                text-gray-900
+                focus:outline-none
+                focus:ring-stone-500
+                focus:border-stone-500
+                focus:z-10
+                sm:text-sm
+              ) 
+            ) %>
+          <% end %>
 
           <%= submit "Go", class: ~w(
             mb-4

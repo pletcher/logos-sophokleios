@@ -40,7 +40,11 @@ defmodule TextServerWeb.ExemplarLive.Show do
     second_level_location = Enum.at(location, 1)
 
     {top_level_toc, second_level_toc} =
-      format_toc(exemplar_id, top_level_location, second_level_location)
+      if length(location) > 2 do
+        format_toc(exemplar_id, top_level_location, second_level_location)
+      else
+        format_toc(exemplar_id, top_level_location)
+      end
 
     {:noreply,
      socket
@@ -76,6 +80,17 @@ defmodule TextServerWeb.ExemplarLive.Show do
       |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == second_level_location])
 
     {top_level_toc, second_level_toc}
+  end
+  
+  defp format_toc(exemplar_id, top_level_location) do
+    toc = Exemplars.get_table_of_contents(exemplar_id)
+
+    top_level_toc =
+      Map.keys(toc)
+      |> Enum.sort()
+      |> Enum.map(&[key: "Book #{&1}", value: &1, selected: &1 == top_level_location])
+    
+    {top_level_toc, nil}
   end
 
   @impl true

@@ -11,8 +11,8 @@ defmodule TextServerWeb.UserSessionControllerTest do
     test "renders log in page", %{conn: conn} do
       conn = get(conn, Routes.user_session_path(conn, :new))
       response = html_response(conn, 200)
-      assert response =~ "<h1>Log in</h1>"
-      assert response =~ "Register</a>"
+      assert response =~ "<h2>Log in</h2>"
+      assert response =~ "Log in</a>"
       assert response =~ "Forgot your password?</a>"
     end
 
@@ -36,7 +36,7 @@ defmodule TextServerWeb.UserSessionControllerTest do
       conn = get(conn, "/")
       response = html_response(conn, 200)
       assert response =~ user.email
-      assert response =~ "Settings</a>"
+      assert response =~ "My projects</a>"
       assert response =~ "Log out</a>"
     end
 
@@ -75,7 +75,7 @@ defmodule TextServerWeb.UserSessionControllerTest do
         })
 
       response = html_response(conn, 200)
-      assert response =~ "<h1>Log in</h1>"
+      assert response =~ "<h2>Log in</h2>"
       assert response =~ "Invalid email or password"
     end
   end

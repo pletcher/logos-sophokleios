@@ -20,4 +20,8 @@ defmodule TextServerWeb.UserAuthLive do
       {:halt, redirect(socket, to: Routes.user_session_path(socket, :new))}
     end
   end
+  
+  def on_mount(_, _params, _args, socket) do
+    {:cont, socket}
+  end
 end

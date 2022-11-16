@@ -19,6 +19,12 @@ defmodule TextServer.Exemplars do
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
 
+  # the @attribution_regex is a special case for matching
+  # old comments by Greg Nagy ("GN") that have been
+  # manually attributed. Normally, attribution will come
+  # directly from a comment's XML.
+  @attribution_regex ~r/\[\[GN\s(\d{4}\.\d{2}\.\d{2})\]\]/
+
   defmodule ExemplarPage do
     defstruct [:exemplar_id, :page, :page_number, :text_nodes, :total_pages]
   end
@@ -251,15 +257,6 @@ defmodule TextServer.Exemplars do
     {:ok, exemplar}
   end
 
-  def create_page(attrs) do
-    {:ok, page} =
-      %Page{}
-      |> Page.changeset(attrs)
-      |> Repo.insert()
-
-    {:ok, page}
-  end
-
   def create_exemplar(attrs, work, project) do
     {:ok, exemplar} =
       Repo.transaction(fn ->
@@ -301,6 +298,15 @@ defmodule TextServer.Exemplars do
       nil -> create_exemplar(attrs)
       exemplar -> {:ok, exemplar}
     end
+  end
+
+  def create_page(attrs) do
+    {:ok, page} =
+      %Page{}
+      |> Page.changeset(attrs)
+      |> Repo.insert()
+
+    {:ok, page}
   end
 
   @doc """
@@ -365,15 +371,6 @@ defmodule TextServer.Exemplars do
       end
 
     update_exemplar(exemplar, %{parsed_at: NaiveDateTime.utc_now()})
-    # case result do
-    #   {:ok, _} ->
-
-
-    #   # {:error, error} ->
-    #   #   IO.puts("There was an error parsing exemplar ##{exemplar.id}:")
-    #   #   IO.inspect(error)
-    #   #   {:error, error}
-    # end
   end
 
   def parse_exemplar_docx(%Exemplar{} = exemplar) do
@@ -448,9 +445,12 @@ defmodule TextServer.Exemplars do
 
     location =
       case Regex.run(@location_regex, maybe_location_string) do
-        regex_list when is_list(regex_list) -> parse_location_marker(regex_list)
-        nil -> [0]
-        # _ -> maybe_location_fragment
+        regex_list when is_list(regex_list) ->
+          parse_location_marker(regex_list)
+
+        nil ->
+          [0]
+          # _ -> maybe_location_fragment
       end
 
     [location | rest]
@@ -489,11 +489,20 @@ defmodule TextServer.Exemplars do
         {elements, offset + String.length(text)}
 
       {:comment, comment} ->
+        content =
+          Map.get(comment, :content, [])
+          |> Enum.reduce("", &flatten_string/2)
+
+        attributes = get_comment_attributes(comment, content)
+
         {elements ++
            [
              %{
-               attributes: Map.get(comment, :attributes),
-               content: Map.get(comment, :content, []) |> Enum.reduce("", &flatten_string/2),
+               attributes: attributes,
+               content:
+                 content
+                 |> String.replace(@attribution_regex, "")
+                 |> String.trim_leading(),
                end_offset: offset,
                start_offset: offset,
                type: :comment
@@ -571,6 +580,24 @@ defmodule TextServer.Exemplars do
       end
 
     "#{string}#{s}"
+  end
+
+  def get_comment_attributes(comment, s) do
+    attrs = Map.get(comment, :attributes)
+
+    if match = Regex.run(@attribution_regex, s) do
+      date_string = Enum.fetch!(match, 1) |> String.replace(".", "-")
+      {:ok, date_time, _} = DateTime.from_iso8601(date_string <> "T00:00:00Z")
+
+      kv_pairs =
+        Map.get(attrs, :key_value_pairs, %{})
+        |> Map.put("author", "Gregory Nagy")
+        |> Map.put("date", date_time)
+
+      Map.put(attrs, :key_value_pairs, kv_pairs)
+    else
+      attrs
+    end
   end
 
   def collect_attributes(node) do

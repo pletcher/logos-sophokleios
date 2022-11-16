@@ -58,7 +58,8 @@ dependency:
 2. Do we really need this dependency?
 3. What happens if it breaks?
 4. Can we just use part of the dependency in the `vendor/` directory with proper attribution?
-2. If you really must install a dependency --- like `@tailwindcss/forms` ---, run `npm i -D <dependency>` from within the `assets/` directory.
+2. If you really must install a dependency --- like `@tailwindcss/forms` ---, run `npm i -D <dependency>`
+from within the `assets/` directory.
 
 ## Commentaries
 

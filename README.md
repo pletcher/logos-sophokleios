@@ -13,7 +13,7 @@ person but rather a loose grouping of works related by style, content, and
 `text_group` instead of "author".
 
 Each `text_group` contains one or more `work`s. You might think of these as
-texts.
+texts, e.g., "Homer's _Odyssey_" or "Lucan's _Bellum Civile_".
 
 A `work` can be further specified by a `version` URN component that points to
 either an `edition` (in the traditional sense of the word) or a `translation`.
@@ -23,7 +23,7 @@ Each `version` can also have a specific imprint, known as an `exemplar`.
 So in rough database speak:
 
 - An `exemplar` belongs to a `version`
-- A `version` has a type indication of either `edition` or `translation`
+- A `version` has a type indication of one of `commentary`, `edition`, or `translation`
 - A `version` belongs to a `work`
 - A `work` belongs to a `text_group`
 - A `text_group` belongs to a `collection`
@@ -32,8 +32,8 @@ In reverse:
 
 - A `collection` has many `text_group`s
 - A `text_group` has many `work`s
-- A `work` _optionally_ has many `version`s, each of which is typed as `edition` or
-  `translation`
+- A `work` _optionally_ has many `version`s, 
+  each of which is typed as `commentary`, `edition`, or `translation`
 - A `version` _optionally_ has many `exemplar`s
 
 ## Running in development

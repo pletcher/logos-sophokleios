@@ -28,7 +28,9 @@ defmodule TextServerWeb.WorkLive.FormComponent do
   end
 
   defp save_work(socket, :edit, work_params) do
-    case Works.update_work(socket.assigns.work, work_params) do
+    text_group = socket.assigns.text_group
+
+    case Works.update_work(socket.assigns.work, Map.put_new(work_params, "text_group_id", text_group.id)) do
       {:ok, _work} ->
         {:noreply,
          socket
@@ -41,7 +43,9 @@ defmodule TextServerWeb.WorkLive.FormComponent do
   end
 
   defp save_work(socket, :new, work_params) do
-    case Works.create_work(work_params) do
+    text_group = socket.assigns.text_group
+
+    case Works.create_work(work_params |> Map.put_new("text_group_id", text_group.id)) do
       {:ok, _work} ->
         {:noreply,
          socket

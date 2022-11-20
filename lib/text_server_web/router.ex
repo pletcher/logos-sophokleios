@@ -74,7 +74,7 @@ defmodule TextServerWeb.Router do
       live "/versions/:id/show/edit", VersionLive.Show, :edit
 
       live "/works", WorkLive.Index, :index
-      live "/works/new", WorkLive.Index, :new
+      live "/works/new", WorkLive.New, :new
       live "/works/:id/edit", WorkLive.Index, :edit
 
       live "/works/:id", WorkLive.Show, :show

@@ -18,16 +18,8 @@
     <tr>
       <th>Description</th>
       <th>English title</th>
-      <th>Filemd5hash</th>
-      <th>Filename</th>
-      <th>Form</th>
-      <th>Full urn</th>
-      <th>Label</th>
       <th>Original title</th>
-      <th>Slug</th>
-      <th>Structure</th>
       <th>Urn</th>
-      <th>Work type</th>
 
       <th></th>
     </tr>
@@ -37,16 +29,8 @@
       <tr id={"work-#{work.id}"}>
         <td><%= work.description %></td>
         <td><%= work.english_title %></td>
-        <td><%= work.filemd5hash %></td>
-        <td><%= work.filename %></td>
-        <td><%= work.form %></td>
-        <td><%= work.full_urn %></td>
-        <td><%= work.label %></td>
         <td><%= work.original_title %></td>
-        <td><%= work.slug %></td>
-        <td><%= work.structure %></td>
         <td><%= work.urn %></td>
-        <td><%= work.work_type %></td>
 
         <td>
           <span>
@@ -67,4 +51,4 @@
   </tbody>
 </table>
 
-<span><%= live_patch("New Work", to: Routes.work_index_path(@socket, :new)) %></span>
+<span><%= link("New Work", to: Routes.work_new_path(@socket, :new)) %></span>

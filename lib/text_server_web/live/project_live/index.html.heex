@@ -21,9 +21,11 @@
       <div class="mt-6 col-auto grid grid-cols-1 gap-y-10 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
         <%= for project <- @project_collection do %>
           <Components.card
-            project={project}
+            item={project}
             url={Routes.project_show_path(@socket, :show, project)}
-          />
+          >
+            ω
+          </Components.card>
         <% end %>
       </div>
     <% end %>

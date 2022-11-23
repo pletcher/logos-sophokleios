@@ -1,19 +1,6 @@
 <article class="min-h-full min-w-full py-12 px-4 sm:px-6 lg:px-8">
   <h1 class="mt-4 mx-auto text-xl"><%= @page_title %></h1>
 
-  <%= if @live_action in [:edit] do %>
-    <.modal return_to={Routes.project_index_path(@socket, :index)}>
-      <.live_component
-        module={TextServerWeb.ProjectLive.FormComponent}
-        id={@project.id}
-        title={@page_title}
-        action={@live_action}
-        project={@project}
-        return_to={Routes.project_user_project_index_path(@socket, :index, @current_user.id)}
-      />
-    </.modal>
-  <% end %>
-
   <%= for project <- @project_collection do %>
     <div class="mt-6 col-auto grid grid-cols-1 gap-y-10 gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
       <Components.card item={project} url={Routes.project_show_path(@socket, :show, project)}>

@@ -12,4 +12,5 @@
   <% end %>
 
   <%= @inner_content %>
+  <script defer phx-track-static type="text/javascript" src={Routes.static_path(@socket, "/assets/app.js")}></script>
 </main>

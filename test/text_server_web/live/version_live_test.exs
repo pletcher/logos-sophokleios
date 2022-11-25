@@ -3,20 +3,20 @@ defmodule TextServerWeb.VersionLiveTest do
 
   import Phoenix.LiveViewTest
   import TextServer.VersionsFixtures
+  import TextServer.WorksFixtures
 
   @create_attrs %{
     description: "some description",
-    slug: "some slug",
-    title: "some title",
-    urn: "some urn"
+    label: "some label",
+    urn: "some urn",
+    version_type: :edition
   }
   @update_attrs %{
     description: "some updated description",
-    slug: "some updated slug",
-    title: "some updated title",
+    label: "some updated label",
     urn: "some updated urn"
   }
-  @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
+  @invalid_attrs %{description: nil, label: nil, urn: nil}
 
   defp create_version(_) do
     version = version_fixture()
@@ -47,7 +47,7 @@ defmodule TextServerWeb.VersionLiveTest do
 
       {:ok, _, html} =
         index_live
-        |> form("#version-form", version: @create_attrs)
+        |> form("#version-form", version: @create_attrs |> Map.put(:work_id, work_fixture().id))
         |> render_submit()
         |> follow_redirect(conn, Routes.version_index_path(conn, :index))
 

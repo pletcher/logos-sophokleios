@@ -14,7 +14,6 @@ defmodule TextServer.Works do
 
   def search_works(term, params \\ []) do
     term = Regex.replace(~r/[^[:word:][:space:]]/u, term, "") <> ":*"
-
     Work
     |> where(
       [w],

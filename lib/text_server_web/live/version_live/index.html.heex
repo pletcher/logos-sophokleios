@@ -17,7 +17,6 @@
   <thead>
     <tr>
       <th>Description</th>
-      <th>Slug</th>
       <th>Title</th>
       <th>Urn</th>
 
@@ -28,8 +27,7 @@
     <%= for version <- @versions do %>
       <tr id={"version-#{version.id}"}>
         <td><%= version.description %></td>
-        <td><%= version.slug %></td>
-        <td><%= version.title %></td>
+        <td><%= version.label %></td>
         <td><%= version.urn %></td>
 
         <td>

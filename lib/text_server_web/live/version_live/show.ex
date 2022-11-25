@@ -16,6 +16,11 @@ defmodule TextServerWeb.VersionLive.Show do
      |> assign(:version, Versions.get_version!(id))}
   end
 
+  @impl true
+  def handle_info({:selected_work, work}, socket) do
+    {:noreply, socket |> assign(:selected_work, work)}
+  end
+
   defp page_title(:show), do: "Show Version"
   defp page_title(:edit), do: "Edit Version"
 end

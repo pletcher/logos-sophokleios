@@ -4,6 +4,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   alias TextServer.Exemplars
   alias TextServer.Languages
 
+  alias TextServerWeb.Components
   alias TextServerWeb.Icons
 
   @impl true
@@ -95,8 +96,6 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
     end
   end
 
-  # when we're updating an exemplar, let's assume that the work,
-  # version, and language stay the same
   defp save_exemplar(socket, :edit, exemplar_params) do
     case Exemplars.update_exemplar(
            socket.assigns.exemplar,
@@ -114,16 +113,10 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   end
 
   defp save_exemplar(socket, :new, exemplar_params) do
-    work = socket.assigns.work
     language = Languages.get_language_by_slug(Map.get(exemplar_params, "language"))
 
     case Exemplars.create_exemplar(
-           exemplar_params
-           |> Enum.into(%{
-             "language_id" => language.id,
-             "urn" => make_exemplar_urn(exemplar_params, work, socket.assigns.project)
-           }),
-           work,
+           Map.put(exemplar_params, "language_id", language.id),
            socket.assigns.project
          ) do
       {:ok, _exemplar} ->
@@ -135,9 +128,5 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
     end
-  end
-
-  defp make_exemplar_urn(%{"title" => title} = _exemplar_params, work, project) do
-    "#{work.urn}.#{String.downcase(project.domain)}.#{Recase.to_kebab(title)}-en"
   end
 end

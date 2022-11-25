@@ -3,6 +3,7 @@ defmodule TextServerWeb.VersionLive.Index do
 
   alias TextServer.Versions
   alias TextServer.Versions.Version
+  alias TextServerWeb.Components
 
   @impl true
   def mount(_params, _session, socket) do
@@ -26,10 +27,22 @@ defmodule TextServerWeb.VersionLive.Index do
     |> assign(:version, %Version{})
   end
 
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Versions")
-    |> assign(:version, nil)
+  defp apply_action(socket, :index, params) do
+    page_number = Map.get(params, "page", 1)
+    versions = socket.assigns.versions
+
+    socket =
+      socket
+      |> assign(:page_title, "Versions")
+      |> assign(:version, nil)
+      |> assign(:page_number, page_number)
+
+    if versions.page_number == page_number do
+      socket
+    else
+      socket
+      |> assign(:versions, list_versions(page_number))
+    end
   end
 
   @impl true
@@ -37,10 +50,10 @@ defmodule TextServerWeb.VersionLive.Index do
     version = Versions.get_version!(id)
     {:ok, _} = Versions.delete_version(version)
 
-    {:noreply, assign(socket, :versions, list_versions())}
+    {:noreply, assign(socket, :versions, list_versions(socket.assigns.page_number))}
   end
 
-  defp list_versions do
-    Versions.list_versions()
+  defp list_versions(page_number \\ 1) do
+    Versions.list_versions(page: page_number, page_size: 20)
   end
 end

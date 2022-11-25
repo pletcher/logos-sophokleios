@@ -6,7 +6,7 @@
       <th>Title</th>
       <th>Slug</th>
       <th>Description</th>
-      <th>Urn</th>
+      <th>URN</th>
 
       <th></th>
     </tr>
@@ -21,9 +21,6 @@
         <td>
           <span>
             <%= live_redirect("Show", to: Routes.exemplar_show_path(@socket, :show, exemplar)) %>
-          </span>
-          <span>
-            <%= live_patch("Edit", to: Routes.exemplar_index_path(@socket, :edit, exemplar)) %>
           </span>
         </td>
       </tr>

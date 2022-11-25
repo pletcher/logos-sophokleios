@@ -16,6 +16,7 @@ defmodule TextServer.Exemplars do
   alias TextServer.TextElements
   alias TextServer.TextNodes
   alias TextServer.TextNodes.TextNode
+  alias TextServer.Works
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
 
@@ -191,22 +192,22 @@ defmodule TextServer.Exemplars do
       )
 
     text_nodes = Repo.all(q)
-    
+
     grouped_text_nodes =
       text_nodes
       |> Enum.filter(fn tn -> tn.location != [0] end)
       |> Enum.group_by(fn tn ->
         location = tn.location
-        
+
         if length(tn.location) > 1 do
           Enum.take(location, length(tn.location) - 1)
         else
           line = List.first(location)
-          
+
           Integer.floor_div(line, 20)
         end
       end)
-    
+
     keys = Map.keys(grouped_text_nodes) |> Enum.sort()
 
     keys
@@ -264,25 +265,26 @@ defmodule TextServer.Exemplars do
     {:ok, exemplar}
   end
 
-  def create_exemplar(attrs, work, project) do
+  def create_exemplar(attrs, project) do
+    urn = make_exemplar_urn(attrs, project)
     {:ok, exemplar} =
       Repo.transaction(fn ->
         {:ok, version} =
           Versions.find_or_create_version(
             attrs
-            |> Map.take(["description", "urn"])
+            |> Map.take(["description", "work_id"])
             |> Enum.into(%{
               "label" => Map.get(attrs, "title"),
               # FIXME: (charles) Eventually we'll want to be more
               # flexible on the version_type
-              "version_type" => :commentary,
-              "work_id" => work.id
+              "urn" => urn,
+              "version_type" => :commentary
             })
           )
 
         {:ok, exemplar} =
           %Exemplar{}
-          |> Exemplar.changeset(attrs |> Map.put("version_id", version.id))
+          |> Exemplar.changeset(attrs |> Map.put("version_id", version.id) |> Map.put("urn", urn))
           |> Repo.insert()
 
         {:ok, _project_exemplar} =
@@ -296,6 +298,11 @@ defmodule TextServer.Exemplars do
     %{id: exemplar.id}
     |> ExemplarJobRunner.new()
     |> Oban.insert()
+  end
+
+  defp make_exemplar_urn(%{"title" => title, "work_id" => work_id} = _exemplar_params, project) do
+    work = Works.get_work!(work_id)
+    "#{work.urn}:#{String.downcase(project.domain)}.#{Recase.to_kebab(title)}-en"
   end
 
   def find_or_create_exemplar(attrs) do

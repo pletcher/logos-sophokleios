@@ -3,7 +3,9 @@ defmodule TextServerWeb.WorkLive.Search do
 
   alias TextServer.TextGroups
   alias TextServer.Works
-  alias TextServerWeb.Components
+
+  # some improvements inspired by
+  # https://elixirforum.com/t/liveview-phx-change-attribute-does-not-emit-event-on-input-text/21280/24
 
   def mount(socket) do
     {:ok,
@@ -47,25 +49,16 @@ defmodule TextServerWeb.WorkLive.Search do
 
   attr :label, :string, required: true
   attr :search_string, :string, default: ""
+  attr :selected_work, TextServer.Works.Work
+  attr :works, :list
 
-  slot :hidden_work_id, required: true
+  slot :selected_work_slot, required: true
 
-  def render(%{label: label, search_string: s} = assigns) do
+  def render(assigns) do
     ~H"""
     <div clas="w-full">
       <%= if @selected_work do %>
-        <Components.card
-          item={
-            %{
-              description: @selected_work.urn,
-              title: @selected_work.english_title
-            }
-          }
-          url={nil}
-        >
-          <%= @selected_work.title %>
-        </Components.card>
-
+        <%= render_slot(@selected_work_slot, @selected_work) %>
         <a
           class="cursor-pointer text-stone-600 underline"
           phx-click="reset_search"
@@ -73,11 +66,9 @@ defmodule TextServerWeb.WorkLive.Search do
         >
           &lsaquo; Search again
         </a>
-
-        <%= render_slot(@hidden_work_id, @selected_work) %>
       <% else %>
         <div>
-          <%= label(:work_search, :search_input, label, class: "block mb-1") %>
+          <%= label(:work_search, :search_input, @label, class: "block mb-1") %>
           <%= text_input(
             :work_search,
             :search_input,
@@ -87,7 +78,7 @@ defmodule TextServerWeb.WorkLive.Search do
             phx_debounce: 500,
             phx_target: @myself,
             placeholder: "Start typing to search for a work",
-            value: s
+            value: @search_string
           ) %>
         </div>
 

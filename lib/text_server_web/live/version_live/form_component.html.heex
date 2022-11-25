@@ -29,9 +29,20 @@
       id={:version_work_search}
       label="What work does this version belong to?"
     >
-      <:hidden_work_id :let={work}>
+      <:selected_work_slot :let={work}>
         <%= hidden_input(f, :work_id, value: work.id) %>
-      </:hidden_work_id>
+        <Components.card
+          item={
+            %{
+              description: work.urn,
+              title: work.english_title
+            }
+          }
+          url={nil}
+        >
+          <%= work.title %>
+        </Components.card>
+      </:selected_work_slot>
     </.live_component>
 
     <div>

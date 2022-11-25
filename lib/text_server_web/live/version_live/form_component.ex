@@ -2,6 +2,7 @@ defmodule TextServerWeb.VersionLive.FormComponent do
   use TextServerWeb, :live_component
 
   alias TextServer.Versions
+  alias TextServerWeb.Components
 
   @impl true
   def update(%{version: version} = assigns, socket) do

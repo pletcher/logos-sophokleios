@@ -23,8 +23,13 @@ defmodule TextServerWeb.VersionLiveTest do
     %{version: version}
   end
 
+  defp create_work(_) do
+    work = work_fixture()
+    %{work: work}
+  end
+
   describe "Index" do
-    setup [:create_version]
+    setup [:create_version, :create_work]
 
     test "lists all versions", %{conn: conn, version: version} do
       {:ok, _index_live, html} = live(conn, Routes.version_index_path(conn, :index))
@@ -33,7 +38,7 @@ defmodule TextServerWeb.VersionLiveTest do
       assert html =~ version.description
     end
 
-    test "saves new version", %{conn: conn} do
+    test "saves new version", %{conn: conn, work: work} do
       {:ok, index_live, _html} = live(conn, Routes.version_index_path(conn, :index))
 
       assert index_live |> element("a", "New Version") |> render_click() =~
@@ -45,9 +50,16 @@ defmodule TextServerWeb.VersionLiveTest do
              |> form("#version-form", version: @invalid_attrs)
              |> render_change() =~ "can&#39;t be blank"
 
+      view =
+        index_live
+        |> element("#work_search_selected_work")
+        |> render_change(%{"work_search" => %{"selected_work" => work.id}})
+
+      assert view =~ work.english_title
+
       {:ok, _, html} =
         index_live
-        |> form("#version-form", version: @create_attrs |> Map.put(:work_id, work_fixture().id))
+        |> form("#version-form", version: @create_attrs)
         |> render_submit()
         |> follow_redirect(conn, Routes.version_index_path(conn, :index))
 

@@ -34,7 +34,7 @@ defmodule TextServerWeb.VersionLiveTest do
     test "lists all versions", %{conn: conn, version: version} do
       {:ok, _index_live, html} = live(conn, Routes.version_index_path(conn, :index))
 
-      assert html =~ "Listing Versions"
+      assert html =~ "Versions"
       assert html =~ version.description
     end
 

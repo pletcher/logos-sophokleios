@@ -5,15 +5,11 @@ defmodule TextServerWeb.TextNodeLiveTest do
   import TextServer.TextNodesFixtures
 
   @create_attrs %{
-    index: 42,
-    location: [],
-    normalized_text: "some normalized_text",
+    location: [1, 1, 1],
     text: "some text"
   }
   @update_attrs %{
-    index: 43,
-    location: [],
-    normalized_text: "some updated normalized_text",
+    location: [1, 1, 1],
     text: "some updated text"
   }
   @invalid_attrs %{index: nil, location: [], normalized_text: nil, text: nil}
@@ -29,8 +25,8 @@ defmodule TextServerWeb.TextNodeLiveTest do
     test "lists all text_nodes", %{conn: conn, text_node: text_node} do
       {:ok, _index_live, html} = live(conn, Routes.text_node_index_path(conn, :index))
 
-      assert html =~ "Listing Text nodes"
-      assert html =~ text_node.normalized_text
+      assert html =~ "TextNodes"
+      assert html =~ text_node.text
     end
 
     test "saves new text_node", %{conn: conn} do
@@ -52,7 +48,7 @@ defmodule TextServerWeb.TextNodeLiveTest do
         |> follow_redirect(conn, Routes.text_node_index_path(conn, :index))
 
       assert html =~ "Text node created successfully"
-      assert html =~ "some normalized_text"
+      assert html =~ "some text"
     end
 
     test "updates text_node in listing", %{conn: conn, text_node: text_node} do
@@ -74,7 +70,7 @@ defmodule TextServerWeb.TextNodeLiveTest do
         |> follow_redirect(conn, Routes.text_node_index_path(conn, :index))
 
       assert html =~ "Text node updated successfully"
-      assert html =~ "some updated normalized_text"
+      assert html =~ "some updated text"
     end
 
     test "deletes text_node in listing", %{conn: conn, text_node: text_node} do
@@ -92,7 +88,6 @@ defmodule TextServerWeb.TextNodeLiveTest do
       {:ok, _show_live, html} = live(conn, Routes.text_node_show_path(conn, :show, text_node))
 
       assert html =~ "Show Text node"
-      assert html =~ text_node.normalized_text
     end
 
     test "updates text_node within modal", %{conn: conn, text_node: text_node} do
@@ -114,7 +109,7 @@ defmodule TextServerWeb.TextNodeLiveTest do
         |> follow_redirect(conn, Routes.text_node_show_path(conn, :show, text_node))
 
       assert html =~ "Text node updated successfully"
-      assert html =~ "some updated normalized_text"
+      assert html =~ "some updated text"
     end
   end
 end

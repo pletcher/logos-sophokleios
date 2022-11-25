@@ -1,4 +1,4 @@
-<h1>Listing Text nodes</h1>
+<h1>TextNodes</h1>
 
 <%= if @live_action in [:new, :edit] do %>
   <.modal return_to={Routes.text_node_index_path(@socket, :index)}>
@@ -16,7 +16,6 @@
 <table>
   <thead>
     <tr>
-      <th>Index</th>
       <th>Location</th>
       <th>Normalized text</th>
       <th>Text</th>
@@ -27,7 +26,6 @@
   <tbody id="text_nodes">
     <%= for text_node <- @text_nodes do %>
       <tr id={"text_node-#{text_node.id}"}>
-        <td><%= text_node.index %></td>
         <td><%= text_node.location %></td>
         <td><%= text_node.normalized_text %></td>
         <td><%= text_node.text %></td>

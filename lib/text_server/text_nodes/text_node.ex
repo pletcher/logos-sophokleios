@@ -152,7 +152,7 @@ defmodule TextServer.TextNodes.TextNode do
 
   defp comment_date(comment) do
     try do
-      {:ok, date} = comment_kv_pairs(comment) |> Map.get("date") |> DateTime.from_iso8601()
+      {:ok, date, _} = comment_kv_pairs(comment) |> Map.get("date") |> DateTime.from_iso8601()
       date
     rescue
       _ -> nil

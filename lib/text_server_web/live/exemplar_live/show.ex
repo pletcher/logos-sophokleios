@@ -13,13 +13,13 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
   @impl true
   def handle_params(%{"id" => id, "page" => page_number}, _, socket) do
-    create_reply(socket, id, get_page(id, page_number))
+    create_response(socket, id, get_page(id, page_number))
   end
 
   def handle_params(%{"id" => id, "location" => raw_location}, _session, socket) do
     location = raw_location |> String.split(".") |> Enum.map(&String.to_integer/1)
 
-    create_reply(socket, id, get_page_by_location(id, location))
+    create_response(socket, id, get_page_by_location(id, location))
   end
 
   def handle_params(params, session, socket) do
@@ -30,7 +30,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
     )
   end
 
-  defp create_reply(socket, exemplar_id, page) do
+  defp create_response(socket, exemplar_id, page) do
     %{comments: comments, footnotes: footnotes, page: page} = page
 
     exemplar = Exemplars.get_exemplar!(exemplar_id)
@@ -81,7 +81,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
 
     {top_level_toc, second_level_toc}
   end
-  
+
   defp format_toc(exemplar_id, top_level_location) do
     toc = Exemplars.get_table_of_contents(exemplar_id)
 
@@ -89,7 +89,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
       Map.keys(toc)
       |> Enum.sort()
       |> Enum.map(&[key: "Book #{&1}", value: &1, selected: &1 == top_level_location])
-    
+
     {top_level_toc, nil}
   end
 

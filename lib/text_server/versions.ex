@@ -17,8 +17,9 @@ defmodule TextServer.Versions do
       [%Version{}, ...]
 
   """
-  def list_versions do
-    Repo.all(Version)
+  def list_versions(params \\ [page: 1, page_size: 20]) do
+    Version
+    |> Repo.paginate(params)
   end
 
   @doc """

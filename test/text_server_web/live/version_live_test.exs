@@ -3,28 +3,33 @@ defmodule TextServerWeb.VersionLiveTest do
 
   import Phoenix.LiveViewTest
   import TextServer.VersionsFixtures
+  import TextServer.WorksFixtures
 
   @create_attrs %{
     description: "some description",
-    slug: "some slug",
-    title: "some title",
-    urn: "some urn"
+    label: "some label",
+    urn: "some urn",
+    version_type: :edition
   }
   @update_attrs %{
     description: "some updated description",
-    slug: "some updated slug",
-    title: "some updated title",
+    label: "some updated label",
     urn: "some updated urn"
   }
-  @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
+  @invalid_attrs %{description: nil, label: nil, urn: nil}
 
   defp create_version(_) do
     version = version_fixture()
     %{version: version}
   end
 
+  defp create_work(_) do
+    work = work_fixture()
+    %{work: work}
+  end
+
   describe "Index" do
-    setup [:create_version]
+    setup [:create_version, :create_work]
 
     test "lists all versions", %{conn: conn, version: version} do
       {:ok, _index_live, html} = live(conn, Routes.version_index_path(conn, :index))
@@ -33,7 +38,7 @@ defmodule TextServerWeb.VersionLiveTest do
       assert html =~ version.description
     end
 
-    test "saves new version", %{conn: conn} do
+    test "saves new version", %{conn: conn, work: work} do
       {:ok, index_live, _html} = live(conn, Routes.version_index_path(conn, :index))
 
       assert index_live |> element("a", "New Version") |> render_click() =~
@@ -44,6 +49,13 @@ defmodule TextServerWeb.VersionLiveTest do
       assert index_live
              |> form("#version-form", version: @invalid_attrs)
              |> render_change() =~ "can&#39;t be blank"
+
+      view =
+        index_live
+        |> element("#work_search_selected_work")
+        |> render_change(%{"work_search" => %{"selected_work" => work.id}})
+
+      assert view =~ work.english_title
 
       {:ok, _, html} =
         index_live

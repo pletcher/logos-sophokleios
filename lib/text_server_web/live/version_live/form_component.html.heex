@@ -1,29 +1,49 @@
 <div>
   <h2><%= @title %></h2>
 
-  <.form
-    let={f}
-    for={@changeset}
-    id="version-form"
-    phx-target={@myself}
-    phx-change="validate"
-    phx-submit="save"
-  >
+  <.form :let={f} for={@changeset} id="version-form" phx-target={@myself} phx-change="validate" phx-submit="save">
     <%= label(f, :description) %>
     <%= text_input(f, :description) %>
     <%= error_tag(f, :description) %>
 
-    <%= label(f, :slug) %>
-    <%= text_input(f, :slug) %>
-    <%= error_tag(f, :slug) %>
-
-    <%= label(f, :title) %>
-    <%= text_input(f, :title) %>
-    <%= error_tag(f, :title) %>
+    <%= label(f, :label) %>
+    <%= text_input(f, :label) %>
+    <%= error_tag(f, :label) %>
 
     <%= label(f, :urn) %>
     <%= text_input(f, :urn) %>
     <%= error_tag(f, :urn) %>
+
+    <%= label(f, :version_type) %>
+    <%= select(
+      f,
+      :version_type,
+      Commentary: "commentary",
+      Edition: "edition",
+      Translation: "translation"
+    ) %>
+    <%= error_tag(f, :version_type) %>
+
+    <.live_component
+      module={TextServerWeb.WorkLive.Search}
+      id={:version_work_search}
+      label="What work does this version belong to?"
+    >
+      <:selected_work_slot :let={work}>
+        <%= hidden_input(f, :work_id, value: work.id) %>
+        <Components.card
+          item={
+            %{
+              description: work.urn,
+              title: work.english_title
+            }
+          }
+          url={nil}
+        >
+          <%= work.title %>
+        </Components.card>
+      </:selected_work_slot>
+    </.live_component>
 
     <div>
       <%= submit("Save", phx_disable_with: "Saving...") %>

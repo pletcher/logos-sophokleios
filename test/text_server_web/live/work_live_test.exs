@@ -117,8 +117,8 @@ defmodule TextServerWeb.WorkLiveTest do
              |> form("#work-form", work: @invalid_attrs)
              |> render_change() =~ "can&#39;t be blank"
 
-
       send(new_live.pid, {:selected_text_group, text_group})
+
       {:ok, _, html} =
         new_live
         |> form("#work-form", work: @create_attrs)

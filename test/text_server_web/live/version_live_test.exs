@@ -39,6 +39,9 @@ defmodule TextServerWeb.VersionLiveTest do
     end
 
     test "saves new version", %{conn: conn, work: work} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, index_live, _html} = live(conn, Routes.version_index_path(conn, :index))
 
       assert index_live |> element("a", "New Version") |> render_click() =~
@@ -68,6 +71,9 @@ defmodule TextServerWeb.VersionLiveTest do
     end
 
     test "updates version in listing", %{conn: conn, version: version} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, index_live, _html} = live(conn, Routes.version_index_path(conn, :index))
 
       assert index_live |> element("#version-#{version.id} a", "Edit") |> render_click() =~
@@ -90,6 +96,9 @@ defmodule TextServerWeb.VersionLiveTest do
     end
 
     test "deletes version in listing", %{conn: conn, version: version} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, index_live, _html} = live(conn, Routes.version_index_path(conn, :index))
 
       assert index_live |> element("#version-#{version.id} a", "Delete") |> render_click()
@@ -108,6 +117,9 @@ defmodule TextServerWeb.VersionLiveTest do
     end
 
     test "updates version within modal", %{conn: conn, version: version} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, show_live, _html} = live(conn, Routes.version_show_path(conn, :show, version))
 
       assert show_live |> element("a", "Edit") |> render_click() =~

@@ -20,6 +20,9 @@ defmodule TextServerWeb.CollectionLiveTest do
     end
 
    test "deletes collection in listing", %{conn: conn, collection: collection} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, index_live, _html} = live(conn, Routes.collection_index_path(conn, :index))
 
       assert index_live |> element("#collection-#{collection.id} a", "Delete") |> render_click()

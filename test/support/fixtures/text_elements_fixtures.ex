@@ -8,6 +8,7 @@ defmodule TextServer.TextElementsFixtures do
   Generate a text_element.
   """
   def text_element_fixture(attrs \\ %{}) do
+    text_node = text_node_fixture()
     {:ok, text_element} =
       attrs
       |> Enum.into(%{
@@ -15,7 +16,9 @@ defmodule TextServer.TextElementsFixtures do
         content: "Some content",
         start_offset: 1,
         end_offset: 5,
-        element_type_id: element_type_fixture().id
+        element_type_id: element_type_fixture().id,
+        start_text_node_id: text_node.id,
+        end_text_node_id: text_node.id
       })
       |> TextServer.TextElements.create_text_element()
 
@@ -24,5 +27,9 @@ defmodule TextServer.TextElementsFixtures do
 
   defp element_type_fixture() do
     TextServer.ElementTypesFixtures.element_type_fixture()
+  end
+
+  defp text_node_fixture() do
+    TextServer.TextNodesFixtures.text_node_fixture()
   end
 end

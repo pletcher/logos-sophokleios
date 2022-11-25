@@ -84,33 +84,40 @@ defmodule TextServerWeb.WorkLiveTest do
       assert html =~ work.description
     end
 
-    # test "updates work within modal", %{conn: conn, work: work} do
-    #   {:ok, show_live, _html} = live(conn, Routes.work_show_path(conn, :show, work))
+    @tag :skip
+    test "updates work within modal", %{conn: conn, work: work} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
 
-    #   assert show_live |> element("a", "Edit") |> render_click() =~
-    #            "Edit Work"
+      {:ok, show_live, _html} = live(conn, Routes.work_show_path(conn, :show, work))
 
-    #   assert_patch(show_live, Routes.work_show_path(conn, :edit, work))
+      assert show_live |> element("a", "Edit") |> render_click() =~
+               "Edit Work"
 
-    #   assert show_live
-    #          |> form("#work-form", work: @invalid_attrs)
-    #          |> render_change() =~ "can&#39;t be blank"
+      assert_patch(show_live, Routes.work_show_path(conn, :edit, work))
 
-    #   {:ok, _, html} =
-    #     show_live
-    #     |> form("#work-form", work: @update_attrs)
-    #     |> render_submit()
-    #     |> follow_redirect(conn, Routes.work_show_path(conn, :show, work))
+      assert show_live
+             |> form("#work-form", work: @invalid_attrs)
+             |> render_change() =~ "can&#39;t be blank"
 
-    #   assert html =~ "Work updated successfully"
-    #   assert html =~ "some updated description"
-    # end
+      {:ok, _, html} =
+        show_live
+        |> form("#work-form", work: @update_attrs)
+        |> render_submit()
+        |> follow_redirect(conn, Routes.work_show_path(conn, :show, work))
+
+      assert html =~ "Work updated successfully"
+      assert html =~ "some updated description"
+    end
   end
 
   describe "New" do
     setup [:create_text_group]
 
     test "saves new work", %{conn: conn, text_group: text_group} do
+      user = TextServer.AccountsFixtures.user_fixture()
+      conn = log_in_user(conn, user)
+
       {:ok, new_live, _html} = live(conn, Routes.work_new_path(conn, :new))
 
       assert new_live

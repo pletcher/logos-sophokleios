@@ -1,5 +1,18 @@
 <h1>Listing Text groups</h1>
 
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.text_group_index_path(@socket, :index)}>
+    <.live_component
+      module={TextServerWeb.TextGroupLive.FormComponent}
+      id={@text_group.id || :new}
+      title={@page_title}
+      action={@live_action}
+      text_group={@text_group}
+      return_to={Routes.text_group_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
 <table>
   <thead>
     <tr>

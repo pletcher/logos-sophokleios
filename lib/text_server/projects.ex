@@ -50,29 +50,29 @@ defmodule TextServer.Projects do
   end
 
   @doc """
-  Creates a project and assigns the passed-in user (generally
-  the current_user) as an admin by creating a %ProjectUser{project_user_type: :admin}
+  Creates a project and assigns the user identified by
+  attrs["created_by_id"] as an admin by creating a %ProjectUser{project_user_type: :admin}
 
   ## Examples
 
       iex> create_project(%User{}, %{field: value})
       {:ok, %Project{}}
 
-      iex> create_project(%{field: bad_value})
+      iex> create_project(%User{}, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_project(user, attrs \\ %{}) do
+  def create_project(attrs) do
     Repo.transaction(fn repo ->
       project =
-        %Project{created_by_id: user.id}
+        %Project{}
         |> Project.changeset(attrs)
         |> repo.insert!()
 
       project_user_attrs = %{
         project_id: project.id,
         project_user_type: :admin,
-        user_id: user.id
+        user_id: project.created_by_id
       }
 
       _project_user =

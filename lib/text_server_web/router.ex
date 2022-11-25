@@ -18,74 +18,73 @@ defmodule TextServerWeb.Router do
   end
 
   scope "/", TextServerWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :with_authenticated_user, on_mount: TextServerWeb.UserAuthLive do
+      live "/collections/new", CollectionLive.Index, :new
+      live "/collections/:id/edit", CollectionLive.Index, :edit
+      live "/collections/:id/show/edit", CollectionLive.Show, :edit
+
+      live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
+
+      live "/languages/new", LanguageLive.Index, :new
+      live "/languages/:id/edit", LanguageLive.Index, :edit
+      live "/languages/:id/show/edit", LanguageLive.Show, :edit
+
+      live "/text_groups/new", TextGroupLive.Index, :new
+      live "/text_groups/:id/edit", TextGroupLive.Index, :edit
+      live "/text_groups/:id/show/edit", TextGroupLive.Show, :edit
+
+      live "/text_nodes/new", TextNodeLive.Index, :new
+      live "/text_nodes/:id/edit", TextNodeLive.Index, :edit
+      live "/text_nodes/:id/show/edit", TextNodeLive.Show, :edit
+
+      live "/versions/new", VersionLive.Index, :new
+      live "/versions/:id/edit", VersionLive.Index, :edit
+      live "/versions/:id/show/edit", VersionLive.Show, :edit
+
+      live "/works/new", WorkLive.New, :new
+      live "/works/:id/edit", WorkLive.Index, :edit
+      live "/works/:id/show/edit", WorkLive.Show, :edit
+
+      scope "/:user_id" do
+        live "/projects", ProjectLive.UserProjectIndex, :index
+        live "/projects/:id/exemplars/new", ExemplarLive.New, :new
+      end
+    end
+  end
+
+  scope "/", TextServerWeb do
     pipe_through :browser
 
     get "/", PageController, :index
 
+    # these logged-out routes must come last, otherwise they
+    # match on /{resource}/new
     live_session :default, on_mount: TextServerWeb.UserAuthLive do
-      live "/authors", AuthorLive.Index, :index
-      live "/authors/new", AuthorLive.Index, :new
-      live "/authors/:id/edit", AuthorLive.Index, :edit
-
-      live "/authors/:id", AuthorLive.Show, :show
-      live "/authors/:id/show/edit", AuthorLive.Show, :edit
-
       live "/collections", CollectionLive.Index, :index
-      live "/collections/new", CollectionLive.Index, :new
-      live "/collections/:id/edit", CollectionLive.Index, :edit
-
       live "/collections/:id", CollectionLive.Show, :show
-      live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
       live "/exemplars", ExemplarLive.Index, :index
-
       live "/exemplars/:id", ExemplarLive.Show, :show
-      live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
 
       live "/languages", LanguageLive.Index, :index
-      live "/languages/new", LanguageLive.Index, :new
-      live "/languages/:id/edit", LanguageLive.Index, :edit
-
       live "/languages/:id", LanguageLive.Show, :show
-      live "/languages/:id/show/edit", LanguageLive.Show, :edit
 
       live "/projects", ProjectLive.Index, :index
       live "/projects/:id", ProjectLive.Show, :show
 
       live "/text_groups", TextGroupLive.Index, :index
-      live "/text_groups/new", TextGroupLive.Index, :new
-      live "/text_groups/:id/edit", TextGroupLive.Index, :edit
-
       live "/text_groups/:id", TextGroupLive.Show, :show
-      live "/text_groups/:id/show/edit", TextGroupLive.Show, :edit
 
       live "/text_nodes", TextNodeLive.Index, :index
-      live "/text_nodes/new", TextNodeLive.Index, :new
-      live "/text_nodes/:id/edit", TextNodeLive.Index, :edit
-
       live "/text_nodes/:id", TextNodeLive.Show, :show
-      live "/text_nodes/:id/show/edit", TextNodeLive.Show, :edit
 
       live "/versions", VersionLive.Index, :index
-      live "/versions/new", VersionLive.Index, :new
-      live "/versions/:id/edit", VersionLive.Index, :edit
-
       live "/versions/:id", VersionLive.Show, :show
-      live "/versions/:id/show/edit", VersionLive.Show, :edit
 
       live "/works", WorkLive.Index, :index
-      live "/works/new", WorkLive.New, :new
-      live "/works/:id/edit", WorkLive.Index, :edit
-
       live "/works/:id", WorkLive.Show, :show
-      live "/works/:id/show/edit", WorkLive.Show, :edit
-
-      scope "/:user_id" do
-        pipe_through :require_authenticated_user
-
-        live "/projects", ProjectLive.UserProjectIndex, :index
-        live "/projects/:id/exemplars/new", ExemplarLive.New, :new
-      end
     end
   end
 

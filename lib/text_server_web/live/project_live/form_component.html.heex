@@ -11,6 +11,7 @@
       phx-change="validate"
       phx-submit="save"
     >
+      <%= hidden_input(f, :created_by_id, @current_user.id) %>
       <div class="rounded-md -space-y-px">
         <div>
           <%= label(f, :title, class: "block mb-1") %>

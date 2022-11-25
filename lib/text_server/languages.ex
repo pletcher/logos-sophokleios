@@ -56,7 +56,7 @@ defmodule TextServer.Languages do
 
   """
   def create_language(attrs \\ %{}) do
-    %Language{slug: attrs[:slug] || Recase.to_kebab(attrs[:title])}
+    %Language{}
     |> Language.changeset(attrs)
     |> Repo.insert()
   end

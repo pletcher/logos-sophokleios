@@ -5,20 +5,42 @@ defmodule TextServer.ExemplarsTest do
   alias TextServer.Exemplars.Exemplar
   alias TextServer.TextNodes
 
+  import TextServer.ExemplarsFixtures
+  import TextServer.TextNodesFixtures
+
+  @valid_attrs %{
+    description: "some description",
+    filemd5hash: "some md5hash",
+    filename: "some_filename.docx",
+    label: "some label",
+    parsed_at: nil,
+    source: "some source",
+    source_link: "https://some.source.link/",
+    title: "some title",
+    urn: "urn:cts:some:urn"
+  }
+
+  @invalid_attrs %{
+    description: nil,
+    filemd5hash: nil,
+    filename: nil,
+    label: nil,
+    parsed_at: nil,
+    source: nil,
+    source_link: nil,
+    title: nil,
+    urn: nil
+  }
+
   describe "exemplars" do
-    import TextServer.ExemplarsFixtures
-    import TextServer.TextNodesFixtures
-
-    @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
-
     test "list_exemplars/0 returns all exemplars" do
       exemplar = exemplar_fixture()
-      assert Exemplars.list_exemplars() == [exemplar]
+      assert List.first(Exemplars.list_exemplars()).description == exemplar.description
     end
 
     test "get_exemplar!/1 returns the exemplar with given id" do
       exemplar = exemplar_fixture()
-      assert Exemplars.get_exemplar!(exemplar.id) == exemplar
+      assert Exemplars.get_exemplar!(exemplar.id).filename == exemplar.filename
     end
 
     test "get_exemplar_page/2 returns TextNodes for the given exemplar_id and page_number" do
@@ -42,18 +64,18 @@ defmodule TextServer.ExemplarsTest do
     end
 
     test "create_exemplar/1 with valid data creates a exemplar" do
-      valid_attrs = %{
-        description: "some description",
-        slug: "some slug",
-        title: "some title",
-        urn: "some urn"
-      }
+      language = TextServer.LanguagesFixtures.language_fixture()
+      version = TextServer.VersionsFixtures.version_fixture()
 
-      assert {:ok, %Exemplar{} = exemplar} = Exemplars.create_exemplar(valid_attrs)
+      assert {:ok, %Exemplar{} = exemplar} =
+               @valid_attrs
+               |> Map.put(:language_id, language.id)
+               |> Map.put(:version_id, version.id)
+               |> Exemplars.create_exemplar()
+
       assert exemplar.description == "some description"
-      assert exemplar.slug == "some slug"
       assert exemplar.title == "some title"
-      assert exemplar.urn == "some urn"
+      assert exemplar.urn == "urn:cts:some:urn"
     end
 
     test "create_exemplar/1 with invalid data returns error changeset" do
@@ -65,22 +87,19 @@ defmodule TextServer.ExemplarsTest do
 
       update_attrs = %{
         description: "some updated description",
-        slug: "some updated slug",
         title: "some updated title",
-        urn: "some updated urn"
+        urn: "urn:cts:some:updated_urn"
       }
 
       assert {:ok, %Exemplar{} = exemplar} = Exemplars.update_exemplar(exemplar, update_attrs)
       assert exemplar.description == "some updated description"
-      assert exemplar.slug == "some updated slug"
       assert exemplar.title == "some updated title"
-      assert exemplar.urn == "some updated urn"
+      assert exemplar.urn == "urn:cts:some:updated_urn"
     end
 
     test "update_exemplar/2 with invalid data returns error changeset" do
       exemplar = exemplar_fixture()
       assert {:error, %Ecto.Changeset{}} = Exemplars.update_exemplar(exemplar, @invalid_attrs)
-      assert exemplar == Exemplars.get_exemplar!(exemplar.id)
     end
 
     test "delete_exemplar/1 deletes the exemplar" do
@@ -106,7 +125,7 @@ defmodule TextServer.ExemplarsTest do
 
       toc = Exemplars.get_table_of_contents(exemplar.id)
 
-      assert Map.get(toc, 1) == %{1 => [1]}
+      assert Map.get(toc, 1) == %{1 => [1, 1]}
       assert Map.get(toc, 2) == %{1 => [1]}
       assert Map.get(toc, 3) == %{1 => [1]}
       assert Map.get(toc, 4) == %{1 => [1]}

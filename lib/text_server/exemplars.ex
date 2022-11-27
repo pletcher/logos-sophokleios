@@ -257,16 +257,14 @@ defmodule TextServer.Exemplars do
 
   """
   def create_exemplar(attrs) do
-    {:ok, exemplar} =
-      %Exemplar{}
-      |> Exemplar.changeset(attrs)
-      |> Repo.insert()
-
-    {:ok, exemplar}
+    %Exemplar{}
+    |> Exemplar.changeset(attrs)
+    |> Repo.insert()
   end
 
   def create_exemplar(attrs, project) do
     urn = make_exemplar_urn(attrs, project)
+
     {:ok, exemplar} =
       Repo.transaction(fn ->
         {:ok, version} =

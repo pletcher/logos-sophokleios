@@ -2,14 +2,19 @@ defmodule TextServer.TextElementsTest do
   use TextServer.DataCase
 
   alias TextServer.TextElements
+  alias TextServer.TextElements.TextElement
+
+  import TextServer.TextElementsFixtures
+
+  @valid_attrs %{
+    attributes: %{},
+    content: "some content",
+    end_offset: 5,
+    start_offset: 0,
+  }
+  @invalid_attrs %{attributes: nil, end_urn: nil}
 
   describe "text_elements" do
-    alias TextServer.TextElements.TextElement
-
-    import TextServer.TextElementsFixtures
-
-    @invalid_attrs %{attributes: nil, end_urn: nil}
-
     test "list_text_elements/0 returns all text_elements" do
       text_element = text_element_fixture()
       assert TextElements.list_text_elements() == [text_element]
@@ -21,11 +26,20 @@ defmodule TextServer.TextElementsTest do
     end
 
     test "create_text_element/1 with valid data creates a text_element" do
-      valid_attrs = %{attributes: %{}, end_urn: "some end_urn"}
+      element_type = TextServer.ElementTypesFixtures.element_type_fixture()
+      end_text_node = TextServer.TextNodesFixtures.text_node_fixture()
+      start_text_node = TextServer.TextNodesFixtures.exemplar_text_node_fixture(end_text_node.exemplar_id)
 
-      assert {:ok, %TextElement{} = text_element} = TextElements.create_text_element(valid_attrs)
+      assert {:ok, %TextElement{} = text_element} =
+        @valid_attrs
+        |> Map.put(:element_type_id, element_type.id)
+        |> Map.put(:end_text_node_id, end_text_node.id)
+        |> Map.put(:start_text_node_id, start_text_node.id)
+        |> TextElements.create_text_element()
       assert text_element.attributes == %{}
-      assert text_element.end_urn == "some end_urn"
+      assert text_element.content == "some content"
+      assert text_element.end_offset == 5
+      assert text_element.start_offset == 0
     end
 
     test "create_text_element/1 with invalid data returns error changeset" do
@@ -34,13 +48,13 @@ defmodule TextServer.TextElementsTest do
 
     test "update_text_element/2 with valid data updates the text_element" do
       text_element = text_element_fixture()
-      update_attrs = %{attributes: %{}, end_urn: "some updated end_urn"}
+      update_attrs = %{attributes: %{}, end_offset: 6}
 
       assert {:ok, %TextElement{} = text_element} =
                TextElements.update_text_element(text_element, update_attrs)
 
       assert text_element.attributes == %{}
-      assert text_element.end_urn == "some updated end_urn"
+      assert text_element.end_offset == 6
     end
 
     test "update_text_element/2 with invalid data returns error changeset" do

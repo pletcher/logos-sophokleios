@@ -2,14 +2,18 @@ defmodule TextServer.CollectionsTest do
   use TextServer.DataCase
 
   alias TextServer.Collections
+  alias TextServer.Collections.Collection
+
+  import TextServer.CollectionsFixtures
+
+  @valid_attrs %{
+    repository: "https://git.repository.test/collection",
+    title: "some title",
+    urn: "urn:cts:some:urn"
+  }
+  @invalid_attrs %{repository: nil, title: nil, urn: nil}
 
   describe "collections" do
-    alias TextServer.Collections.Collection
-
-    import TextServer.CollectionsFixtures
-
-    @invalid_attrs %{repository: nil, slug: nil, title: nil, urn: nil}
-
     test "list_collections/0 returns all collections" do
       collection = collection_fixture()
       assert Collections.list_collections() == [collection]
@@ -21,18 +25,10 @@ defmodule TextServer.CollectionsTest do
     end
 
     test "create_collection/1 with valid data creates a collection" do
-      valid_attrs = %{
-        repository: "some repository",
-        slug: "some slug",
-        title: "some title",
-        urn: "some urn"
-      }
-
-      assert {:ok, %Collection{} = collection} = Collections.create_collection(valid_attrs)
-      assert collection.repository == "some repository"
-      assert collection.slug == "some slug"
+      assert {:ok, %Collection{} = collection} = Collections.create_collection(@valid_attrs)
+      assert collection.repository == "https://git.repository.test/collection"
       assert collection.title == "some title"
-      assert collection.urn == "some urn"
+      assert collection.urn == "urn:cts:some:urn"
     end
 
     test "create_collection/1 with invalid data returns error changeset" do
@@ -43,19 +39,17 @@ defmodule TextServer.CollectionsTest do
       collection = collection_fixture()
 
       update_attrs = %{
-        repository: "some updated repository",
-        slug: "some updated slug",
+        repository: "https://git.repository.test/some_updated_repository",
         title: "some updated title",
-        urn: "some updated urn"
+        urn: "urn:cts:some:updated_urn"
       }
 
       assert {:ok, %Collection{} = collection} =
                Collections.update_collection(collection, update_attrs)
 
-      assert collection.repository == "some updated repository"
-      assert collection.slug == "some updated slug"
+      assert collection.repository == "https://git.repository.test/some_updated_repository"
       assert collection.title == "some updated title"
-      assert collection.urn == "some updated urn"
+      assert collection.urn == "urn:cts:some:updated_urn"
     end
 
     test "update_collection/2 with invalid data returns error changeset" do

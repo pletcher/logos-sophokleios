@@ -1,37 +1,44 @@
 defmodule TextServer.ProjectsTest do
+  import Ecto.Query, warn: false
   use TextServer.DataCase
 
   alias TextServer.Projects
+  alias TextServer.Repo
+
+  alias TextServer.Projects.Project
+  alias TextServer.Projects.Exemplar, as: ProjectExemplar
+  alias TextServer.TextGroups.TextGroup
+  alias TextServer.Versions.Version
+  alias TextServer.Works.Work
+
+  import TextServer.AccountsFixtures
+  import TextServer.ExemplarsFixtures
+  import TextServer.ProjectsFixtures
+
+  @invalid_attrs %{created_by_id: nil, description: nil, domain: "some domain", title: nil}
+
+  defp create_creator(_) do
+    user = user_fixture()
+    %{user: user}
+  end
 
   describe "project" do
-    import Ecto.Query, warn: false
-    alias TextServer.Repo
-
-    alias TextServer.Projects.Project
-    alias TextServer.Projects.Exemplar, as: ProjectExemplar
-    alias TextServer.TextGroups.TextGroup
-    alias TextServer.Versions.Version
-    alias TextServer.Works.Work
-
-    import TextServer.AccountsFixtures
-    import TextServer.ExemplarsFixtures
-    import TextServer.ProjectsFixtures
-
-    @invalid_attrs %{description: nil, domain: "some domain", title: nil}
+    setup [:create_creator]
 
     test "get_project!/1 returns the project with given id" do
       project = project_fixture()
       assert Projects.get_project!(project.id) == project
     end
 
-    test "create_project/1 with invalid domain returns error changeset" do
+    test "create_project/1 with invalid domain returns error changeset", %{user: user} do
       bad_domain_attrs = %{
+        created_by_id: user.id,
         description: "some description",
         domain: "some domain",
         title: "some title"
       }
 
-      assert {:error, %Ecto.Changeset{}} = Projects.create_project(bad_domain_attrs)
+      assert %Ecto.InvalidChangesetError{} = catch_error(Projects.create_project(bad_domain_attrs))
     end
 
     test "create_project/1 with valid data creates a project" do
@@ -48,7 +55,7 @@ defmodule TextServer.ProjectsTest do
     end
 
     test "create_project/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Projects.create_project(@invalid_attrs)
+      assert %Ecto.InvalidChangesetError{} = catch_error(Projects.create_project(@invalid_attrs))
     end
 
     test "add_collection/2 with valid data returns a list of ProjectExemplars" do

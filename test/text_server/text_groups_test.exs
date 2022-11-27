@@ -2,31 +2,38 @@ defmodule TextServer.TextGroupsTest do
   use TextServer.DataCase
 
   alias TextServer.TextGroups
+  alias TextServer.TextGroups.TextGroup
+
+  import TextServer.TextGroupsFixtures
+
+  @valid_attrs %{
+    title: "some title",
+    urn: "urn:cts:some:urn"
+  }
+  @invalid_attrs %{title: nil, urn: nil}
 
   describe "text_groups" do
-    alias TextServer.TextGroups.TextGroup
-
-    import TextServer.TextGroupsFixtures
-
-    @invalid_attrs %{slug: nil, title: nil, urn: nil}
-
     test "list_text_groups/0 returns all text_groups" do
       text_group = text_group_fixture()
-      assert TextGroups.list_text_groups() == [text_group]
+      assert List.first(TextGroups.list_text_groups().entries).id == text_group.id
     end
 
     test "get_text_group!/1 returns the text_group with given id" do
       text_group = text_group_fixture()
-      assert TextGroups.get_text_group!(text_group.id) == text_group
+      assert TextGroups.get_text_group!(text_group.id).title == text_group.title
     end
 
     test "create_text_group/1 with valid data creates a text_group" do
-      valid_attrs = %{slug: "some slug", title: "some title", urn: "some urn"}
+      collection = TextServer.CollectionsFixtures.collection_fixture()
 
-      assert {:ok, %TextGroup{} = text_group} = TextGroups.create_text_group(valid_attrs)
-      assert text_group.slug == "some slug"
+      assert {:ok, %TextGroup{} = text_group} =
+               TextGroups.create_text_group(
+                 @valid_attrs
+                 |> Map.put(:collection_id, collection.id)
+               )
+
       assert text_group.title == "some title"
-      assert text_group.urn == "some urn"
+      assert text_group.urn == "urn:cts:some:urn"
     end
 
     test "create_text_group/1 with invalid data returns error changeset" do
@@ -37,17 +44,15 @@ defmodule TextServer.TextGroupsTest do
       text_group = text_group_fixture()
 
       update_attrs = %{
-        slug: "some updated slug",
         title: "some updated title",
-        urn: "some updated urn"
+        urn: "urn:cts:some:updated_urn"
       }
 
       assert {:ok, %TextGroup{} = text_group} =
                TextGroups.update_text_group(text_group, update_attrs)
 
-      assert text_group.slug == "some updated slug"
       assert text_group.title == "some updated title"
-      assert text_group.urn == "some updated urn"
+      assert text_group.urn == "urn:cts:some:updated_urn"
     end
 
     test "update_text_group/2 with invalid data returns error changeset" do
@@ -55,8 +60,6 @@ defmodule TextServer.TextGroupsTest do
 
       assert {:error, %Ecto.Changeset{}} =
                TextGroups.update_text_group(text_group, @invalid_attrs)
-
-      assert text_group == TextGroups.get_text_group!(text_group.id)
     end
 
     test "delete_text_group/1 deletes the text_group" do

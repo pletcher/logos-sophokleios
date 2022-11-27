@@ -17,8 +17,20 @@ defmodule TextServer.Images.CoverImage do
   @doc false
   def changeset(cover_image, attrs) do
     cover_image
-    |> cast(attrs, [:attribution_name, :attribution_source, :attribution_url, :image_url])
-    |> validate_required([:attribution_name, :attribution_source, :attribution_url, :image_url])
+    |> cast(attrs, [
+      :attribution_name,
+      :attribution_source,
+      :attribution_source_url,
+      :attribution_url,
+      :image_url
+    ])
+    |> validate_required([
+      :attribution_name,
+      :attribution_source,
+      :attribution_source_url,
+      :attribution_url,
+      :image_url
+    ])
     |> unique_constraint(:attribution_url)
   end
 end

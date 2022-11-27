@@ -20,6 +20,7 @@ defmodule TextServer.ImagesFixtures do
         attribution_name: "some attribution_name",
         attribution_source: "some attribution_source",
         attribution_url: unique_cover_image_attribution_url(),
+        attribution_source_url: "https://some.attribution_source_url",
         image_url: "some image_url"
       })
       |> TextServer.Images.create_cover_image()

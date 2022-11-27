@@ -2,19 +2,27 @@ defmodule TextServer.ImagesTest do
   use TextServer.DataCase
 
   alias TextServer.Images
+  alias TextServer.Images.CoverImage
+
+  import TextServer.ImagesFixtures
+
+  @valid_attrs %{
+    attribution_name: "some attribution_name",
+    attribution_source: "some attribution_source",
+    attribution_source_url: "https://some.attribution_source_url",
+    attribution_url: "https://some.attribution_url",
+    image_url: "some image_url"
+  }
+
+  @invalid_attrs %{
+    attribution_name: nil,
+    attribution_source: nil,
+    attribution_url: nil,
+    attribution_source_url: nil,
+    image_url: nil
+  }
 
   describe "cover_images" do
-    alias TextServer.Images.CoverImage
-
-    import TextServer.ImagesFixtures
-
-    @invalid_attrs %{
-      attribution_name: nil,
-      attribution_source: nil,
-      attribution_url: nil,
-      image_url: nil
-    }
-
     test "list_cover_images/0 returns all cover_images" do
       cover_image = cover_image_fixture()
       assert Images.list_cover_images() == [cover_image]
@@ -26,17 +34,11 @@ defmodule TextServer.ImagesTest do
     end
 
     test "create_cover_image/1 with valid data creates a cover_image" do
-      valid_attrs = %{
-        attribution_name: "some attribution_name",
-        attribution_source: "some attribution_source",
-        attribution_url: "some attribution_url",
-        image_url: "some image_url"
-      }
-
-      assert {:ok, %CoverImage{} = cover_image} = Images.create_cover_image(valid_attrs)
+      assert {:ok, %CoverImage{} = cover_image} = Images.create_cover_image(@valid_attrs)
       assert cover_image.attribution_name == "some attribution_name"
       assert cover_image.attribution_source == "some attribution_source"
-      assert cover_image.attribution_url == "some attribution_url"
+      assert cover_image.attribution_source_url == "https://some.attribution_source_url"
+      assert cover_image.attribution_url == "https://some.attribution_url"
       assert cover_image.image_url == "some image_url"
     end
 
@@ -50,7 +52,7 @@ defmodule TextServer.ImagesTest do
       update_attrs = %{
         attribution_name: "some updated attribution_name",
         attribution_source: "some updated attribution_source",
-        attribution_url: "some updated attribution_url",
+        attribution_url: "https://some.updated.attribution_url",
         image_url: "some updated image_url"
       }
 
@@ -59,7 +61,7 @@ defmodule TextServer.ImagesTest do
 
       assert cover_image.attribution_name == "some updated attribution_name"
       assert cover_image.attribution_source == "some updated attribution_source"
-      assert cover_image.attribution_url == "some updated attribution_url"
+      assert cover_image.attribution_url == "https://some.updated.attribution_url"
       assert cover_image.image_url == "some updated image_url"
     end
 

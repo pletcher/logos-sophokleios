@@ -32,7 +32,24 @@ defmodule TextServer.ExemplarsFixtures do
     # it should not be possible to create an exemplar
     # without at least one text node
     text_node_fixture(exemplar)
-    
+
+    exemplar
+  end
+
+  def text_node_exemplar_fixture(attrs \\ %{}) do
+    {:ok, exemplar} =
+      attrs
+      |> Enum.into(%{
+        description: "some description",
+        filemd5hash: unique_exemplar_filemd5hash(),
+        filename: unique_exemplar_filename(),
+        language_id: language_fixture().id,
+        title: "some title",
+        urn: unique_exemplar_urn(),
+        version_id: version_fixture().id
+      })
+      |> TextServer.Exemplars.create_exemplar()
+
     exemplar
   end
 
@@ -48,7 +65,7 @@ defmodule TextServer.ExemplarsFixtures do
   end
 
   defp text_node_fixture(exemplar) do
-    TextServer.TextNodesFixtures.text_node_fixture(%{exemplar_id: exemplar.id})
+    TextServer.TextNodesFixtures.exemplar_text_node_fixture(exemplar.id)
   end
 
   defp version_fixture() do

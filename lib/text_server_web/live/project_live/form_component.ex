@@ -48,7 +48,6 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
   end
 
   defp save_project(socket, :new, project_params) do
-    dbg(project_params)
     case Projects.create_project(project_params) do
       {:ok, project} ->
         {:noreply,

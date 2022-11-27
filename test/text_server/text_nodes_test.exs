@@ -12,26 +12,24 @@ defmodule TextServer.TextNodesTest do
 
     test "list_text_nodes/0 returns all text_nodes" do
       text_node = text_node_fixture()
-      assert TextNodes.list_text_nodes() == [text_node]
+      assert List.first(TextNodes.list_text_nodes().entries).id == text_node.id
     end
 
     test "get_text_node!/1 returns the text_node with given id" do
       text_node = text_node_fixture()
-      assert TextNodes.get_text_node!(text_node.id) == text_node
+      assert TextNodes.get_text_node!(text_node.id).exemplar_id == text_node.exemplar_id
+      assert TextNodes.get_text_node!(text_node.id).location == text_node.location
+      assert TextNodes.get_text_node!(text_node.id).text == text_node.text
     end
 
     test "create_text_node/1 with valid data creates a text_node" do
       valid_attrs = %{
-        index: 42,
         location: [],
-        normalized_text: "some normalized_text",
         text: "some text"
       }
 
       assert {:ok, %TextNode{} = text_node} = TextNodes.create_text_node(valid_attrs)
-      assert text_node.index == 42
       assert text_node.location == []
-      assert text_node.normalized_text == "some normalized_text"
       assert text_node.text == "some text"
     end
 
@@ -43,23 +41,19 @@ defmodule TextServer.TextNodesTest do
       text_node = text_node_fixture()
 
       update_attrs = %{
-        index: 43,
         location: [],
-        normalized_text: "some updated normalized_text",
         text: "some updated text"
       }
 
       assert {:ok, %TextNode{} = text_node} = TextNodes.update_text_node(text_node, update_attrs)
-      assert text_node.index == 43
       assert text_node.location == []
-      assert text_node.normalized_text == "some updated normalized_text"
       assert text_node.text == "some updated text"
     end
 
     test "update_text_node/2 with invalid data returns error changeset" do
       text_node = text_node_fixture()
       assert {:error, %Ecto.Changeset{}} = TextNodes.update_text_node(text_node, @invalid_attrs)
-      assert text_node == TextNodes.get_text_node!(text_node.id)
+      assert text_node.text == TextNodes.get_text_node!(text_node.id).text
     end
 
     test "delete_text_node/1 deletes the text_node" do
@@ -93,7 +87,7 @@ defmodule TextServer.TextNodesTest do
     end
 
     test "list_locations_by_exemplar_id/1 returns all TextNode locations for the given exemplar" do
-      exemplar = exemplar_fixture()
+      exemplar = text_node_exemplar_fixture()
 
       Enum.each(1..5, fn i ->
         text_node_fixture(%{exemplar_id: exemplar.id, text: "Text #{i}", location: [1, i]})
@@ -108,7 +102,7 @@ defmodule TextServer.TextNodesTest do
   describe "TextNode" do
     import TextServer.TextElementsFixtures
 
-    test "tag_graphemes/1 with valid data returns tagged text_node graphmes" do
+    test "tag_graphemes/1 with valid data returns tagged text_node graphemes" do
       start_offset = 1
       end_offset = 3
       text = "test tagging"

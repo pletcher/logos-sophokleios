@@ -2,17 +2,22 @@ defmodule TextServer.VersionsTest do
   use TextServer.DataCase
 
   alias TextServer.Versions
+  alias TextServer.Versions.Version
+
+  import TextServer.VersionsFixtures
+
+  @valid_attrs %{
+    description: "some description",
+    label: "some label",
+    urn: "urn:cts:some:urn",
+    version_type: "commentary"
+  }
+  @invalid_attrs %{description: nil, label: nil, urn: nil, version_type: nil}
 
   describe "versions" do
-    alias TextServer.Versions.Version
-
-    import TextServer.VersionsFixtures
-
-    @invalid_attrs %{description: nil, slug: nil, title: nil, urn: nil}
-
     test "list_versions/0 returns all versions" do
       version = version_fixture()
-      assert Versions.list_versions() == [version]
+      assert Versions.list_versions().entries == [version]
     end
 
     test "get_version!/1 returns the version with given id" do
@@ -21,18 +26,12 @@ defmodule TextServer.VersionsTest do
     end
 
     test "create_version/1 with valid data creates a version" do
-      valid_attrs = %{
-        description: "some description",
-        slug: "some slug",
-        title: "some title",
-        urn: "some urn"
-      }
-
-      assert {:ok, %Version{} = version} = Versions.create_version(valid_attrs)
+      work = TextServer.WorksFixtures.work_fixture()
+      assert {:ok, %Version{} = version} = Versions.create_version(Map.put(@valid_attrs, :work_id, work.id))
       assert version.description == "some description"
-      assert version.slug == "some slug"
-      assert version.title == "some title"
-      assert version.urn == "some urn"
+      assert version.label == "some label"
+      assert version.urn == "urn:cts:some:urn"
+      assert version.version_type == :commentary
     end
 
     test "create_version/1 with invalid data returns error changeset" do
@@ -44,16 +43,14 @@ defmodule TextServer.VersionsTest do
 
       update_attrs = %{
         description: "some updated description",
-        slug: "some updated slug",
-        title: "some updated title",
-        urn: "some updated urn"
+        label: "some updated label",
+        urn: "urn:cts:some:updated_urn"
       }
 
       assert {:ok, %Version{} = version} = Versions.update_version(version, update_attrs)
       assert version.description == "some updated description"
-      assert version.slug == "some updated slug"
-      assert version.title == "some updated title"
-      assert version.urn == "some updated urn"
+      assert version.label == "some updated label"
+      assert version.urn == "urn:cts:some:updated_urn"
     end
 
     test "update_version/2 with invalid data returns error changeset" do

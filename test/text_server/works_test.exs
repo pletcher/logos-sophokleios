@@ -22,7 +22,7 @@ defmodule TextServer.WorksTest do
 
       search_results = Works.search_works("Anoth").entries
 
-      assert List.first(search_results) == work_2.id
+      assert List.first(search_results).id == work_2.id
 
       search_results = Works.search_works("title").entries
 

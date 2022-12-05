@@ -45,7 +45,8 @@ defmodule TextServer.Repo.Migrations.CreateTextNodes do
 
     execute(
       """
-        CREATE OR REPLACE TRIGGER text_node_normalized_text_trigger
+        DROP TRIGGER IF EXISTS text_node_normalized_text_trigger ON text_nodes;
+        CREATE TRIGGER text_node_normalized_text_trigger
         BEFORE INSERT OR UPDATE OF text
         ON text_nodes
         EXECUTE FUNCTION normalize_greek();

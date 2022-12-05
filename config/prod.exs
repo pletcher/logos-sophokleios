@@ -10,7 +10,13 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :text_server, TextServerWeb.Endpoint,
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  url: [host: "opencommentaries.org", port: 443],
+  https: [
+    port: 443,
+    cipher_suite: :strong
+  ],
+  force_ssl: [rewrite_on: [:x_forwarded_proto]]
 
 # Do not print debug messages in production
 config :logger, level: :info

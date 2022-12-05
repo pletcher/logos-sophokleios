@@ -33,7 +33,7 @@ defmodule TextServerWeb.Components do
         } = assigns
       ) do
     ~H"""
-    <div class="overflow-scroll bg-white shadow sm:rounded-lg">
+    <div class="overflow-scroll bg-white sm:rounded-lg">
       <%= for c <- comments do %>
         <div class={comment_class(c, highlighted_comments)}>
           <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>

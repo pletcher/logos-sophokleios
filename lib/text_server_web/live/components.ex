@@ -68,11 +68,7 @@ defmodule TextServerWeb.Components do
 
   def small_card(%{item: item, url: url} = assigns) do
     ~H"""
-    <div class="flex py-6">
-      <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-        <img src="https://www.fillmurray.com/480/480" class="h-full w-full object-cover object-center" />
-      </div>
-
+    <div class="flex py-6 rounded shadow-md hover:shadow-lg">
       <div class="ml-4 flex flex-1 flex-col">
         <div>
           <div class="flex justify-between text-base font-medium text-gray-900">

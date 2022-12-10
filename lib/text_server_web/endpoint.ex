@@ -46,5 +46,6 @@ defmodule TextServerWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+  plug TextServerWeb.Plugs.Subdomain, %{subdomain_router: TextServerWeb.SubdomainRouter}
   plug TextServerWeb.Router
 end

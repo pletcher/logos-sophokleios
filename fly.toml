@@ -1,6 +1,6 @@
-# fly.toml file generated for open-commentaries on 2022-10-30T19:11:18-04:00
+# fly.toml file generated for opencommentaries on 2022-12-09T19:32:33-05:00
 
-app = "open-commentaries"
+app = "opencommentaries"
 kill_signal = "SIGTERM"
 kill_timeout = 5
 processes = []
@@ -9,7 +9,7 @@ processes = []
   release_command = "/app/bin/migrate"
 
 [env]
-  PHX_HOST = "open-commentaries.fly.dev"
+  PHX_HOST = "opencommentaries.fly.dev"
   PORT = "8080"
 
 [experimental]

@@ -66,22 +66,26 @@ defmodule TextServerWeb.Components do
     """
   end
 
-  def small_card(%{item: item, url: url} = assigns) do
+  attr :description, :string
+  attr :title, :string, required: true
+  attr :url, :string, default: "#"
+
+  def small_card(assigns) do
     ~H"""
-    <div class="flex py-6 rounded shadow-md hover:shadow-lg">
-      <div class="ml-4 flex flex-1 flex-col">
-        <div>
-          <div class="flex justify-between text-base font-medium text-gray-900">
-            <h3>
-              <a href={url}><%= item.title %></a>
-            </h3>
+    <a href={@url}>
+      <div class="flex py-6 rounded shadow-md hover:shadow-lg">
+        <div class="ml-4 flex flex-1 flex-col">
+          <div>
+            <div class="flex justify-between text-base font-medium text-gray-900">
+              <h3><%= @title %></h3>
+            </div>
+          </div>
+          <div class="flex flex-1 justify-between text-sm">
+            <p class="text-sm text-gray-500"><%= @description %></p>
           </div>
         </div>
-        <div class="flex flex-1 justify-between text-sm">
-          <p class="text-sm text-gray-500"><%= item.description %></p>
-        </div>
       </div>
-    </div>
+    </a>
     """
   end
 

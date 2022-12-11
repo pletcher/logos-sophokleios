@@ -2,7 +2,6 @@ defmodule TextServerWeb.ExemplarLive.Index do
   use TextServerWeb, :live_view
 
   alias TextServer.Exemplars
-  alias TextServer.Exemplars.Exemplar
 
   @impl true
   def mount(_params, _session, socket) do
@@ -12,18 +11,6 @@ defmodule TextServerWeb.ExemplarLive.Index do
   @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Exemplar")
-    |> assign(:exemplar, Exemplars.get_exemplar!(id))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Exemplar")
-    |> assign(:exemplar, %Exemplar{})
   end
 
   defp apply_action(socket, :index, _params) do

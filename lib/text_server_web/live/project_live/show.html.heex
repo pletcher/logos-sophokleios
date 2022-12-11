@@ -15,7 +15,11 @@
       <h2 class="text-2xl font-semibold">Exemplars</h2>
 
       <%= for exemplar <- @project.project_exemplars do %>
-        <Components.small_card item={exemplar} url={Routes.exemplar_show_path(@socket, :show, exemplar)} />
+        <Components.small_card
+          description={exemplar.description}
+          title={exemplar.title}
+          url={Routes.exemplar_show_path(@socket, :show, exemplar)}
+        />
       <% end %>
     <% end %>
 

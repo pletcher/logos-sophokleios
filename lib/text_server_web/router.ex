@@ -25,7 +25,7 @@ defmodule TextServerWeb.Router do
       live "/collections/:id/edit", CollectionLive.Index, :edit
       live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
-      live "/exemplars/:id/show/edit", ExemplarLive.Show, :edit
+      live "/exemplars/:id/edit", ExemplarLive.Edit, :edit
 
       live "/languages/new", LanguageLive.Index, :new
       live "/languages/:id/edit", LanguageLive.Index, :edit

@@ -11,7 +11,7 @@
       phx-change="validate"
       phx-submit="save"
     >
-      <%= hidden_input(f, :created_by_id, @current_user.id) %>
+      <%= hidden_input(f, :created_by_id, value: @user.id) %>
       <div class="rounded-md -space-y-px">
         <div>
           <%= label(f, :title, class: "block mb-1") %>
@@ -47,7 +47,7 @@
             class:
               "appearance-none relative resize-none w-40 py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
             placeholder: "commentaria-nova"
-          ) %> <span>.oc.newalexandria.info</span>
+          ) %> <span>.<%= TextServerWeb.Endpoint.config(:url)[:host] %></span>
         </div>
         <%= error_tag(f, :domain) %>
       </div>

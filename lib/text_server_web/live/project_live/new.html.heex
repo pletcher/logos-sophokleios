@@ -2,8 +2,8 @@
   module={TextServerWeb.ProjectLive.FormComponent}
   id={:new}
   action={@live_action}
-  current_user={@current_user}
   project={@project}
   return_to={Routes.project_user_project_index_path(@socket, :index, @current_user.id)}
   title={@page_title}
+  user={@current_user}
 />

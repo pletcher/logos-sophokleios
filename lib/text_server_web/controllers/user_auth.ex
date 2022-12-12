@@ -142,10 +142,9 @@ defmodule TextServerWeb.UserAuth do
 
   def require_project_admin(conn, _opts) do
     user = conn.assigns[:current_user]
-    domain = conn.private[:subdomain]
+    project_id = conn.params["project_id"]
 
-    dbg(conn.private)
-    project = Projects.get_project_by_domain!(domain)
+    project = Projects.get_project!(project_id)
 
     if Projects.is_user_admin?(project, user) do
       conn

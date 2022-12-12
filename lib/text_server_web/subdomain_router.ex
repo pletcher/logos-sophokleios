@@ -19,14 +19,6 @@ defmodule TextServerWeb.SubdomainRouter do
   end
 
   scope "/", TextServerWeb.Subdomain do
-    pipe_through [:browser, :require_authenticated_user, :require_project_admin]
-
-    live_session :project_with_admin, on_mount: TextServerWeb.UserAuthLive do
-      live "/projects/:id/edit", ProjectLive.Edit, :edit
-    end
-  end
-
-  scope "/", TextServerWeb.Subdomain do
     pipe_through :browser
 
     get "/", PageController, :index

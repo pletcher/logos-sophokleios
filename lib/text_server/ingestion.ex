@@ -4,7 +4,6 @@ defmodule TextServer.Ingestion do
   """
 
   import Ecto.Query, warn: false
-  alias TextServer.Repo
 
   @doc """
   Takes parsed TEI header data and returns an ordered list

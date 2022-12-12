@@ -15,6 +15,14 @@ config :text_server, TextServerWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :text_server, TextServerWeb.Endpoint,
+  url: [host: "opencommentaries.org", port: 443],
+  force_ssl: [
+    host: nil,
+    rewrite_on: [:x_forwarded_port, :x_forwarded_proto],
+    hsts: false, # maybe true when we use this for real
+  ]
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key

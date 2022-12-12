@@ -24,13 +24,13 @@ defmodule TextServerWeb.SubdomainRouter do
     get "/", PageController, :index
   end
 
-  # note that we're deferring to TextServerWeb here, not
-  # the Subdomain context
-  scope "/", TextServerWeb do
-    pipe_through :browser
+  # # note that we're deferring to TextServerWeb here, not
+  # # the Subdomain context
+  # scope "/", TextServerWeb do
+  #   pipe_through :browser
 
-    live_session :reader do
-      live "/exemplars/:id", ExemplarLive.Show, :show
-    end
-  end
+  #   live_session :reader do
+  #     live "/exemplars/:id", ExemplarLive.Show, :show
+  #   end
+  # end
 end

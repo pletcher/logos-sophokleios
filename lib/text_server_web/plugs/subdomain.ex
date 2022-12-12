@@ -4,9 +4,10 @@ defmodule TextServerWeb.Plugs.Subdomain do
   import Plug.Conn, only: [put_private: 3, halt: 1]
 
   def init(opts) do
+    root_host = Application.get_env(:text_server, TextServerWeb.Endpoint)[:url][:host]
     Map.merge(
       opts,
-      %{root_host: TextServerWeb.Endpoint.config(:url)[:host]}
+      %{root_host: root_host}
     )
   end
 

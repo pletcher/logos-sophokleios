@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Texts.Pull do
 
   defp pull_repo(repo) do
     %{:url => url} = repo
-    dir = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "./tmp"))
+    dir = Path.expand(Application.get_env(:text_server, :text_repo_destination, "./tmp"))
 
     repo_dir_name =
       String.split(url, "/")

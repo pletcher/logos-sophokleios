@@ -29,11 +29,6 @@ defmodule TextServerWeb.ExemplarLive.New do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_info({:selected_work, work}, socket) do
-    {:noreply, socket |> assign(:selected_work, work)}
-  end
-
   defp get_project!(id) do
     Projects.get_project!(id)
   end

@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Texts.Ingest do
   end
 
   def get_filename_from_path(s) do
-    path_prefix = Path.expand(System.get_env("TEXT_REPO_DESTINATION", "tmp"))
+    path_prefix = Path.expand(Application.get_env(:text_server, :text_repo_destination, "tmp"))
 
     String.replace_prefix(s, "#{path_prefix}/", "")
   end

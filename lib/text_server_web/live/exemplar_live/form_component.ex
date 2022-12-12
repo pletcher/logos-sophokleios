@@ -54,7 +54,11 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
     {:noreply, socket}
   end
 
-  def handle_event("save", %{"exemplar" => exemplar_params}, socket) do
+  def handle_event(
+        "save",
+        %{"exemplar" => exemplar_params, "selected_work" => work_params},
+        socket
+      ) do
     file_params =
       consume_uploaded_entries(
         socket,
@@ -62,9 +66,7 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
         fn %{path: path}, %{client_name: client_name} = _entry ->
           dest =
             Path.join([
-              :code.priv_dir(:text_server),
-              "static",
-              "uploads",
+              Application.get_env(:text_server, :user_uploads_directory),
               "exemplar_files",
               client_name
             ])
@@ -89,7 +91,9 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
       save_exemplar(
         socket,
         socket.assigns.action,
-        exemplar_params |> Map.merge(file_params)
+        exemplar_params
+        |> Map.merge(file_params)
+        |> Map.put("work_id", Map.get(work_params, "work_id"))
       )
     else
       {:noreply, socket}
@@ -113,10 +117,12 @@ defmodule TextServerWeb.ExemplarLive.FormComponent do
   end
 
   defp save_exemplar(socket, :new, exemplar_params) do
-    language = Languages.get_language_by_slug(Map.get(exemplar_params, "language"))
+    # see documentation for put_assoc/4 for why we're doing it this way
+    language_slug = Map.get(exemplar_params, "language") |> Map.get("title")
+    language = Languages.get_language_by_slug(language_slug)
 
     case Exemplars.create_exemplar(
-           Map.put(exemplar_params, "language_id", language.id),
+           exemplar_params |> Map.put("language_id", language.id) |> Map.delete("language"),
            socket.assigns.project
          ) do
       {:ok, _exemplar} ->

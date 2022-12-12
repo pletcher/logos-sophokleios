@@ -18,7 +18,7 @@ processes = []
 
 [mounts]
 source = "opencommentaries_data"
-destination = "/app/lib/text_server-0.0.3/priv" # MAKE SURE THIS VERSION MATCHES WHAT'S IN mix.exs
+destination = "/app/data"
 
 [[services]]
   http_checks = []

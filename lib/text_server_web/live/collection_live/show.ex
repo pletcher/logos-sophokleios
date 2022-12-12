@@ -2,7 +2,6 @@ defmodule TextServerWeb.CollectionLive.Show do
   use TextServerWeb, :live_view
 
   alias TextServer.Collections
-  alias TextServer.TextGroups
 
   @impl true
   def mount(_params, _session, socket) do

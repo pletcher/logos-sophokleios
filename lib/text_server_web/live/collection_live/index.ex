@@ -2,7 +2,6 @@ defmodule TextServerWeb.CollectionLive.Index do
   use TextServerWeb, :live_view
 
   alias TextServer.Collections
-  alias TextServer.Collections.Collection
 
   @impl true
   def mount(_params, _session, socket) do
@@ -40,24 +39,6 @@ defmodule TextServerWeb.CollectionLive.Index do
   def handle_params(_, _, socket) do
     assigns = get_and_assign_page(nil)
     {:noreply, assign(socket, assigns)}
-  end
-
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Collection")
-    |> assign(:collection, Collections.get_collection!(id))
-  end
-
-  defp apply_action(socket, :new, _params) do
-    socket
-    |> assign(:page_title, "New Collection")
-    |> assign(:collection, %Collection{})
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Listing Collections")
-    |> assign(:collection, nil)
   end
 
   @impl true

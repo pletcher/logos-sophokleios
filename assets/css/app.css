@@ -121,3 +121,70 @@
   0% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* Styles for markdown copy (on project homepages)
+ * Note that these styles must be descended from a node
+ * with the .@@oc/user-markdown class, otherwise they will override
+ * Tailwind's resets
+ */
+
+.\@\@oc\/user-markdown a {
+  color: #44403c; /* tailwind's stone-700 */
+  text-decoration: underline;
+}
+
+.\@\@oc\/user-markdown a:visited {
+  color: #78716c; /* tailwind's stone-500 */
+  text-decoration: underline;
+}
+
+.\@\@oc\/user-markdown > h1 {
+  font-weight: bolder;
+  font-size: xx-large;
+  margin-bottom: 1.1rem;
+}
+
+.\@\@oc\/user-markdown > h2 {
+  font-weight: bold;
+  font-size: x-large;
+  margin-bottom: 1.0rem;
+  margin-top: 2.0rem;
+}
+
+.\@\@oc\/user-markdown > h3 {
+  font-weight: bold;
+  font-size: large;
+  margin-bottom: 1.0rem;
+}
+
+.\@\@oc\/user-markdown > h4 {
+  font-weight: bold;
+  font-size: medium;
+  margin-bottom: 0.9rem;
+}
+
+.\@\@oc\/user-markdown > h5 {
+  font-weight: 500;
+  font-size: medium;
+  margin-bottom: 0.9rem;
+}
+
+.\@\@oc\/user-markdown > h6 {
+  font-weight: 500;
+  font-size: medium;
+  margin-bottom: 0.9rem;
+}
+
+.\@\@oc\/user-markdown li {
+  line-height: 1.5;
+  list-style-type: disc;
+  margin-left: 0.9rem;
+}
+
+.\@\@oc\/user-markdown > p {
+  margin-bottom: 0.9rem;
+}
+
+.\@\@oc\/user-markdown ul {
+  margin-bottom: 0.9rem;
+}

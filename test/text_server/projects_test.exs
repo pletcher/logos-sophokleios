@@ -15,7 +15,7 @@ defmodule TextServer.ProjectsTest do
   import TextServer.ExemplarsFixtures
   import TextServer.ProjectsFixtures
 
-  @invalid_attrs %{created_by_id: nil, description: nil, domain: "some domain", title: nil}
+  @invalid_attrs %{created_by_id: nil, description: nil, domain: "some domain", homepage_copy: "# Markdown", title: nil}
 
   defp create_creator(_) do
     user = user_fixture()

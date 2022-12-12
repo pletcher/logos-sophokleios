@@ -5,6 +5,7 @@ defmodule TextServer.Projects.Project do
   schema "projects" do
     field :description, :string
     field :domain, :string
+    field :homepage_copy, :string
     field :title, :string
 
     belongs_to :created_by, TextServer.Accounts.User
@@ -20,7 +21,7 @@ defmodule TextServer.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:created_by_id, :description, :domain, :title])
+    |> cast(attrs, [:created_by_id, :description, :domain, :homepage_copy, :title])
     |> validate_required([:created_by_id, :description, :domain, :title])
     |> validate_format(:domain, ~r/^\w(?:[\w-]{0,61}\w)?$/)
     |> assoc_constraint(:created_by)

@@ -60,7 +60,9 @@ defmodule TextServer.MixProject do
       {:hackney, "~> 1.17"},
       {:oban, "~> 2.13"},
       {:panpipe, "~> 0.2"},
-      {:rambo, "~> 0.3.4"}
+      {:rambo, "~> 0.3.4"},
+      {:earmark, "~> 1.4.34"},
+      {:html_sanitize_ex, "~> 1.4"}
     ]
   end
 

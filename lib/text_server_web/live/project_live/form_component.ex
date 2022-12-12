@@ -2,6 +2,8 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
   use TextServerWeb, :live_component
 
   alias TextServer.Projects
+  alias TextServerWeb.Icons
+  alias TextServerWeb.Helpers.Markdown
 
   def mount(_params, _session, socket) do
     {:ok,
@@ -17,7 +19,9 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:changeset, changeset)}
+     |> assign(:changeset, changeset)
+     |> assign(:markdown_preview, Markdown.sanitize_and_parse_markdown(project.homepage_copy))
+     |> assign(:raw_markdown, project.homepage_copy)}
   end
 
   @impl true
@@ -27,7 +31,16 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
       |> Projects.change_project(project_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :changeset, changeset)}
+    {:noreply,
+     socket
+     |> assign(:changeset, changeset)
+     |> assign(:raw_markdown, project_params["homepage_copy"])}
+  end
+
+  def handle_event("render_markdown", %{"raw_markdown" => raw_markdown}, socket) do
+    html = Markdown.sanitize_and_parse_markdown(raw_markdown)
+
+    {:noreply, socket |> assign(:markdown_preview, html)}
   end
 
   def handle_event("save", %{"project" => project_params}, socket) do

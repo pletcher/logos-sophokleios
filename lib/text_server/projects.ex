@@ -56,6 +56,12 @@ defmodule TextServer.Projects do
     |> Repo.get(id)
   end
 
+  def get_project_exemplars(id) do
+    q = from(pe in ProjectExemplar, where: pe.project_id == ^id, preload: :exemplar)
+
+    Repo.all(q) |> Enum.map(fn pe -> pe.exemplar end)
+  end
+
   @doc """
   Creates a project and assigns the user identified by
   attrs["created_by_id"] as an admin by creating a %ProjectUser{project_user_type: :admin}

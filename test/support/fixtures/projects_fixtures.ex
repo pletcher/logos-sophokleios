@@ -14,6 +14,7 @@ defmodule TextServer.ProjectsFixtures do
         created_by_id: created_by_fixture().id,
         description: "some description",
         domain: "domain",
+        homepage_copy: "# Markdown",
         title: "some title"
       })
       |> TextServer.Projects.create_project()

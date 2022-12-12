@@ -27,6 +27,7 @@ defmodule TextServer.Projects do
     Repo.all(Project)
   end
 
+  @spec get_project!(integer()) :: any
   @doc """
   Gets a single project.
 
@@ -42,6 +43,12 @@ defmodule TextServer.Projects do
 
   """
   def get_project!(id), do: Repo.get!(Project, id)
+
+  def get_project_by_domain!(domain) do
+    query = from(p in Project, where: p.domain == ^domain)
+
+    Repo.one!(query)
+  end
 
   def get_project_with_exemplars(id) do
     Project
@@ -318,5 +325,17 @@ defmodule TextServer.Projects do
   """
   def change_exemplar(%Exemplar{} = exemplar, attrs \\ %{}) do
     Exemplar.changeset(exemplar, attrs)
+  end
+
+  @doc """
+  Returns true if `user` is an `admin` of the given `project`; false otherwise.
+  """
+
+  def is_user_admin?(%Project{} = project, %TextServer.Accounts.User{} = user) do
+    project_user =
+      from(p in ProjectUser, where: p.project_id == ^project.id and p.user_id == ^user.id)
+      |> Repo.one()
+
+    project_user.project_user_type == :admin
   end
 end

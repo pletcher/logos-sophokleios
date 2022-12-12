@@ -314,7 +314,7 @@ defmodule Mix.Tasks.Texts.Ingest do
     versions = Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
 
     _exemplars =
-      Enum.map(versions || [], fn v ->
+      Enum.map(versions, fn v ->
         urn = String.split(v.urn, ":") |> List.last()
         # ingestion_exemplars = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
         exemplar_files = Path.wildcard("#{dir}/**/#{urn}.xml")

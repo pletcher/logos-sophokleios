@@ -66,6 +66,7 @@ defmodule TextServer.Languages do
 
     case Repo.one(query) do
       nil ->
+        attrs = Map.put_new(attrs, :slug, Recase.to_kebab(attrs[:title]))
         {:ok, _new_language} = create_language(attrs)
 
       language ->
@@ -76,8 +77,8 @@ defmodule TextServer.Languages do
   def get_by_slug(slug) do
     cleaned_slug =
       case slug do
-        "eng" -> "en"
-        "la" -> "lat"
+        "eng" -> "english"
+        "la" -> "latin"
         _ -> slug
       end
 

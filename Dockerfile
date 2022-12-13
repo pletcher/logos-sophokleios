@@ -25,6 +25,37 @@ FROM ${BUILDER_IMAGE} as builder
 RUN apt-get update -y && apt-get install -y build-essential git \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH \
+    RUST_VERSION=1.65.0
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gcc \
+        libc6-dev \
+        wget \
+        ; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    rustArch='x86_64-unknown-linux-gnu'; \
+    rustupSha256='5cc9ffd1026e82e7fb2eec2121ad71f4b0f044e88bca39207b3f6b769aaa799c'; \
+    url="https://static.rust-lang.org/rustup/archive/1.25.1/${rustArch}/rustup-init"; \
+    wget "$url"; \
+    echo "${rustupSha256} *rustup-init" | sha256sum -c -; \
+    chmod +x rustup-init; \
+    ./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION --default-host ${rustArch}; \
+    rm rustup-init; \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
+    rustup --version; \
+    cargo --version; \
+    rustc --version; \
+    apt-get remove -y --auto-remove \
+        wget \
+        ; \
+    rm -rf /var/lib/apt/lists/*;
+
 # prepare build dir
 WORKDIR /app
 
@@ -93,4 +124,3 @@ CMD ["/app/bin/server"]
 # Appended by flyctl
 ENV ECTO_IPV6 true
 ENV ERL_AFLAGS "-proto_dist inet6_tcp"
-

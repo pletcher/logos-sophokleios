@@ -14,28 +14,8 @@ defmodule Mix.Tasks.Texts.Clone do
 
     Mix.shell().info("... Cloning repositories ... \n")
 
-    clone_repos()
+    TextServer.Texts.clone_repos()
 
     Mix.shell().info("... Finished cloning repositories ... ")
-  end
-
-  defp clone_repo(repo) do
-    %{:url => url} = repo
-
-    dir = Path.expand(Application.get_env(:text_server, :text_repo_destination, "./tmp"))
-
-    repo_dir_name =
-      String.split(url, "/")
-      |> List.last()
-      |> String.replace(".git", "")
-
-    dest = Path.join(dir, repo_dir_name) |> Path.expand("./")
-
-    Mix.Shell.IO.cmd("git clone #{url} #{dest}")
-  end
-
-  defp clone_repos() do
-    TextServer.Texts.repositories()
-    |> Enum.map(&clone_repo/1)
   end
 end

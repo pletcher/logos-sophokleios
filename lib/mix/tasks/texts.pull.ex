@@ -14,27 +14,8 @@ defmodule Mix.Tasks.Texts.Pull do
 
     Mix.shell().info(" ... Pulling repositories ... \n")
 
-    pull_repos()
+    TextServer.Texts.pull_repos()
 
     Mix.shell().info("\n ... Finished pulling repositories ... ")
-  end
-
-  defp pull_repo(repo) do
-    %{:url => url} = repo
-    dir = Path.expand(Application.get_env(:text_server, :text_repo_destination, "./tmp"))
-
-    repo_dir_name =
-      String.split(url, "/")
-      |> List.last()
-      |> String.replace(".git", "")
-
-    dest = Path.join(dir, repo_dir_name) |> Path.expand("./")
-
-    Mix.Shell.IO.cmd("git -C #{dest} pull")
-  end
-
-  defp pull_repos() do
-    TextServer.Texts.repositories()
-    |> Enum.map(&pull_repo/1)
   end
 end

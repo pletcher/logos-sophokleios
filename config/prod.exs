@@ -24,6 +24,8 @@ config :text_server, TextServerWeb.Endpoint,
     hsts: false, # maybe true when we use this for real
   ]
 
+config :swoosh, :api_client, Swoosh.ApiClient.Hackney
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key

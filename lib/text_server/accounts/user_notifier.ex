@@ -10,7 +10,7 @@ defmodule TextServer.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Open Commentaries", "contact@oc.newalexandria.info"})
+      |> from({"Open Commentaries", "contact@opencommentaries.org"})
       |> subject(subject)
       |> text_body(body)
 
@@ -20,7 +20,7 @@ defmodule TextServer.Accounts.UserNotifier do
   end
 
   defp unsubscribe_url(email) do
-    "https://oc.newalexandria.info/unsubscribe/#{email}"
+    "https://opencommentaries.org/unsubscribe/#{email}"
   end
 
   @doc """
@@ -30,7 +30,7 @@ defmodule TextServer.Accounts.UserNotifier do
     email =
       new()
       |> to(user.email)
-      |> from({"Open Commentaries", "contact@oc.newalexandria.info"})
+      |> from({"Open Commentaries", "contact@opencommentaries.org"})
       |> subject("Please confirm your Open Commentaries email address")
       |> render_body("user_confirmation.html", %{
         unsubscribe_url: unsubscribe_url(user.email),

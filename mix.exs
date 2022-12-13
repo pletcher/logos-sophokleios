@@ -62,7 +62,8 @@ defmodule TextServer.MixProject do
       {:panpipe, "~> 0.2"},
       {:rambo, "~> 0.3.4"},
       {:earmark, "~> 1.4.34"},
-      {:html_sanitize_ex, "~> 1.4"}
+      {:html_sanitize_ex, "~> 1.4"},
+      {:gen_smtp, "~> 1.2.0"}
     ]
   end
 

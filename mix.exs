@@ -53,7 +53,7 @@ defmodule TextServer.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:recase, "~> 0.5"},
       {:iteraptor, "~> 1.12.0"},
-      {:saxy, "~> 1.3", only: [:dev, :test]},
+      {:saxy, "~> 1.3"},
       {:scrivener_ecto, "~> 2.7"},
       {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev},
       {:tesla, "~> 1.4"},

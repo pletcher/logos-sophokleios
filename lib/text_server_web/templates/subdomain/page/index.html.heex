@@ -12,14 +12,13 @@
         <%= for fc <- @featured_commentaries do %>
           <a href={Routes.exemplar_show_path(@conn, :show, fc)}>
             <div class="relative flex flex-col gap-6 sm:flex-row md:flex-col lg:flex-row">
-              <div class="bg-pausanias flex h-64 w-64 items-center justify-center rounded-xl bg-indigo-500 text-white sm:shrink-0" />
+              <div class="bg-pausanias bg-cover flex h-64 w-64 items-center justify-center rounded-xl bg-indigo-500 text-white sm:shrink-0" />
               <div class="sm:min-w-0 sm:flex-1">
                 <p class="text-lg font-semibold leading-8 text-gray-900">
                   <%= fc.title %>
                 </p>
                 <p class="mt-2 text-base leading-7 text-gray-500">
                   <%= fc.description %>
-                  <%# Gregory Nagy, Carolyn Higbie, Greta Hawes, Angelia Hanhardt, and Keith Stone %>
                 </p>
               </div>
             </div>

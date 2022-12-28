@@ -38,6 +38,8 @@ defmodule TextServer.Versions do
   """
   def get_version!(id), do: Repo.get!(Version, id)
 
+  def get_version_by_urn!(urn), do: Repo.get_by!(Version, urn: urn)
+
   @doc """
   Creates a version.
 

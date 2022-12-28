@@ -18,6 +18,8 @@ defmodule TextServer.VersionsFixtures do
       |> Enum.into(%{
         description: "some description",
         label: "some title",
+        language_id: language_fixture().id,
+        title: "some title",
         urn: unique_version_urn(),
         version_type: version_type(),
         work_id: work_fixture().id
@@ -25,6 +27,10 @@ defmodule TextServer.VersionsFixtures do
       |> TextServer.Versions.create_version()
 
     version
+  end
+
+  defp language_fixture() do
+    TextServer.LanguagesFixtures.language_fixture()
   end
 
   defp version_type() do

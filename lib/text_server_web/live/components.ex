@@ -59,10 +59,45 @@ defmodule TextServerWeb.Components do
     ~H"""
     <%= for {footnote, i} <- Enum.with_index(@footnotes) do %>
       <p class="text-stone-500">
-        <a href={"#_fn-ref-#{footnote.id}"} id={"_fn-#{footnote.id}"}><sup><%= i + 1%></sup></a>
+        <a href={"#_fn-ref-#{footnote.id}"} id={"_fn-#{footnote.id}"}><sup><%= i + 1 %></sup></a>
         <span><%= footnote.content %></span>
       </p>
     <% end %>
+    """
+  end
+
+  attr :classes, :string, default: ""
+  attr :form, :any, required: true
+  attr :name, :atom, required: true
+  attr :on_change, :string
+  attr :options, :list, default: []
+
+  def select_dropdown(assigns) do
+    ~H"""
+    <%= select(
+      assigns[:form],
+      assigns[:name],
+      assigns[:options],
+      class: ~w(
+                appearance-none
+                relative
+                resize-none
+                flex-1
+                py-2
+                mb-4
+                border
+                border-gray-300
+                placeholder-gray-500
+                text-gray-900
+                focus:outline-none
+                focus:ring-stone-500
+                focus:border-stone-500
+                focus:z-10
+                sm:text-sm
+                #{assigns[:classes]}
+              ),
+      "phx-change": assigns[:on_change]
+    ) %>
     """
   end
 
@@ -117,8 +152,9 @@ defmodule TextServerWeb.Components do
   defp first_page_button(assigns) do
     current_page = assigns[:current_page]
 
-    classes = if current_page == 1 do
-      ~w(
+    classes =
+      if current_page == 1 do
+        ~w(
         relative
         inline-flex
         items-center
@@ -134,8 +170,8 @@ defmodule TextServerWeb.Components do
         text-gray-100
         cursor-default
       )
-    else
-      ~w(
+      else
+        ~w(
         relative
         inline-flex
         items-center
@@ -151,10 +187,10 @@ defmodule TextServerWeb.Components do
         text-gray-500
         hover:bg-gray-50
       )
-    end
+      end
 
     ~H"""
-    <.link patch={"?page=1"} class={classes}>
+    <.link patch="?page=1" class={classes}>
       <span class="sr-only">First page</span>
       <!-- Heroicon name: mini/chevron-double-left -->
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
@@ -171,8 +207,9 @@ defmodule TextServerWeb.Components do
     current_page = assigns[:current_page]
     total_pages = assigns[:total_pages]
 
-    classes = if current_page == total_pages do
-      ~w(
+    classes =
+      if current_page == total_pages do
+        ~w(
         relative
         inline-flex
         items-center
@@ -188,8 +225,8 @@ defmodule TextServerWeb.Components do
         text-gray-100
         cursor-default
       )
-    else
-      ~w(
+      else
+        ~w(
         relative
         inline-flex
         items-center
@@ -205,7 +242,7 @@ defmodule TextServerWeb.Components do
         text-gray-500
         hover:bg-gray-50
       )
-    end
+      end
 
     ~H"""
     <.link patch={"?page=#{total_pages}"} class={classes}>
@@ -225,8 +262,9 @@ defmodule TextServerWeb.Components do
     current_page = assigns[:current_page]
     total_pages = assigns[:total_pages]
 
-    classes = if current_page == total_pages do
-      ~w(
+    classes =
+      if current_page == total_pages do
+        ~w(
         relative
         inline-flex
         items-center
@@ -241,8 +279,8 @@ defmodule TextServerWeb.Components do
         text-gray-100
         cursor-default
       )
-    else
-      ~w(
+      else
+        ~w(
         relative
         inline-flex
         items-center
@@ -257,20 +295,25 @@ defmodule TextServerWeb.Components do
         text-gray-500
         hover:bg-gray-50
       )
-    end
+      end
 
-    next_page = if current_page + 1 == total_pages do
-      total_pages
-    else
-      current_page + 1
-    end
+    next_page =
+      if current_page + 1 == total_pages do
+        total_pages
+      else
+        current_page + 1
+      end
 
     ~H"""
     <.link patch={"?page=#{next_page}"} class={classes}>
       <span class="sr-only">Next</span>
       <!-- Heroicon name: mini/chevron-right -->
       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+        <path
+          fill-rule="evenodd"
+          d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+          clip-rule="evenodd"
+        />
       </svg>
     </.link>
     """
@@ -286,18 +329,16 @@ defmodule TextServerWeb.Components do
     total_pages = assigns[:total_pages]
     halfway = Integer.floor_div(max_buttons, 2)
 
-    {start_n, end_n} = cond do
-      current_page - halfway <= 0 -> {1, max_buttons}
-      current_page + halfway - 1 > total_pages -> {total_pages - max_buttons + 1, total_pages}
-      true -> {current_page - halfway, current_page + halfway - 1}
-    end
+    {start_n, end_n} =
+      cond do
+        current_page - halfway <= 0 -> {1, max_buttons}
+        current_page + halfway - 1 > total_pages -> {total_pages - max_buttons + 1, total_pages}
+        true -> {current_page - halfway, current_page + halfway - 1}
+      end
 
     ~H"""
     <%= for i <- start_n..end_n do %>
-      <a
-        href={"?page=#{i}"}
-        aria-current="page"
-        class={numbered_button_classes(current_page, i)}><%= i %></a>
+      <a href={"?page=#{i}"} aria-current="page" class={numbered_button_classes(current_page, i)}><%= i %></a>
     <% end %>
     """
   end
@@ -342,8 +383,9 @@ defmodule TextServerWeb.Components do
   defp prev_button(assigns) do
     current_page = assigns[:current_page]
 
-    classes = if current_page == 1 do
-      ~w(
+    classes =
+      if current_page == 1 do
+        ~w(
         relative
         inline-flex
         items-center
@@ -358,8 +400,8 @@ defmodule TextServerWeb.Components do
         text-gray-100
         cursor-default
       )
-    else
-      ~w(
+      else
+        ~w(
         relative
         inline-flex
         items-center
@@ -374,20 +416,25 @@ defmodule TextServerWeb.Components do
         text-gray-500
         hover:bg-gray-50
       )
-    end
+      end
 
-    previous_page = if current_page - 1 <= 0 do
-      1
-    else
-      current_page - 1
-    end
+    previous_page =
+      if current_page - 1 <= 0 do
+        1
+      else
+        current_page - 1
+      end
 
     ~H"""
     <.link patch={"?page=#{previous_page}"} class={classes}>
       <span class="sr-only">Previous</span>
       <!-- Heroicon name: mini/chevron-left -->
       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+        <path
+          fill-rule="evenodd"
+          d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+          clip-rule="evenodd"
+        />
       </svg>
     </.link>
     """

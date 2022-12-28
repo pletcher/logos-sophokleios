@@ -8,23 +8,14 @@ defmodule TextServer.ExemplarsFixtures do
   def unique_exemplar_filename, do: "some filename#{System.unique_integer([:positive])}"
 
   @doc """
-  Generate a unique exemplar urn.
-  """
-  def unique_exemplar_urn, do: "some urn#{System.unique_integer([:positive])}"
-
-  @doc """
   Generate a exemplar.
   """
   def exemplar_fixture(attrs \\ %{}) do
     {:ok, exemplar} =
       attrs
       |> Enum.into(%{
-        description: "some description",
         filemd5hash: unique_exemplar_filemd5hash(),
         filename: unique_exemplar_filename(),
-        language_id: language_fixture().id,
-        title: "some title",
-        urn: unique_exemplar_urn(),
         version_id: version_fixture().id
       })
       |> TextServer.Exemplars.create_exemplar()
@@ -40,12 +31,8 @@ defmodule TextServer.ExemplarsFixtures do
     {:ok, exemplar} =
       attrs
       |> Enum.into(%{
-        description: "some description",
         filemd5hash: unique_exemplar_filemd5hash(),
         filename: unique_exemplar_filename(),
-        language_id: language_fixture().id,
-        title: "some title",
-        urn: unique_exemplar_urn(),
         version_id: version_fixture().id
       })
       |> TextServer.Exemplars.create_exemplar()
@@ -58,10 +45,6 @@ defmodule TextServer.ExemplarsFixtures do
       attrs
       |> Enum.into(%{filename: Path.expand("test/support/fixtures/exemplar.docx")})
     )
-  end
-
-  defp language_fixture() do
-    TextServer.LanguagesFixtures.language_fixture()
   end
 
   defp text_node_fixture(exemplar) do

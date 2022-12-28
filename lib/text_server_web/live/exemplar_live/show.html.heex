@@ -1,12 +1,12 @@
 <article class="container mx-auto p-4">
-  <h1 class="text-2xl font-bold"><%= @exemplar.title %></h1>
+  <h1 class="text-2xl font-bold"><%= @exemplar.version.label %></h1>
   <%= if @current_user do %>
     <a href={Routes.exemplar_edit_path(@socket, :edit, @exemplar)}>Edit</a>
   <% end %>
 
-  <p><%= @exemplar.description %></p>
+  <p><%= @exemplar.version.description %></p>
 
-  <p class="mb-4"><%= @exemplar.urn %></p>
+  <p class="mb-4"><%= @exemplar.version.urn %></p>
 
   <hr class="mb-4" />
 
@@ -14,53 +14,18 @@
     <div class="max-w-xl pr-4 text-justify">
       <.form :let={f} for={:location} phx-submit="change-location">
         <section class="flex">
-          <%= select(
-            f,
-            :top_level_location,
-            @top_level_toc,
-            class: ~w(
-              appearance-none
-              relative
-              resize-none
-              flex-1
-              py-2
-              mb-4
-              border
-              border-gray-300
-              placeholder-gray-500
-              text-gray-900
-              focus:outline-none
-              focus:ring-stone-500
-              focus:border-stone-500
-              focus:z-10
-              sm:text-sm
-            ),
-            "phx-change": "top-level-location-change"
-        ) %>
+          <Components.select_dropdown
+            form={f}
+            name={:top_level_location}
+            on_change="top-level-location-change"
+            options={@top_level_toc} />
           <%= unless is_nil(@second_level_toc) do %>
-            <%= select(
-              f,
-              :second_level_location,
-              @second_level_toc,
-              class: ~w(
-                appearance-none
-                relative
-                resize-none
-                flex-1
-                py-2
-                mb-4
-                ml-4
-                border
-                border-gray-300
-                placeholder-gray-500
-                text-gray-900
-                focus:outline-none
-                focus:ring-stone-500
-                focus:border-stone-500
-                focus:z-10
-                sm:text-sm
-              )
-            ) %>
+            <div class="mr-2" />
+            <Components.select_dropdown
+              form={f}
+              name={:second_level_location}
+              on_change="second-level-location-change"
+              options={@second_level_toc} />
           <% end %>
 
           <%= submit "Go", class: ~w(
@@ -94,7 +59,13 @@
       />
     </div>
 
-    <div class="max-w-lg w-lg flex-grow">
+    <div class="max-w-xl w-xl flex-grow">
+      <Components.select_dropdown
+        classes="w-full max-w-full min-w-full"
+        form={:second_reader}
+        name={:second_reade_select}
+        on_change="second-reader-change"
+        options={["should include this commentary (project title?) and other readable exemplars in this work"]} />
       <%= if length(@comments) > 0 do %>
         <Components.floating_comments
           comments={@comments}

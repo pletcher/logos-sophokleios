@@ -32,9 +32,14 @@ In reverse:
 
 - A `collection` has many `text_group`s
 - A `text_group` has many `work`s
-- A `work` _optionally_ has many `version`s, 
+- A `work` has many `version`s,
   each of which is typed as `commentary`, `edition`, or `translation`
-- A `version` _optionally_ has many `exemplar`s
+- A `version` has **one** `exemplar`
+
+Note that exemplars are kind of a weird thing in the CTS specification.
+The spec essentially admits [CITATION] that they're all but superfluous,
+and their URNs are for all practical purposes identical to their versions.
+We use exemplars to store information about the "raw" file itself, as opposed to its canonical representation.
 
 ## Running in development
 
@@ -58,7 +63,7 @@ dependency:
 2. Do we really need this dependency?
 3. What happens if it breaks?
 4. Can we just use part of the dependency in the `vendor/` directory with proper attribution?
-2. If you really must install a dependency --- like `@tailwindcss/forms` --- run `npm i -D <dependency>`
+5. If you really must install a dependency --- like `@tailwindcss/forms` --- run `npm i -D <dependency>`
 from within the `assets/` directory.
 
 ## Commentaries
@@ -75,6 +80,16 @@ https://research.fas.harvard.edu/deans-competitive-fund-promising-scholarship
 ## TODO: Blog posts
 
 Allow writing blog posts on commentaries in progress
+
+## TODO: Two-up view
+
+Two panels with editions that can be synced. For example,
+we can have the Pausanias translation alongside the
+Pausanias commentary.
+
+## TODO: oc.newalexandria.info -> opencommentaries.org pipeline
+
+Migrate commentaries from oc.newalexandria to opencommentaries
 
 ## TODO (and notes)
 
@@ -117,7 +132,7 @@ Allow writing blog posts on commentaries in progress
   * Source: https://github.com/phoenixframework/phoenix
 
 # License
-    
+
     Open Commentaries: Collaborative, cutting-edge editions of ancient texts
     Copyright (C) 2022 New Alexandria Foundation
 

@@ -4,6 +4,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
   alias TextServerWeb.Components
 
   alias TextServer.Exemplars
+  alias TextServer.Repo
   alias TextServer.TextNodes
 
   @impl true
@@ -33,11 +34,13 @@ defmodule TextServerWeb.ExemplarLive.Show do
   defp create_response(socket, exemplar_id, page) do
     %{comments: comments, footnotes: footnotes, page: page} = page
 
-    exemplar = Exemplars.get_exemplar!(exemplar_id)
+    exemplar = Exemplars.get_exemplar!(exemplar_id) |> Repo.preload(:version)
     text_nodes = page.text_nodes
     location = List.first(text_nodes).location
     top_level_location = List.first(location)
     second_level_location = Enum.at(location, 1)
+
+    other_exemplars = Exemplars.list_sibling_exemplars(exemplar)
 
     {top_level_toc, second_level_toc} =
       if length(location) > 2 do
@@ -57,6 +60,7 @@ defmodule TextServerWeb.ExemplarLive.Show do
          "top_level_location" => top_level_location,
          "second_level_location" => second_level_location
        },
+       other_exemplars: other_exemplars,
        page: Map.delete(page, :text_nodes),
        page_title: page_title(socket.assigns.live_action),
        text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
@@ -103,6 +107,10 @@ defmodule TextServerWeb.ExemplarLive.Show do
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
 
+  def handle_event("second-level-location-change", _, socket) do
+    {:noreply, socket}
+  end
+
   def handle_event("top-level-location-change", %{"location" => location}, socket) do
     exemplar = socket.assigns.exemplar
     top_level = Map.get(location, "top_level_location") |> String.to_integer()
@@ -119,6 +127,12 @@ defmodule TextServerWeb.ExemplarLive.Show do
     location_s = "#{top_level}.#{second_level}.1"
 
     {:noreply, socket |> push_patch(to: "/exemplars/#{exemplar.id}?location=#{location_s}")}
+  end
+
+  def handle_event(event, _, socket) do
+    IO.puts("Failed to capture event #{event}")
+
+    {:noreply, socket}
   end
 
   defp get_page(exemplar_id, page_number) when is_binary(page_number),

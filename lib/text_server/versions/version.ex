@@ -8,9 +8,10 @@ defmodule TextServer.Versions.Version do
     field :urn, :string
     field :version_type, Ecto.Enum, values: [:commentary, :edition, :translation]
 
+    belongs_to :language, TextServer.Languages.Language
     belongs_to :work, TextServer.Works.Work
 
-    has_many :exemplars, TextServer.Exemplars.Exemplar
+    has_one :exemplar, TextServer.Exemplars.Exemplar
 
     timestamps()
   end
@@ -18,8 +19,16 @@ defmodule TextServer.Versions.Version do
   @doc false
   def changeset(version, attrs) do
     version
-    |> cast(attrs, [:description, :label, :urn, :version_type, :work_id])
+    |> cast(attrs, [
+      :description,
+      :label,
+      :language_id,
+      :urn,
+      :version_type,
+      :work_id
+    ])
     |> validate_required([:label, :urn, :version_type])
+    |> assoc_constraint(:language)
     |> assoc_constraint(:work)
     |> unique_constraint(:urn)
   end

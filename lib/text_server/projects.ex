@@ -10,6 +10,7 @@ defmodule TextServer.Projects do
   alias TextServer.Projects.Project
   alias TextServer.Projects.Exemplar, as: ProjectExemplar
   alias TextServer.Projects.User, as: ProjectUser
+  alias TextServer.Projects.Version, as: ProjectVersion
   alias TextServer.TextGroups.TextGroup
   alias TextServer.Versions.Version
   alias TextServer.Works.Work
@@ -97,15 +98,21 @@ defmodule TextServer.Projects do
     end)
   end
 
+  def create_project_version(project, version) do
+    %ProjectVersion{}
+    |> ProjectVersion.changeset(%{project_id: project.id, version_id: version.id})
+    |> Repo.insert()
+  end
+
   @doc """
   Fetches projects created by the given user.
 
   ## Examples
 
-  		iex> created_by(%User{id: 1})
+  		iex> list_projects_created_by(%User{id: 1})
   		{:ok, [%Project{}]}
   """
-  def created_by(user) do
+  def list_projects_created_by(user) do
     from(p in Project, where: p.created_by_id == ^user.id)
     |> Repo.all()
   end

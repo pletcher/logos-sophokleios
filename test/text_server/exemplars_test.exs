@@ -9,33 +9,25 @@ defmodule TextServer.ExemplarsTest do
   import TextServer.TextNodesFixtures
 
   @valid_attrs %{
-    description: "some description",
     filemd5hash: "some md5hash",
     filename: "some_filename.docx",
-    label: "some label",
     parsed_at: nil,
     source: "some source",
-    source_link: "https://some.source.link/",
-    title: "some title",
-    urn: "urn:cts:some:urn"
+    source_link: "https://some.source.link/"
   }
 
   @invalid_attrs %{
-    description: nil,
     filemd5hash: nil,
     filename: nil,
-    label: nil,
     parsed_at: nil,
     source: nil,
-    source_link: nil,
-    title: nil,
-    urn: nil
+    source_link: nil
   }
 
   describe "exemplars" do
     test "list_exemplars/0 returns all exemplars" do
       exemplar = exemplar_fixture()
-      assert List.first(Exemplars.list_exemplars()).description == exemplar.description
+      assert List.first(Exemplars.list_exemplars()).filename == exemplar.filename
     end
 
     test "get_exemplar!/1 returns the exemplar with given id" do
@@ -69,13 +61,10 @@ defmodule TextServer.ExemplarsTest do
 
       assert {:ok, %Exemplar{} = exemplar} =
                @valid_attrs
-               |> Map.put(:language_id, language.id)
                |> Map.put(:version_id, version.id)
                |> Exemplars.create_exemplar()
 
-      assert exemplar.description == "some description"
-      assert exemplar.title == "some title"
-      assert exemplar.urn == "urn:cts:some:urn"
+      assert exemplar.filename == "some_filename.docx"
     end
 
     test "create_exemplar/1 with invalid data returns error changeset" do
@@ -86,15 +75,11 @@ defmodule TextServer.ExemplarsTest do
       exemplar = exemplar_fixture()
 
       update_attrs = %{
-        description: "some updated description",
-        title: "some updated title",
-        urn: "urn:cts:some:updated_urn"
+        filename: "some updated filename",
       }
 
       assert {:ok, %Exemplar{} = exemplar} = Exemplars.update_exemplar(exemplar, update_attrs)
-      assert exemplar.description == "some updated description"
-      assert exemplar.title == "some updated title"
-      assert exemplar.urn == "urn:cts:some:updated_urn"
+      assert exemplar.filename == "some updated filename"
     end
 
     test "update_exemplar/2 with invalid data returns error changeset" do

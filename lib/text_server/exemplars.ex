@@ -6,8 +6,6 @@ defmodule TextServer.Exemplars do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
-  alias TextServer.Versions
-
   alias TextServer.ElementTypes
   alias TextServer.ExemplarJobRunner
   alias TextServer.Exemplars.Page
@@ -16,7 +14,9 @@ defmodule TextServer.Exemplars do
   alias TextServer.TextElements
   alias TextServer.TextNodes
   alias TextServer.TextNodes.TextNode
+  alias TextServer.Versions
   alias TextServer.Works
+  alias TextServer.Works.Work
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
 
@@ -41,6 +41,46 @@ defmodule TextServer.Exemplars do
   """
   def list_exemplars do
     Repo.all(Exemplar)
+  end
+
+  # def list_sibling_exemplars(exemplar) do
+  #   version = Versions.get_version!(exemplar.version_id)
+  #   query = from(
+  #     w in Work,
+  #     where: w.id == ^version.work_id,
+  #     join: v in assoc(w, :versions),
+  #     join: e in assoc(v, :exemplars),
+  #     preload: [versions: {v, exemplars: e}],
+  #   )
+
+  #   works = Repo.one!(query)
+
+  #   dbg(works)
+
+  #   works
+  # end
+
+  def list_sibling_exemplars(exemplar) do
+    version = Versions.get_version!(exemplar.version_id)
+
+    work_tree_initial_query =
+      Work
+      |> where([w], w.id == ^version.work_id)
+
+    work_tree_recursion_query =
+      Exemplar
+      |> join(:inner, [e], v in "versions", on: e.version_id == v.id)
+
+    work_tree_query =
+      work_tree_initial_query
+      |> union_all(^work_tree_recursion_query)
+
+    Exemplar
+    |> recursive_ctes(true)
+    |> with_cte("work_tree", as: ^work_tree_query)
+    |> join(:left, [e], v in "work_tree", on: v.id == e.version_id)
+    |> group_by([e], e.id)
+    |> select([e, v], e)
   end
 
   @doc """

@@ -1,4 +1,4 @@
-defmodule TextServer.Exemplars.TeiHeader do
+defmodule TextServer.Versions.TeiHeader do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -8,7 +8,7 @@ defmodule TextServer.Exemplars.TeiHeader do
     field :revision_description, :map
   end
 
-  def changeset(%TextServer.Exemplars.TeiHeader{} = tei_header, attrs \\ %{}) do
+  def changeset(tei_header, attrs \\ %{}) do
     tei_header
     |> cast(attrs, [
       :file_description,

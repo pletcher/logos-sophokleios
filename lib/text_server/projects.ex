@@ -6,9 +6,7 @@ defmodule TextServer.Projects do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
-  alias TextServer.Exemplars.Exemplar
   alias TextServer.Projects.Project
-  alias TextServer.Projects.Exemplar, as: ProjectExemplar
   alias TextServer.Projects.User, as: ProjectUser
   alias TextServer.Projects.Version, as: ProjectVersion
   alias TextServer.TextGroups.TextGroup
@@ -51,16 +49,16 @@ defmodule TextServer.Projects do
     Repo.one!(query)
   end
 
-  def get_project_with_exemplars(id) do
+  def get_project_with_versions(id) do
     Project
-    |> preload(:project_exemplars)
+    |> preload(:project_versions)
     |> Repo.get(id)
   end
 
-  def get_project_exemplars(id) do
-    q = from(pe in ProjectExemplar, where: pe.project_id == ^id, preload: :exemplar)
+  def get_project_versions(id) do
+    q = from(pe in ProjectVersion, where: pe.project_id == ^id, preload: :version)
 
-    Repo.all(q) |> Enum.map(fn pe -> pe.exemplar end)
+    Repo.all(q) |> Enum.map(fn pe -> pe.version end)
   end
 
   @doc """
@@ -118,12 +116,12 @@ defmodule TextServer.Projects do
   end
 
   @doc """
-  Adds all exemplars of a collection to a project. Returns list of ProjectExemplars.
+  Adds all versions of a collection to a project. Returns list of ProjectVersions.
 
   ## Examples
 
   		iex> add_work(project, 1)
-  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  		[{:ok, %ProjectVersion{}}, {:ok, %ProjectVersion{}}]
   """
   def add_collection(project, collection_id) do
     text_group_ids =
@@ -135,32 +133,32 @@ defmodule TextServer.Projects do
   end
 
   @doc """
-  Adds exemplars to a project.
+  Adds versions to a project.
 
   ## Examples
 
-  		iex> add_exemplars(project, [1, 2])
-  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  		iex> add_versions(project, [1, 2])
+  		[{:ok, %ProjectVersion{}}, {:ok, %ProjectVersion{}}]
   """
-  def add_exemplars(project, exemplar_ids \\ []) do
-    exemplar_ids
+  def add_versions(project, version_ids \\ []) do
+    version_ids
     |> Enum.map(fn ex_id ->
-      %ProjectExemplar{}
-      |> ProjectExemplar.changeset(%{
+      %ProjectVersion{}
+      |> ProjectVersion.changeset(%{
         project_id: project.id,
-        exemplar_id: ex_id
+        version_id: ex_id
       })
       |> Repo.insert()
     end)
   end
 
   @doc """
-  Adds all exemplars of a text_group to a project. Returns list of ProjectExemplars.
+  Adds all versions of a text_group to a project. Returns list of ProjectVersions.
 
   ## Examples
 
   		iex> add_work(project, [1])
-  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  		[{:ok, %ProjectVersion{}}, {:ok, %ProjectVersion{}}]
   """
   def add_text_groups(project, text_group_ids) do
     work_ids =
@@ -171,22 +169,13 @@ defmodule TextServer.Projects do
     add_works(project, work_ids)
   end
 
-  def add_versions(project, version_ids) do
-    exemplar_ids =
-      from(e in Exemplar, where: e.version_id in ^version_ids, select: [:id])
-      |> Repo.all()
-      |> Enum.map(fn e -> e.id end)
-
-    add_exemplars(project, exemplar_ids)
-  end
-
   @doc """
-  Adds all exemplars of a work to a project. Returns list of ProjectExemplars.
+  Adds all versions of a work to a project. Returns list of ProjectVersions.
 
   ## Examples
 
   		iex> add_work(project, 1)
-  		[{:ok, %ProjectExemplar{}}, {:ok, %ProjectExemplar{}}]
+  		[{:ok, %ProjectVersion{}}, {:ok, %ProjectVersion{}}]
   """
   def add_works(project, work_ids) do
     version_ids =
@@ -244,100 +233,100 @@ defmodule TextServer.Projects do
     Project.changeset(project, attrs)
   end
 
-  alias TextServer.Projects.Exemplar
+  alias TextServer.Projects.Version
 
   @doc """
-  Returns the list of exemplars.
+  Returns the list of versions.
 
   ## Examples
 
-      iex> list_exemplars()
-      [%Exemplar{}, ...]
+      iex> list_versions()
+      [%Version{}, ...]
 
   """
-  def list_exemplars do
-    Repo.all(Exemplar)
+  def list_versions do
+    Repo.all(Version)
   end
 
   @doc """
-  Gets a single exemplar.
+  Gets a single version.
 
-  Raises `Ecto.NoResultsError` if the Exemplar does not exist.
+  Raises `Ecto.NoResultsError` if the Version does not exist.
 
   ## Examples
 
-      iex> get_exemplar!(123)
-      %Exemplar{}
+      iex> get_version!(123)
+      %Version{}
 
-      iex> get_exemplar!(456)
+      iex> get_version!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_exemplar!(id), do: Repo.get!(Exemplar, id)
+  def get_version!(id), do: Repo.get!(Version, id)
 
   @doc """
-  Creates a exemplar.
+  Creates a version.
 
   ## Examples
 
-      iex> create_exemplar(%{field: value})
-      {:ok, %Exemplar{}}
+      iex> create_version(%{field: value})
+      {:ok, %Version{}}
 
-      iex> create_exemplar(%{field: bad_value})
+      iex> create_version(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_exemplar(attrs \\ %{}) do
-    %Exemplar{}
-    |> Exemplar.changeset(attrs)
+  def create_version(attrs \\ %{}) do
+    %Version{}
+    |> Version.changeset(attrs)
     |> Repo.insert()
   end
 
   @doc """
-  Updates a exemplar.
+  Updates a version.
 
   ## Examples
 
-      iex> update_exemplar(exemplar, %{field: new_value})
-      {:ok, %Exemplar{}}
+      iex> update_version(version, %{field: new_value})
+      {:ok, %Version{}}
 
-      iex> update_exemplar(exemplar, %{field: bad_value})
+      iex> update_version(version, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_exemplar(%Exemplar{} = exemplar, attrs) do
-    exemplar
-    |> Exemplar.changeset(attrs)
+  def update_version(%Version{} = version, attrs) do
+    version
+    |> Version.changeset(attrs)
     |> Repo.update()
   end
 
   @doc """
-  Deletes a exemplar.
+  Deletes a version.
 
   ## Examples
 
-      iex> delete_exemplar(exemplar)
-      {:ok, %Exemplar{}}
+      iex> delete_version(version)
+      {:ok, %Version{}}
 
-      iex> delete_exemplar(exemplar)
+      iex> delete_version(version)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_exemplar(%Exemplar{} = exemplar) do
-    Repo.delete(exemplar)
+  def delete_version(%Version{} = version) do
+    Repo.delete(version)
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking exemplar changes.
+  Returns an `%Ecto.Changeset{}` for tracking version changes.
 
   ## Examples
 
-      iex> change_exemplar(exemplar)
-      %Ecto.Changeset{data: %Exemplar{}}
+      iex> change_version(version)
+      %Ecto.Changeset{data: %Version{}}
 
   """
-  def change_exemplar(%Exemplar{} = exemplar, attrs \\ %{}) do
-    Exemplar.changeset(exemplar, attrs)
+  def change_version(%Version{} = version, attrs \\ %{}) do
+    Version.changeset(version, attrs)
   end
 
   @doc """

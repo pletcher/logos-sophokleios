@@ -6,7 +6,23 @@ defmodule TextServer.Versions do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
+  alias TextServer.Projects.Version, as: ProjectVersion
+  alias TextServer.TextNodes
+  alias TextServer.TextNodes.TextNode
+  alias TextServer.Versions.Passage
   alias TextServer.Versions.Version
+
+  @location_regex ~r/\{\d+\.\d+\.\d+\}/
+
+  # the @attribution_regex is a special case for matching
+  # old comments by Greg Nagy ("GN") that have been
+  # manually attributed. Normally, attribution will come
+  # directly from a comment's XML.
+  @attribution_regex ~r/\[\[GN\s(\d{4}\.\d{2}\.\d{2})\]\]/
+
+  defmodule VersionPassage do
+    defstruct [:version_id, :passage, :passage_number, :text_nodes, :total_passages]
+  end
 
   @doc """
   Returns the list of versions.
@@ -71,6 +87,47 @@ defmodule TextServer.Versions do
     end
   end
 
+  def create_version(attrs, project) do
+    urn = make_version_urn(attrs, project)
+
+    {:ok, version} =
+      Repo.transaction(fn ->
+        {:ok, version} =
+          Versions.find_or_create_version(
+            attrs
+            |> Map.take(["description", "work_id"])
+            |> Enum.into(%{
+              "label" => Map.get(attrs, "title"),
+              # FIXME: (charles) Eventually we'll want to be more
+              # flexible on the version_type
+              "urn" => urn,
+              "version_type" => :commentary
+            })
+          )
+
+        {:ok, version} =
+          %Version{}
+          |> Version.changeset(attrs |> Map.put("version_id", version.id) |> Map.put("urn", urn))
+          |> Repo.insert()
+
+        {:ok, _project_version} =
+          %ProjectVersion{}
+          |> ProjectVersion.changeset(%{version_id: version.id, project_id: project.id})
+          |> Repo.insert()
+
+        version
+      end)
+
+    %{id: version.id}
+    |> VersionJobRunner.new()
+    |> Oban.insert()
+  end
+
+  defp make_version_urn(%{"title" => title, "work_id" => work_id} = _version_params, project) do
+    work = Works.get_work!(work_id)
+    "#{work.urn}.#{String.downcase(project.domain)}-#{Recase.to_kebab(title)}-en"
+  end
+
   @doc """
   Updates a version.
 
@@ -87,6 +144,185 @@ defmodule TextServer.Versions do
     version
     |> Version.changeset(attrs)
     |> Repo.update()
+  end
+
+  def create_passage(attrs) do
+    {:ok, passage} =
+      %Passage{}
+      |> Passage.changeset(attrs)
+      |> Repo.insert()
+
+    {:ok, passage}
+  end
+
+  def get_version_passage(version_id, passage_number \\ 1) do
+    total_passages = get_total_passages(version_id)
+
+    n =
+      if passage_number > total_passages do
+        total_passages
+      else
+        passage_number
+      end
+
+    passage =
+      Passage
+      |> where([p], p.version_id == ^version_id and p.passage_number == ^n)
+      |> Repo.one()
+
+    if is_nil(passage) do
+      ex = get_version!(version_id)
+      paginate_version(ex)
+      get_version_passage(version_id, passage_number)
+    else
+      text_nodes =
+        TextNodes.get_text_nodes_by_version_between_locations(
+          version_id,
+          passage.start_location,
+          passage.end_location
+        )
+
+      %VersionPassage{
+        version_id: version_id,
+        passage: passage,
+        passage_number: passage.passage_number,
+        text_nodes: text_nodes,
+        total_passages: total_passages
+      }
+    end
+  end
+
+  def get_version_passage_by_location(version_id, location) when is_list(location) do
+    passage =
+      Passage
+      |> where(
+        [p],
+        p.version_id == ^version_id and
+          p.start_location <= ^location and
+          p.end_location >= ^location
+      )
+      |> Repo.one()
+
+    text_nodes =
+      TextNodes.get_text_nodes_by_version_between_locations(
+        version_id,
+        passage.start_location,
+        passage.end_location
+      )
+
+    %VersionPassage{
+      version_id: version_id,
+      passage: passage,
+      passage_number: passage.passage_number,
+      text_nodes: text_nodes,
+      total_passages: get_total_passages(version_id)
+    }
+  end
+
+  @doc """
+  Returns the total number of passages for a given version.
+
+  ## Examples
+    iex> get_total_passages(1)
+    20
+  """
+
+  def get_total_passages(version_id) do
+    total_passages_query =
+      from(
+        p in Passage,
+        where: p.version_id == ^version_id,
+        select: max(p.passage_number)
+      )
+
+    Repo.one(total_passages_query)
+  end
+
+    @doc """
+  Returns a table of contents represented by a(n unordered) map of maps.
+
+  ## Examples
+    iex> get_table_of_contents(1)
+    %{7 => %{1 => [1, 2, 3], 4 => [1, 2], 2 => [1, 2, 3], ...}, ...}
+  """
+
+  def get_table_of_contents(version_id) do
+    locations = TextNodes.list_locations_by_version_id(version_id)
+
+    locations |> Enum.reduce(%{}, &nest_location/2)
+  end
+
+  defp nest_location(l, acc) when length(l) == 3 do
+    [x | rest] = l
+    [y | z] = rest
+
+    curr =
+      case acc do
+        %{^x => %{^y => value}} -> value
+        _ -> []
+      end
+
+    put_in(acc, Enum.map([x, y], &Access.key(&1, %{})), curr ++ z)
+  end
+
+  defp nest_location(l, acc) when length(l) == 2 do
+    [x | y] = l
+
+    Map.update(acc, x, y, fn arr -> arr ++ y end)
+  end
+
+  defp nest_location(l, acc) when length(l) == 1 do
+    acc
+  end
+
+    @doc """
+  Groups an Version's TextNodes into Pages by location.
+  Returns {:ok, total_passages} on success.
+  """
+
+  def paginate_version(version_id) do
+    q =
+      from(
+        t in TextNode,
+        where: t.version_id == ^version_id,
+        order_by: [asc: t.location]
+      )
+
+    text_nodes = Repo.all(q)
+
+    grouped_text_nodes =
+      text_nodes
+      |> Enum.filter(fn tn -> tn.location != [0] end)
+      |> Enum.group_by(fn tn ->
+        location = tn.location
+
+        if length(tn.location) > 1 do
+          Enum.take(location, length(tn.location) - 1)
+        else
+          line = List.first(location)
+
+          Integer.floor_div(line, 20)
+        end
+      end)
+
+    keys = Map.keys(grouped_text_nodes) |> Enum.sort()
+
+    keys
+    |> Enum.with_index()
+    |> Enum.each(fn {k, i} ->
+      text_nodes = Map.get(grouped_text_nodes, k)
+      first_node = List.first(text_nodes)
+      last_node = List.last(text_nodes)
+
+      create_passage(%{
+        end_location: last_node.location,
+        version_id: version_id,
+        passage_number: i + 1,
+        start_location: first_node.location
+      })
+    end)
+
+    {:ok, length(keys)}
   end
 
   @doc """
@@ -116,5 +352,318 @@ defmodule TextServer.Versions do
   """
   def change_version(%Version{} = version, attrs \\ %{}) do
     Version.changeset(version, attrs)
+  end
+
+  def clear_text_nodes(%Version{} = version) do
+    TextNodes.delete_text_nodes_by_version_id(version.id)
+  end
+
+  def parse_version(%Version{} = version) do
+    clear_text_nodes(version)
+
+    _result =
+      if String.ends_with?(version.filename, ".docx") do
+        parse_version_docx(version)
+      else
+        parse_version_xml(version)
+      end
+
+    update_version(version, %{parsed_at: NaiveDateTime.utc_now()})
+  end
+
+  def parse_version_docx(%Version{} = version) do
+    # `track_changes: "all"` catches comments; see example below
+    {:ok, ast} = Panpipe.ast(input: version.filename, track_changes: "all")
+    fragments = Map.get(ast, :children, []) |> Enum.map(&collect_fragments/1)
+    serialized_fragments = fragments |> Enum.map(&serialize_for_database/1)
+
+    nodes =
+      serialized_fragments
+      |> Enum.filter(fn {_location, text, _elements} -> String.trim(text) != "" end)
+      |> Enum.map(fn {location, text, elements} ->
+        {:ok, text_node} =
+          TextNodes.find_or_create_text_node(%{
+            version_id: version.id,
+            location: location,
+            text: text
+          })
+
+        elements
+        |> Enum.map(fn el ->
+          {:ok, element_type} =
+            ElementTypes.find_or_create_element_type(%{name: Atom.to_string(el[:type])})
+
+          {:ok, text_element} =
+            TextElements.find_or_create_text_element(
+              el
+              |> Map.delete(:type)
+              |> Map.merge(%{
+                element_type_id: element_type.id,
+                end_text_node_id: text_node.id,
+                start_text_node_id: text_node.id
+              })
+              |> Map.put_new(:attributes, %{})
+              |> Map.put_new(:end_offset, el[:start_offset])
+            )
+
+          {:ok, {element_type, text_element}}
+        end)
+
+        {:ok, text_node}
+      end)
+
+    {:ok, nodes}
+  end
+
+  def serialize_for_database(list) do
+    [location | list] = set_location(list)
+    text = list |> Enum.reduce("", &flatten_string/2) |> String.trim_leading()
+
+    # if getting the location has left the node starting with a single space,
+    # pop that element off the node entirely. This helps to avoid off-by-one
+    # errors in offsets. An assumption is made that a node that begins with
+    # more than a single space character does so for a reason, so we maintain
+    # that string
+    list =
+      if List.first(list) == {:string, " "} do
+        tl(list)
+      else
+        list
+      end
+
+    {text_elements, _final_offset} = list |> Enum.reduce({[], 0}, &tag_elements/2)
+
+    {location, text, text_elements}
+  end
+
+  def set_location(list) do
+    [maybe_location_fragment | rest] = list
+
+    maybe_location_string = get_maybe_location_string(maybe_location_fragment) || ""
+
+    location =
+      case Regex.run(@location_regex, maybe_location_string) do
+        regex_list when is_list(regex_list) ->
+          parse_location_marker(regex_list)
+
+        nil ->
+          [0]
+          # _ -> maybe_location_fragment
+      end
+
+    [location | rest]
+  end
+
+  def get_maybe_location_string(fragment) do
+    case fragment do
+      [string: string] ->
+        string
+
+      {:string, string} ->
+        string
+
+      {_, maybe_list} when is_list(maybe_list) ->
+        maybe_list |> Enum.find_value(&get_maybe_location_string/1)
+
+      _ ->
+        false
+    end
+  end
+
+  defp parse_location_marker(regex_list) do
+    List.first(regex_list)
+    |> String.replace("{", "")
+    |> String.replace("}", "")
+    |> String.split(".")
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  def tag_elements(fragment, {elements, offset}) do
+    case fragment do
+      [string: text] ->
+        {elements, offset + String.length(text)}
+
+      {:string, text} ->
+        {elements, offset + String.length(text)}
+
+      {:comment, comment} ->
+        content =
+          Map.get(comment, :content, [])
+          |> Enum.reduce("", &flatten_string/2)
+
+        attributes = get_comment_attributes(comment, content)
+
+        {elements ++
+           [
+             %{
+               attributes: attributes,
+               content:
+                 content
+                 |> String.replace(@attribution_regex, "")
+                 |> String.trim_leading(),
+               end_offset: offset,
+               start_offset: offset,
+               type: :comment
+             }
+           ], offset}
+
+      {:emph, emph} ->
+        s = emph |> Enum.reduce("", &flatten_string/2)
+        end_offset = offset + String.length(s)
+
+        {elements ++
+           [
+             %{
+               content: s,
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :emph
+             }
+           ], end_offset}
+
+      {:note, note} ->
+        {elements ++
+           [
+             %{
+               content: note |> Enum.reduce("", &flatten_string/2),
+               start_offset: offset,
+               type: :note
+             }
+           ], offset}
+
+      {:strong, strong} ->
+        s = strong |> Enum.reduce("", &flatten_string/2)
+        end_offset = offset + String.length(s)
+
+        {elements ++
+           [
+             %{
+               content: s,
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :strong
+             }
+           ], end_offset}
+
+      {:underline, underline} ->
+        s = underline |> Enum.reduce("", &flatten_string/2)
+        end_offset = offset + String.length(s)
+
+        {elements ++
+           [
+             %{
+               content: s,
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :underline
+             }
+           ], end_offset}
+
+      _ ->
+        {elements, offset}
+    end
+  end
+
+  def flatten_string(fragment, string \\ "") do
+    s =
+      case fragment do
+        [string: text] -> text
+        {:string, text} -> text
+        {:note, _} -> nil
+        {:comment, _} -> nil
+        {:change, _} -> nil
+        {:span, _} -> nil
+        {_k, v} -> Enum.reduce(v, "", &flatten_string/2)
+        _ -> nil
+      end
+
+    "#{string}#{s}"
+  end
+
+  def get_comment_attributes(comment, s) do
+    attrs = Map.get(comment, :attributes)
+
+    if match = Regex.run(@attribution_regex, s) do
+      date_string = Enum.fetch!(match, 1) |> String.replace(".", "-")
+      {:ok, date_time, _} = DateTime.from_iso8601(date_string <> "T00:00:00Z")
+
+      kv_pairs =
+        Map.get(attrs, :key_value_pairs, %{})
+        |> Map.put("author", "Gregory Nagy")
+        |> Map.put("date", date_time)
+
+      Map.put(attrs, :key_value_pairs, kv_pairs)
+    else
+      attrs
+    end
+  end
+
+  def collect_attributes(node) do
+    node |> Map.get(:attr, %{}) |> Map.take([:classes, :key_value_pairs])
+  end
+
+  def collect_fragments(node),
+    do: collect_fragments(node, :children)
+
+  def collect_fragments(node, attr) do
+    Map.get(node, attr, []) |> Enum.map(fn n -> handle_fragment(n) end) |> List.flatten()
+  end
+
+  def handle_fragment(%Panpipe.AST.Emph{} = fragment),
+    do: {:emph, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Note{} = fragment),
+    do: {:note, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Para{} = fragment),
+    do: collect_fragments(fragment)
+
+  def handle_fragment(%Panpipe.AST.Str{} = fragment),
+    do: {:string, Map.get(fragment, :string, "")}
+
+  def handle_fragment(%Panpipe.AST.Space{} = _fragment),
+    do: {:string, " "}
+
+  def handle_fragment(%Panpipe.AST.Span{} = fragment) do
+    attributes = collect_attributes(fragment)
+    classes = Map.get(attributes, :classes, [])
+
+    fragment_type =
+      cond do
+        Enum.member?(classes, "deletion") -> :change
+        Enum.member?(classes, "insertion") -> :change
+        Enum.member?(classes, "paragraph-deletion") -> :change
+        Enum.member?(classes, "paragraph-insertion") -> :change
+        Enum.member?(classes, "comment-end") -> :comment
+        Enum.member?(classes, "comment-start") -> :comment
+        true -> :span
+      end
+
+    {fragment_type,
+     %{
+       attributes: attributes,
+       content: collect_fragments(fragment)
+     }}
+  end
+
+  def handle_fragment(%Panpipe.AST.Strong{} = fragment),
+    do: {:strong, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Underline{} = fragment),
+    do: {:underline, collect_fragments(fragment)}
+
+  def handle_fragment(fragment) do
+    name =
+      fragment.__struct__
+      |> Module.split()
+      |> List.last()
+      |> String.downcase()
+      |> String.to_atom()
+
+    {name, collect_fragments(fragment)}
+  end
+
+  defp parse_version_xml(%Version{} = version) do
+    {:ok, version}
   end
 end

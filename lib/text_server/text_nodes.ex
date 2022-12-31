@@ -24,13 +24,13 @@ defmodule TextServer.TextNodes do
 
   @doc """
   Returns a paginated list of text_nodes with their text_elements,
-  based on exemplar_id.
+  based on version_id.
 
   This function is especially useful for the ReadingEnvironment.
 
   ## Examples
 
-      iex> list_text_nodes_by_exemplar_id(1, [page_size: 20, page: 2])
+      iex> list_text_nodes_by_version_id(1, [page_size: 20, page: 2])
       %Scrivener.Page{
         entries: [
           %TextNode{
@@ -44,13 +44,13 @@ defmodule TextServer.TextNodes do
         total_pages: 4
       }
   """
-  def list_text_nodes_by_exemplar_id(exemplar_id, params \\ [page_size: 20]) do
+  def list_text_nodes_by_version_id(version_id, params \\ [page_size: 20]) do
     text_elements_query = from te in TextElement, order_by: te.start_offset
 
     query =
       from(
         t in TextNode,
-        where: t.exemplar_id == ^exemplar_id,
+        where: t.version_id == ^version_id,
         order_by: [asc: t.location],
         preload: [text_elements: ^{text_elements_query, [:element_type]}]
       )
@@ -59,19 +59,19 @@ defmodule TextServer.TextNodes do
   end
 
   @doc """
-  Returns an ordered list of TextNode locations for the given exemplar.
+  Returns an ordered list of TextNode locations for the given version.
 
   ## Examples
 
-      iex> list_text_node_locations_by_exemplar_id(1)
+      iex> list_text_node_locations_by_version_id(1)
       [[1, 1, 1], [1, 1, 2], [1, 1, 3], ...]
   """
 
-  def list_locations_by_exemplar_id(exemplar_id) do
+  def list_locations_by_version_id(version_id) do
     query =
       from(
         t in TextNode,
-        where: t.exemplar_id == ^exemplar_id,
+        where: t.version_id == ^version_id,
         order_by: [asc: t.location],
         select: t.location
       )
@@ -82,22 +82,22 @@ defmodule TextServer.TextNodes do
   @doc """
   Returns a list of TextNodes between start_location and end_location.
 
-  Used by Exemplars.get_exemplar_page/2 and Exemplars.get_exemplar_page_by_location/2.
+  Used by Exemplars.get_version_page/2 and Exemplars.get_version_page_by_location/2.
 
   ## Examples
 
-      iex> get_text_nodes_by_exemplar_between_locations(1, [1, 1, 1], [1, 1, 2])
+      iex> get_text_nodes_by_version_between_locations(1, [1, 1, 1], [1, 1, 2])
       [%TextNode{location: [1, 1, 1], ...}, %TextNode{location: [1, 1, 2], ...}]
   """
 
-  def get_text_nodes_by_exemplar_between_locations(exemplar_id, start_location, end_location) do
+  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) do
     text_elements_query = from te in TextElement, order_by: te.start_offset
 
     query =
       from(
         t in TextNode,
         where:
-          t.exemplar_id == ^exemplar_id and
+          t.version_id == ^version_id and
             t.location >= ^start_location and
             t.location <= ^end_location,
         order_by: [asc: t.location],
@@ -152,7 +152,7 @@ defmodule TextServer.TextNodes do
   def find_or_create_text_node(attrs) do
     query =
       from(t in TextNode,
-        where: t.exemplar_id == ^attrs[:exemplar_id] and t.location == ^attrs[:location]
+        where: t.version_id == ^attrs[:version_id] and t.location == ^attrs[:location]
       )
 
     case Repo.one(query) do
@@ -195,11 +195,11 @@ defmodule TextServer.TextNodes do
     Repo.delete(text_node)
   end
 
-  def delete_text_nodes_by_exemplar_id(exemplar_id) do
+  def delete_text_nodes_by_version_id(version_id) do
     query =
       from(
         t in TextNode,
-        where: t.exemplar_id == ^exemplar_id
+        where: t.version_id == ^version_id
       )
 
     Repo.delete_all(query)

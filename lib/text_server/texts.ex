@@ -100,8 +100,8 @@ defmodule TextServer.Texts do
     end)
   end
 
-  def parse_exemplar_xml(f) do
-    IO.puts("Ingesting exemplar XML at #{f}")
+  def parse_version_xml(f) do
+    IO.puts("Ingesting version XML at #{f}")
 
     file_stream = File.stream!(f)
 
@@ -111,7 +111,7 @@ defmodule TextServer.Texts do
         {:error, _reason} -> nil
       end
 
-    _exemplar =
+    _version =
       if is_nil(header_data) do
         nil
       else
@@ -293,15 +293,14 @@ defmodule TextServer.Texts do
     source = parsed["source"]
     source_link = parsed["sourceLink"]
 
-    {:ok, exemplar} =
-      TextServer.Exemplars.find_or_create_exemplar(%{
+    {:ok, version} =
+      TextServer.Versions.find_or_create_version(%{
         description: description,
         filename: filename,
         filemd5hash: :crypto.hash(:md5, binary) |> Base.encode16(case: :lower),
         form: nil,
-        label: nil,
+        label: original_title || english_title,
         language_id: language.id,
-        title: original_title || english_title,
         source: source,
         source_link: source_link,
         structure: nil,
@@ -316,7 +315,7 @@ defmodule TextServer.Texts do
       TextServer.TextNodes.find_or_create_text_node(%{
         location: location,
         text: v,
-        exemplar_id: exemplar.id
+        version_id: version.id
       })
     end)
 
@@ -371,14 +370,14 @@ defmodule TextServer.Texts do
 
     versions = Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
 
-    _exemplars =
+    _versions =
       Enum.map(versions, fn v ->
         urn = String.split(v.urn, ":") |> List.last()
-        # ingestion_exemplars = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
-        exemplar_files = Path.wildcard("#{dir}/**/#{urn}.xml")
+        # ingestion_versions = TextServer.Ingestion.list_ingestion_items_like("%#{urn}.xml")
+        version_files = Path.wildcard("#{dir}/**/#{urn}.xml")
 
-        IO.puts("... Processing exemplar files: ")
-        IO.inspect(exemplar_files)
+        IO.puts("... Processing version files: ")
+        IO.inspect(version_files)
 
         # Sometimes the ingestion process appears to
         # hang here, such as on the Suda
@@ -386,43 +385,43 @@ defmodule TextServer.Texts do
         # Not sure why, but it would be nice to add more
         # debugging output
 
-        exemplar_files
+        version_files
         |> Enum.map(fn f ->
-          exemplar_data = parse_exemplar_xml(f)
+          version_data = parse_version_xml(f)
 
-          _exemplar =
-            if is_nil(exemplar_data) do
-              IO.inspect("Unable to parse exemplar file #{f}")
+          _version =
+            if is_nil(version_data) do
+              IO.inspect("Unable to parse version file #{f}")
               nil
             else
               ex_data =
                 Map.merge(
-                  Map.delete(exemplar_data, :body),
+                  Map.delete(version_data, :body),
                   %{description: v.description, label: v.label, urn: v.urn, version_id: v.id}
                 )
 
-              {:ok, exemplar} = TextServer.Exemplars.find_or_create_exemplar(ex_data)
-              exemplar
+              {:ok, version} = TextServer.Versions.find_or_create_version(ex_data)
+              version
             end
 
           # NOTE: (charles) This is admittedly a bit confusing. "elems" here
-          # refers to anything contained in an exemplar's body, including
+          # refers to anything contained in an version's body, including
           # TextNodes. TextNodes are differentiated from TextElements by
           # containing a :content key.
           # _text_elements =
-          #   unless is_nil(exemplar) do
-          #     elems = exemplar_data[:body][:text_elements]
+          #   unless is_nil(version) do
+          #     elems = version_data[:body][:text_elements]
 
           #     if is_nil(elems) do
-          #       IO.inspect("No text elements? #{inspect(exemplar_data[:body])}")
+          #       IO.inspect("No text elements? #{inspect(version_data[:body])}")
           #       []
           #     else
-          #       TextServer.Exemplars.process_exemplar_text_nodes(
-          #         exemplar,
+          #       TextServer.Versions.process_version_text_nodes(
+          #         version,
           #         Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
           #       )
 
-          #       TextServer.Exemplars.process_exemplar_text_elements(exemplar, elems)
+          #       TextServer.Versions.process_version_text_elements(version, elems)
           #     end
           #   end
 

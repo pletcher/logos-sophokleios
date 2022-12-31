@@ -11,7 +11,7 @@ defmodule TextServer.TextNodes.TextNode do
     field :text, :string
     field :_search, TextServer.Ecto.Types.TsVector
 
-    belongs_to :exemplar, TextServer.Exemplars.Exemplar
+    belongs_to :version, TextServer.Versions.Version
 
     has_many :text_elements, TextServer.TextElements.TextElement, foreign_key: :start_text_node_id
 
@@ -21,9 +21,9 @@ defmodule TextServer.TextNodes.TextNode do
   @doc false
   def changeset(text_node, attrs) do
     text_node
-    |> cast(attrs, [:exemplar_id, :location, :text])
+    |> cast(attrs, [:version_id, :location, :text])
     |> validate_required([:location, :text])
-    |> assoc_constraint(:exemplar)
+    |> assoc_constraint(:version)
   end
 
   defmodule Tag do

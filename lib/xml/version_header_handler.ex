@@ -1,4 +1,4 @@
-defmodule Xml.ExemplarHeaderHandler do
+defmodule Xml.VersionHeaderHandler do
   @behaviour Saxy.Handler
 
   def handle_event(:start_document, _prolog, state) do

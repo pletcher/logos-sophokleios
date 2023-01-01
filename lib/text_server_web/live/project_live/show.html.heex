@@ -17,7 +17,7 @@
       <%= for version <- @project.project_versions do %>
         <Components.small_card
           description={version.description}
-          title={version.title}
+          title={version.label}
           url={Routes.version_show_path(@socket, :show, version)}
         />
       <% end %>

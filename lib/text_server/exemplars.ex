@@ -1,3 +1,5 @@
+### NO LONGER IN USE ___ HERE ONLY UNTIL MIGRATION TO VERSIONS IS COMPLETE
+
 defmodule TextServer.Exemplars do
   @moduledoc """
   The Exemplars context.

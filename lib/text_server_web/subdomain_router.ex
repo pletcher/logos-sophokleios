@@ -30,7 +30,7 @@ defmodule TextServerWeb.SubdomainRouter do
     pipe_through :browser
 
     live_session :reader do
-      live "/exemplars/:id", ExemplarLive.Show, :show
+      live "/versions/:id", VersionLive.Show, :show
     end
   end
 end

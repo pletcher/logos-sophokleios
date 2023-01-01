@@ -106,7 +106,7 @@ defmodule TextServer.Texts do
     file_stream = File.stream!(f)
 
     header_data =
-      case Saxy.parse_stream(file_stream, Xml.ExemplarHeaderHandler, {nil, []}) do
+      case Saxy.parse_stream(file_stream, Xml.VersionHeaderHandler, {nil, []}) do
         {:ok, data} -> data
         {:error, _reason} -> nil
       end
@@ -133,7 +133,7 @@ defmodule TextServer.Texts do
           end)
 
         body_data =
-          case Saxy.parse_stream(file_stream, Xml.ExemplarBodyHandler, %{ref_levels: ref_levels}) do
+          case Saxy.parse_stream(file_stream, Xml.VersionBodyHandler, %{ref_levels: ref_levels}) do
             {:ok, data} -> data
             {:error, _reason} -> nil
           end

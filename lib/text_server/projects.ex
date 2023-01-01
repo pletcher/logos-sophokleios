@@ -44,7 +44,13 @@ defmodule TextServer.Projects do
   def get_project!(id), do: Repo.get!(Project, id)
 
   def get_project_by_domain!(domain) do
-    query = from(p in Project, where: p.domain == ^domain)
+    d = if Mix.env() == :dev do
+      domain |> String.replace_suffix(".local", "")
+    else
+      domain
+    end
+
+    query = from(p in Project, where: p.domain == ^d)
 
     Repo.one!(query)
   end

@@ -61,9 +61,9 @@
 
     <div class="max-w-xl w-xl flex-grow">
       <Components.select_dropdown
-        classes="w-full max-w-full min-w-full"
+        classes="w-full max-w-full min-w-full hidden"
         form={:second_reader}
-        name={:second_reade_select}
+        name={:second_reader_select}
         on_change="second-reader-change"
         options={["should include this commentary (project title?) and other readable versions in this work"]} />
       <%= if length(@comments) > 0 do %>

@@ -10,8 +10,8 @@ defmodule TextServer.Projects.Project do
 
     belongs_to :created_by, TextServer.Accounts.User
 
-    many_to_many :project_exemplars, TextServer.Exemplars.Exemplar,
-      join_through: TextServer.Projects.Exemplar
+    many_to_many :project_versions, TextServer.Versions.Version,
+      join_through: TextServer.Projects.Version
 
     many_to_many :project_users, TextServer.Accounts.User, join_through: TextServer.Projects.User
 

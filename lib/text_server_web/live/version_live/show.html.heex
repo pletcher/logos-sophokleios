@@ -1,36 +1,77 @@
-<h1>Show Version</h1>
+<article class="container mx-auto p-4">
+  <h1 class="text-2xl font-bold"><%= @version.label %></h1>
+  <%= if @current_user do %>
+    <a href={Routes.version_show_path(@socket, :edit, @version)}>Edit</a>
+  <% end %>
 
-<%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.version_show_path(@socket, :show, @version)}>
-    <.live_component
-      module={TextServerWeb.VersionLive.FormComponent}
-      id={@version.id}
-      title={@page_title}
-      action={@live_action}
-      version={@version}
-      return_to={Routes.version_show_path(@socket, :show, @version)}
-    />
-  </.modal>
-<% end %>
+  <p><%= @version.description %></p>
 
-<ul>
-  <li>
-    <strong>Description:</strong>
-    <%= @version.description %>
-  </li>
+  <p class="mb-4"><%= @version.urn %></p>
 
-  <li>
-    <strong>Title:</strong>
-    <%= @version.label %>
-  </li>
+  <hr class="mb-4" />
 
-  <li>
-    <strong>Urn:</strong>
-    <%= @version.urn %>
-  </li>
-</ul>
+  <div class="flex">
+    <div class="max-w-xl pr-4 text-justify">
+      <.form :let={f} for={:location} phx-submit="change-location">
+        <section class="flex">
+          <Components.select_dropdown
+            form={f}
+            name={:top_level_location}
+            on_change="top-level-location-change"
+            options={@top_level_toc} />
+          <%= unless is_nil(@second_level_toc) do %>
+            <div class="mr-2" />
+            <Components.select_dropdown
+              form={f}
+              name={:second_level_location}
+              on_change="second-level-location-change"
+              options={@second_level_toc} />
+          <% end %>
 
-<span>
-  <%= live_patch("Edit", to: Routes.version_show_path(@socket, :edit, @version), class: "button") %>
-</span>
-| <span><%= live_redirect("Back", to: Routes.version_index_path(@socket, :index)) %></span>
+          <%= submit "Go", class: ~w(
+            mb-4
+            ml-2
+            px-4
+            border
+            border-transparent
+            text-sm
+            font-medium
+            text-white
+            bg-stone-600
+            hover:bg-stone-700
+            focus:outline-none
+            focus:ring-2
+            focus:ring-offset-2
+            focus:ring-stone-500
+          ) %>
+        </section>
+       </.form>
+
+      <.live_component
+        id={:reader}
+        footnotes={@footnotes}
+        module={TextServerWeb.ReadingEnvironment.Reader}
+        location={@location}
+        passage={@passage}
+        text_nodes={@text_nodes}
+        top_level_toc={@top_level_toc}
+        second_level_toc={@second_level_toc}
+      />
+    </div>
+
+    <div class="max-w-xl w-xl flex-grow">
+      <Components.select_dropdown
+        classes="w-full max-w-full min-w-full"
+        form={:second_reader}
+        name={:second_reade_select}
+        on_change="second-reader-change"
+        options={["should include this commentary (project title?) and other readable versions in this work"]} />
+      <%= if length(@comments) > 0 do %>
+        <Components.floating_comments
+          comments={@comments}
+          highlighted_comments={@highlighted_comments}
+        />
+      <% end %>
+    </div>
+  </div>
+</article>

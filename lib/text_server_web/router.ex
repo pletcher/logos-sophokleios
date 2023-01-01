@@ -25,8 +25,6 @@ defmodule TextServerWeb.Router do
       live "/collections/:id/edit", CollectionLive.Index, :edit
       live "/collections/:id/show/edit", CollectionLive.Show, :edit
 
-      live "/exemplars/:id/edit", ExemplarLive.Edit, :edit
-
       live "/languages/new", LanguageLive.Index, :new
       live "/languages/:id/edit", LanguageLive.Index, :edit
       live "/languages/:id/show/edit", LanguageLive.Show, :edit
@@ -39,7 +37,6 @@ defmodule TextServerWeb.Router do
       live "/text_nodes/:id/edit", TextNodeLive.Index, :edit
       live "/text_nodes/:id/show/edit", TextNodeLive.Show, :edit
 
-      live "/versions/new", VersionLive.Index, :new
       live "/versions/:id/edit", VersionLive.Index, :edit
       live "/versions/:id/show/edit", VersionLive.Show, :edit
 
@@ -49,7 +46,7 @@ defmodule TextServerWeb.Router do
 
       scope "/:user_id" do
         live "/projects", ProjectLive.UserProjectIndex, :index
-        live "/projects/:id/exemplars/new", ExemplarLive.New, :new
+        live "/projects/:id/versions/new", VersionLive.New, :new
       end
     end
   end

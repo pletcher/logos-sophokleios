@@ -1,6 +1,7 @@
 defmodule TextServer.VersionsTest do
   use TextServer.DataCase
 
+  alias TextServer.TextNodes
   alias TextServer.Versions
   alias TextServer.Versions.Version
 
@@ -8,28 +9,67 @@ defmodule TextServer.VersionsTest do
 
   @valid_attrs %{
     description: "some description",
+    filemd5hash: :crypto.hash(:md5, "some md5") |> Base.encode16(case: :lower),
+    filename: "some_filename.docx",
     label: "some label",
+    parsed_at: DateTime.utc_now(),
+    source: "some source",
+    source_link: "https://some.source.link",
     urn: "urn:cts:some:urn",
     version_type: "commentary"
   }
-  @invalid_attrs %{description: nil, label: nil, urn: nil, version_type: nil}
+
+  @invalid_attrs %{
+    description: nil,
+    filemd5hash: nil,
+    filename: nil,
+    label: nil,
+    parsed_at: nil,
+    source: nil,
+    source_link: nil,
+    urn: nil,
+    version_type: nil
+  }
 
   describe "versions" do
-    test "list_versions/0 returns all versions" do
+    test "list_versions/0 returns a paginated list of versions" do
       version = version_fixture()
-      assert Versions.list_versions().entries == [version]
+      versions = Versions.list_versions().entries
+
+      assert List.first(versions).id == version.id
     end
 
     test "get_version!/1 returns the version with given id" do
       version = version_fixture()
-      assert Versions.get_version!(version.id) == version
+      assert Versions.get_version!(version.id).label == version.label
     end
 
     test "create_version/1 with valid data creates a version" do
+      language = TextServer.LanguagesFixtures.language_fixture()
       work = TextServer.WorksFixtures.work_fixture()
-      assert {:ok, %Version{} = version} = Versions.create_version(Map.put(@valid_attrs, :work_id, work.id))
+
+      attrs =
+        @valid_attrs
+        |> Enum.into(%{
+          language_id: language.id,
+          work_id: work.id
+        })
+
+      assert {:ok, %Version{} = version} = Versions.create_version(attrs)
+
       assert version.description == "some description"
+      assert version.filemd5hash == :crypto.hash(:md5, "some md5") |> Base.encode16(case: :lower)
+      assert version.filename == "some_filename.docx"
       assert version.label == "some label"
+
+      assert DateTime.diff(
+               DateTime.utc_now(),
+               DateTime.from_naive!(version.parsed_at, "Etc/UTC"),
+               :minute
+             ) <= 1
+
+      assert version.source == "some source"
+      assert version.source_link == "https://some.source.link"
       assert version.urn == "urn:cts:some:urn"
       assert version.version_type == :commentary
     end
@@ -56,7 +96,7 @@ defmodule TextServer.VersionsTest do
     test "update_version/2 with invalid data returns error changeset" do
       version = version_fixture()
       assert {:error, %Ecto.Changeset{}} = Versions.update_version(version, @invalid_attrs)
-      assert version == Versions.get_version!(version.id)
+      assert version.description == Versions.get_version!(version.id).description
     end
 
     test "delete_version/1 deletes the version" do
@@ -68,6 +108,48 @@ defmodule TextServer.VersionsTest do
     test "change_version/1 returns a version changeset" do
       version = version_fixture()
       assert %Ecto.Changeset{} = Versions.change_version(version)
+    end
+
+    test "get_table_of_contents/1 returns the table of contents for the given version" do
+      version = version_fixture()
+
+      Enum.each(1..5, fn i ->
+        TextServer.TextNodesFixtures.version_text_node_fixture(version.id, %{
+          location: [i, 1, 1]
+        })
+      end)
+
+      toc = Versions.get_table_of_contents(version.id)
+
+      assert Map.get(toc, 1) == %{1 => [1, 1]}
+      assert Map.get(toc, 2) == %{1 => [1]}
+      assert Map.get(toc, 3) == %{1 => [1]}
+      assert Map.get(toc, 4) == %{1 => [1]}
+      assert Map.get(toc, 5) == %{1 => [1]}
+    end
+  end
+
+  describe "Version DOCX parsing" do
+    import TextServer.VersionsFixtures
+
+    test "parse_version/1 can parse a docx" do
+      version = version_with_docx_fixture()
+
+      assert {:ok, %Version{} = _} = Versions.parse_version(version)
+
+      text_node = TextNodes.get_by(%{version_id: version.id, location: [1, 1, 1]})
+
+      assert String.contains?(
+               text_node.text,
+               "This is a test document for TextServer.Versions.parse_xml/1"
+             )
+
+      text_node = TextNodes.get_by(%{version_id: version.id, location: [1, 2, 1]})
+
+      assert String.contains?(
+               text_node.text,
+               "Now we want to test inline styles and TextElements."
+             )
     end
   end
 end

@@ -5,7 +5,6 @@ defmodule TextServer.TextNodesTest do
   alias TextServer.TextNodes.TextNode
 
   import TextServer.TextNodesFixtures
-  import TextServer.ExemplarsFixtures
 
   describe "text_nodes" do
     @invalid_attrs %{index: nil, location: nil, normalized_text: nil, text: nil}
@@ -17,7 +16,7 @@ defmodule TextServer.TextNodesTest do
 
     test "get_text_node!/1 returns the text_node with given id" do
       text_node = text_node_fixture()
-      assert TextNodes.get_text_node!(text_node.id).exemplar_id == text_node.exemplar_id
+      assert TextNodes.get_text_node!(text_node.id).version_id == text_node.version_id
       assert TextNodes.get_text_node!(text_node.id).location == text_node.location
       assert TextNodes.get_text_node!(text_node.id).text == text_node.text
     end
@@ -67,15 +66,15 @@ defmodule TextServer.TextNodesTest do
       assert %Ecto.Changeset{} = TextNodes.change_text_node(text_node)
     end
 
-    test "get_text_nodes_by_exemplar_between_locations/3 returns text nodes between the given locations" do
-      exemplar = exemplar_fixture()
+    test "get_text_nodes_by_version_between_locations/3 returns text nodes between the given locations" do
+      version = TextServer.VersionsFixtures.version_fixture()
 
       Enum.each(1..5, fn i ->
-        text_node_fixture(%{exemplar_id: exemplar.id, text: "Text #{i}", location: [1, i]})
+        text_node_fixture(%{version_id: version.id, text: "Text #{i}", location: [1, i]})
       end)
 
       text_nodes =
-        TextNodes.get_text_nodes_by_exemplar_between_locations(exemplar.id, [1, 2], [1, 4])
+        TextNodes.get_text_nodes_by_version_between_locations(version.id, [1, 2], [1, 4])
 
       locations = Enum.map(text_nodes, & &1.location)
 
@@ -86,14 +85,14 @@ defmodule TextServer.TextNodesTest do
       refute Enum.member?(locations, [1, 5])
     end
 
-    test "list_locations_by_exemplar_id/1 returns all TextNode locations for the given exemplar" do
-      exemplar = text_node_exemplar_fixture()
+    test "list_locations_by_version_id/1 returns all TextNode locations for the given version" do
+      version = TextServer.VersionsFixtures.text_node_version_fixture()
 
       Enum.each(1..5, fn i ->
-        text_node_fixture(%{exemplar_id: exemplar.id, text: "Text #{i}", location: [1, i]})
+        text_node_fixture(%{version_id: version.id, text: "Text #{i}", location: [1, i]})
       end)
 
-      locations = TextNodes.list_locations_by_exemplar_id(exemplar.id)
+      locations = TextNodes.list_locations_by_version_id(version.id)
 
       assert locations == [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5]]
     end
@@ -116,7 +115,7 @@ defmodule TextServer.TextNodesTest do
           end_offset: end_offset
         })
 
-      page = TextNodes.list_text_nodes_by_exemplar_id(text_node.exemplar_id)
+      page = TextNodes.list_text_nodes_by_version_id(text_node.version_id)
       node = List.first(page.entries)
       tagged = TextNode.tag_graphemes(node)
 

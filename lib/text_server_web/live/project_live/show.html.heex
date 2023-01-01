@@ -7,18 +7,18 @@
     </div>
   </section>
   <div class="p-4 max-w-md w-full">
-    <%= if length(@project.project_exemplars) == 0 do %>
+    <%= if length(@project.project_versions) == 0 do %>
       <p>
-        It looks like you haven't added any exemplars to this project yet.
+        It looks like you haven't added any versions to this project yet.
       </p>
     <% else %>
       <h2 class="text-2xl font-semibold">Exemplars</h2>
 
-      <%= for exemplar <- @project.project_exemplars do %>
+      <%= for version <- @project.project_versions do %>
         <Components.small_card
-          description={exemplar.description}
-          title={exemplar.title}
-          url={Routes.exemplar_show_path(@socket, :show, exemplar)}
+          description={version.description}
+          title={version.title}
+          url={Routes.version_show_path(@socket, :show, version)}
         />
       <% end %>
     <% end %>
@@ -28,11 +28,11 @@
         <a
           data-phx-link="patch"
           data-phx-link-state="push"
-          href={Routes.exemplar_new_path(@socket, :new, @current_user, @project)}
+          href={Routes.version_new_path(@socket, :new, @current_user, @project)}
           class="group relative w-full flex justify-center py-4 px-4 text-md font-medium text-stone-700"
         >
           <span class="absolute left-0 inset-y-0 flex items-center underline">
-            <Icons.exemplar_icon /> Add an exemplar
+            <Icons.version_icon /> Add a version
           </span>
         </a>
       </div>

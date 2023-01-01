@@ -25,6 +25,8 @@ defmodule TextServer.Repo.Migrations.MergeExemplarsIntoVersions do
       add :end_location, {:array, :integer}, null: false
       add :start_location, {:array, :integer}, null: false
       add(:version_id, references(:versions, on_delete: :delete_all))
+
+      timestamps()
     end
 
     alter table(:versions) do
@@ -32,7 +34,7 @@ defmodule TextServer.Repo.Migrations.MergeExemplarsIntoVersions do
       add(:filemd5hash, :string)
       # filename should be not null
       add(:filename, :string)
-      # add(:language_id, references(:languages, on_delete: :delete_all))
+      add(:language_id, references(:languages, on_delete: :delete_all))
       add(:parsed_at, :naive_datetime)
       add(:source, :string)
       add(:source_link, :string)

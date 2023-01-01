@@ -23,18 +23,18 @@ defmodule TextServer.ProjectsFixtures do
   end
 
   @doc """
-  Generate a project_exemplar.
+  Generate a project_version.
   """
-  def project_exemplar_fixture(attrs \\ %{}) do
-    exemplar = TextServer.ExemplarsFixtures.exemplar_fixture()
+  def project_version_fixture(attrs \\ %{}) do
+    version = TextServer.VersionsFixtures.version_fixture()
     project = project_fixture()
 
-    {:ok, project_exemplar} =
+    {:ok, project_version} =
       attrs
-      |> Enum.into(%{exemplar_id: exemplar.id, project_id: project.id})
-      |> TextServer.Projects.create_exemplar()
+      |> Enum.into(%{version_id: version.id, project_id: project.id})
+      |> TextServer.Projects.create_version()
 
-    project_exemplar
+    project_version
   end
 
   defp created_by_fixture() do

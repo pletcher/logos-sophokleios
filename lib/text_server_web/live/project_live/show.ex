@@ -17,7 +17,7 @@ defmodule TextServerWeb.ProjectLive.Show do
       scheme: scheme
     } = URI.parse(uri)
 
-    project = Projects.get_project_with_exemplars(id)
+    project = Projects.get_project_with_versions(id)
     project_url = "#{scheme}://#{project.domain}.#{authority}"
 
     {:noreply,

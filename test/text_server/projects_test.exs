@@ -6,13 +6,13 @@ defmodule TextServer.ProjectsTest do
   alias TextServer.Repo
 
   alias TextServer.Projects.Project
-  alias TextServer.Projects.Exemplar, as: ProjectExemplar
+  alias TextServer.Projects.Version, as: ProjectVersion
   alias TextServer.TextGroups.TextGroup
   alias TextServer.Versions.Version
   alias TextServer.Works.Work
 
   import TextServer.AccountsFixtures
-  import TextServer.ExemplarsFixtures
+  import TextServer.VersionsFixtures
   import TextServer.ProjectsFixtures
 
   @invalid_attrs %{created_by_id: nil, description: nil, domain: "some domain", homepage_copy: "# Markdown", title: nil}
@@ -58,10 +58,10 @@ defmodule TextServer.ProjectsTest do
       assert %Ecto.InvalidChangesetError{} = catch_error(Projects.create_project(@invalid_attrs))
     end
 
-    test "add_collection/2 with valid data returns a list of ProjectExemplars" do
+    test "add_collection/2 with valid data returns a list of ProjectVersions" do
       project = project_fixture()
-      exemplars = [exemplar_fixture(), exemplar_fixture()]
-      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+      versions = [version_fixture(), version_fixture()]
+      version_ids = versions |> Enum.map(fn v -> v.id end)
 
       work_ids =
         from(v in Version, where: v.id in ^version_ids, select: [:work_id])
@@ -80,34 +80,34 @@ defmodule TextServer.ProjectsTest do
 
       Enum.each(collection_ids, fn c_id ->
         Enum.each(Projects.add_collection(project, c_id), fn pe ->
-          assert {:ok, %ProjectExemplar{}} = pe
+          assert {:ok, %ProjectVersion{}} = pe
         end)
       end)
     end
 
-    test "add_exemplars/2 with invalid data returns list of error changesets" do
+    test "add_versions/2 with invalid data returns list of error changesets" do
       project = project_fixture()
-      exemplar_ids = [1, 2, 3]
-      errors = Projects.add_exemplars(project, exemplar_ids)
+      version_ids = [1, 2, 3]
+      errors = Projects.add_versions(project, version_ids)
 
       Enum.each(errors, fn e ->
         assert {:error, %Ecto.Changeset{}} = e
       end)
     end
 
-    test "add_exemplars/2 with valid data returns a list of ProjectExemplars" do
+    test "add_versions/2 with valid data returns a list of ProjectVersions" do
       project = project_fixture()
-      exemplar = exemplar_fixture()
+      version = version_fixture()
 
-      Enum.each(Projects.add_exemplars(project, [exemplar.id]), fn pe ->
-        assert {:ok, %ProjectExemplar{}} = pe
+      Enum.each(Projects.add_versions(project, [version.id]), fn pv ->
+        assert {:ok, %ProjectVersion{}} = pv
       end)
     end
 
-    test "add_text_groups/2 with valid data returns a list of ProjectExemplars" do
+    test "add_text_groups/2 with valid data returns a list of ProjectVersions" do
       project = project_fixture()
-      exemplars = [exemplar_fixture(), exemplar_fixture()]
-      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+      versions = [version_fixture(), version_fixture()]
+      version_ids = versions |> Enum.map(fn v -> v.id end)
 
       work_ids =
         from(v in Version, where: v.id in ^version_ids, select: [:work_id])
@@ -119,33 +119,23 @@ defmodule TextServer.ProjectsTest do
         |> Repo.all()
         |> Enum.map(fn w -> w.text_group_id end)
 
-      Enum.each(Projects.add_text_groups(project, text_group_ids), fn pe ->
-        assert {:ok, %ProjectExemplar{}} = pe
+      Enum.each(Projects.add_text_groups(project, text_group_ids), fn pv ->
+        assert {:ok, %ProjectVersion{}} = pv
       end)
     end
 
-    test "add_versions/2 with valid data returns a list of ProjectExemplars" do
+    test "add_works/2 with valid data returns a list of ProjectVersions" do
       project = project_fixture()
-      exemplars = [exemplar_fixture(), exemplar_fixture()]
-      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
-
-      Enum.each(Projects.add_versions(project, version_ids), fn pe ->
-        assert {:ok, %ProjectExemplar{}} = pe
-      end)
-    end
-
-    test "add_works/2 with valid data returns a list of ProjectExemplars" do
-      project = project_fixture()
-      exemplars = [exemplar_fixture(), exemplar_fixture()]
-      version_ids = exemplars |> Enum.map(fn e -> e.version_id end)
+      versions = [version_fixture(), version_fixture()]
+      version_ids = versions |> Enum.map(fn e -> e.id end)
 
       work_ids =
         from(v in Version, where: v.id in ^version_ids, select: [:work_id])
         |> Repo.all()
         |> Enum.map(fn v -> v.work_id end)
 
-      Enum.each(Projects.add_works(project, work_ids), fn pe ->
-        assert {:ok, %ProjectExemplar{}} = pe
+      Enum.each(Projects.add_works(project, work_ids), fn pv ->
+        assert {:ok, %ProjectVersion{}} = pv
       end)
     end
 
@@ -182,61 +172,61 @@ defmodule TextServer.ProjectsTest do
     end
   end
 
-  describe "Project.exemplars" do
-    alias TextServer.Projects.Exemplar, as: ProjectExemplar
+  describe "Project.versions" do
+    alias TextServer.Projects.Version, as: ProjectVersion
 
     import TextServer.ProjectsFixtures
 
-    @invalid_attrs %{exemplar_id: "not a number", project_id: "not a number"}
+    @invalid_attrs %{version_id: "not a number", project_id: "not a number"}
 
-    test "list_exemplars/0 returns all exemplars" do
-      project_exemplar = project_exemplar_fixture()
-      assert Projects.list_exemplars() == [project_exemplar]
+    test "list_versions/0 returns all versions" do
+      project_version = project_version_fixture()
+      assert Projects.list_versions() == [project_version]
     end
 
-    test "get_exemplar!/1 returns the exemplar with given id" do
-      project_exemplar = project_exemplar_fixture()
-      assert Projects.get_exemplar!(project_exemplar.id) == project_exemplar
+    test "get_version!/1 returns the version with given id" do
+      project_version = project_version_fixture()
+      assert Projects.get_version!(project_version.id) == project_version
     end
 
-    test "create_exemplar/1 with valid data creates a exemplar" do
-      exemplar = TextServer.ExemplarsFixtures.exemplar_fixture()
+    test "create_version/1 with valid data creates a version" do
+      version = TextServer.VersionsFixtures.version_fixture()
       project = project_fixture()
-      valid_attrs = %{exemplar_id: exemplar.id, project_id: project.id}
+      valid_attrs = %{version_id: version.id, project_id: project.id}
 
-      assert {:ok, %ProjectExemplar{} = _project_exemplar} = Projects.create_exemplar(valid_attrs)
+      assert {:ok, %ProjectVersion{} = _project_version} = Projects.create_version(valid_attrs)
     end
 
-    test "create_exemplar/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Projects.create_exemplar(@invalid_attrs)
+    test "create_version/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Projects.create_version(@invalid_attrs)
     end
 
-    test "update_exemplar/2 with valid data updates the exemplar" do
-      project_exemplar = project_exemplar_fixture()
+    test "update_version/2 with valid data updates the version" do
+      project_version = project_version_fixture()
       update_attrs = %{project_id: project_fixture().id}
 
-      assert {:ok, %ProjectExemplar{} = _project_exemplar} =
-               Projects.update_exemplar(project_exemplar, update_attrs)
+      assert {:ok, %ProjectVersion{} = _project_version} =
+               Projects.update_version(project_version, update_attrs)
     end
 
-    test "update_exemplar/2 with invalid data returns error changeset" do
-      project_exemplar = project_exemplar_fixture()
+    test "update_version/2 with invalid data returns error changeset" do
+      project_version = project_version_fixture()
 
       assert {:error, %Ecto.Changeset{}} =
-               Projects.update_exemplar(project_exemplar, @invalid_attrs)
+               Projects.update_version(project_version, @invalid_attrs)
 
-      assert project_exemplar == Projects.get_exemplar!(project_exemplar.id)
+      assert project_version == Projects.get_version!(project_version.id)
     end
 
-    test "delete_exemplar/1 deletes the exemplar" do
-      project_exemplar = project_exemplar_fixture()
-      assert {:ok, %ProjectExemplar{}} = Projects.delete_exemplar(project_exemplar)
-      assert_raise Ecto.NoResultsError, fn -> Projects.get_exemplar!(project_exemplar.id) end
+    test "delete_version/1 deletes the version" do
+      project_version = project_version_fixture()
+      assert {:ok, %ProjectVersion{}} = Projects.delete_version(project_version)
+      assert_raise Ecto.NoResultsError, fn -> Projects.get_version!(project_version.id) end
     end
 
-    test "change_exemplar/1 returns a exemplar changeset" do
-      project_exemplar = project_exemplar_fixture()
-      assert %Ecto.Changeset{} = Projects.change_exemplar(project_exemplar)
+    test "change_version/1 returns a version changeset" do
+      project_version = project_version_fixture()
+      assert %Ecto.Changeset{} = Projects.change_version(project_version)
     end
   end
 end

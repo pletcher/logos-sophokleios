@@ -1,7 +1,7 @@
 defmodule TextServerWeb.Icons do
   use TextServerWeb, :component
 
-  def exemplar_icon(assigns) do
+  def version_icon(assigns) do
     ~H"""
     <!-- Heroicon name:  outline/document (https://heroicons.com/) -->
     <svg

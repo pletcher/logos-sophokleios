@@ -1,17 +1,17 @@
-defmodule TextServerWeb.ProjectLive.EditExemplars do
+defmodule TextServerWeb.ProjectLive.EditVersions do
   use TextServerWeb, :live_view
 
   alias TextServer.Repo
-  alias TextServer.Exemplars
+  alias TextServer.Versions
   alias TextServer.Projects
 
   @impl true
   def mount(%{"id" => id} = _params, _session, socket) do
-    project = Projects.get_project!(id) |> Repo.preload(:project_exemplars)
-    selected_exemplars = project.project_exemplars
+    project = Projects.get_project!(id) |> Repo.preload(:project_versions)
+    selected_versions = project.project_versions
     # NOTE: (charles) We're assuming that most projects won't have
-    # too many exemplars.
-    selected_exemplar_ids = Enum.map(selected_exemplars, fn ex -> ex.id end)
+    # too many versions.
+    selected_version_ids = Enum.map(selected_versions, fn ex -> ex.id end)
 
     %{
       entries: entries,
@@ -19,17 +19,17 @@ defmodule TextServerWeb.ProjectLive.EditExemplars do
       page_size: page_size,
       total_entries: total_entries,
       total_pages: total_pages
-    } = Exemplars.list_exemplars_except(selected_exemplar_ids)
+    } = Versions.list_versions_except(selected_version_ids)
 
     assigns = [
       conn: socket,
       page_number: page_number,
       page_size: page_size,
       project: project,
-      selected_exemplars: selected_exemplars,
+      selected_versions: selected_versions,
       total_entries: total_entries,
       total_pages: total_pages,
-      unselected_exemplars: entries
+      unselected_versions: entries
     ]
 
     {:ok, assign(socket, assigns)}
@@ -41,15 +41,15 @@ defmodule TextServerWeb.ProjectLive.EditExemplars do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    project = Projects.get_project!(id) |> Repo.preload(:project_exemplars)
-    selected_exemplars = project.project_exemplars
-    unselected_exemplars = Exemplars.list_exemplars_except(selected_exemplars)
+    project = Projects.get_project!(id) |> Repo.preload(:project_versions)
+    selected_versions = project.project_versions
+    unselected_versions = Versions.list_versions_except(selected_versions |> Enum.map(& &1.id))
 
     socket
-    |> assign(:page_title, "Add or remove exemplars")
+    |> assign(:page_title, "Add or remove versions")
     |> assign(:project, project)
-    |> assign(:selected_exemplars, selected_exemplars)
-    |> assign(:unselected_exemplars, unselected_exemplars)
+    |> assign(:selected_versions, selected_versions)
+    |> assign(:unselected_versions, unselected_versions)
   end
 
   @impl true

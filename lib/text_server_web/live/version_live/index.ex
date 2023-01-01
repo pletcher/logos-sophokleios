@@ -1,6 +1,7 @@
 defmodule TextServerWeb.VersionLive.Index do
   use TextServerWeb, :live_view
 
+  alias TextServer.Repo
   alias TextServer.Versions
   alias TextServer.Versions.Version
   alias TextServerWeb.Components
@@ -18,7 +19,7 @@ defmodule TextServerWeb.VersionLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Version")
-    |> assign(:version, Versions.get_version!(id))
+    |> assign(:version, Versions.get_version!(id) |> Repo.preload(:language))
   end
 
   defp apply_action(socket, :new, _params) do

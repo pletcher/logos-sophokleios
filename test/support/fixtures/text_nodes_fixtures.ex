@@ -7,11 +7,11 @@ defmodule TextServer.TextNodesFixtures do
   @doc """
   Generate a text_node.
   """
-  def exemplar_text_node_fixture(exemplar_id, attrs \\ %{}) do
+  def version_text_node_fixture(version_id, attrs \\ %{}) do
     {:ok, text_node} =
       attrs
       |> Enum.into(%{
-        exemplar_id: exemplar_id,
+        version_id: version_id,
         location: [1, 1, 1],
         text: "some text"
       })
@@ -24,12 +24,12 @@ defmodule TextServer.TextNodesFixtures do
   Generate a text_node.
   """
   def text_node_fixture(attrs \\ %{}) do
-    exemplar_id = Map.get(attrs, :exemplar_id, exemplar_fixture().id)
+    version_id = Map.get(attrs, :version_id, version_fixture().id)
 
     {:ok, text_node} =
       attrs
       |> Enum.into(%{
-        exemplar_id: exemplar_id,
+        version_id: version_id,
         location: [1, 1, 1],
         text: "some text"
       })
@@ -38,7 +38,7 @@ defmodule TextServer.TextNodesFixtures do
     text_node
   end
 
-  defp exemplar_fixture do
-    TextServer.ExemplarsFixtures.text_node_exemplar_fixture()
+  defp version_fixture do
+    TextServer.VersionsFixtures.text_node_version_fixture()
   end
 end

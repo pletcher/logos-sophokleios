@@ -1,19 +1,21 @@
-defmodule TextServer.Versions do
+defmodule TextServer.Exemplars do
   @moduledoc """
-  The Versions context.
+  The Exemplars context.
   """
 
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
+  alias TextServer.Versions
+
   alias TextServer.ElementTypes
-  alias TextServer.Projects.Version, as: ProjectVersion
+  alias TextServer.ExemplarJobRunner
+  alias TextServer.Exemplars.Page
+  alias TextServer.Exemplars.Exemplar
+  alias TextServer.Projects.Exemplar, as: ProjectExemplar
   alias TextServer.TextElements
   alias TextServer.TextNodes
   alias TextServer.TextNodes.TextNode
-  alias TextServer.VersionJobRunner
-  alias TextServer.Versions.Passage
-  alias TextServer.Versions.Version
   alias TextServer.Works
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
@@ -24,226 +26,122 @@ defmodule TextServer.Versions do
   # directly from a comment's XML.
   @attribution_regex ~r/\[\[GN\s(\d{4}\.\d{2}\.\d{2})\]\]/
 
-  defmodule VersionPassage do
-    defstruct [:version_id, :passage, :passage_number, :text_nodes, :total_passages]
+  defmodule ExemplarPage do
+    defstruct [:exemplar_id, :page, :page_number, :text_nodes, :total_pages]
   end
 
-  @spec list_versions(keyword | map) :: Scrivener.Page.t()
   @doc """
-  Returns the list of versions.
+  Returns the list of exemplars.
 
   ## Examples
 
-      iex> list_versions()
-      [%Version{}, ...]
+      iex> list_exemplars()
+      [%Exemplar{}, ...]
 
   """
-  def list_versions(params \\ [page: 1, page_size: 20]) do
-    Version
-    |> Repo.paginate(params)
+  def list_exemplars do
+    Repo.all(Exemplar)
   end
 
-  @spec list_versions_except(list(integer()), keyword | map) :: Scrivener.Page.t()
-  def list_versions_except(version_ids, pagination_params \\ []) do
-    Version
-    |> where([e], e.id not in ^version_ids)
+  @doc """
+  Returns a list of exemplars that have not been added as
+  ProjectExemplars in the given list of `exemplar_ids`.
+
+  ## Examples
+
+  		iex> list_exemplars_except([%ProjectExemplar{}, ...])
+  		[%Exemplar{}, ...]
+  """
+  def list_exemplars_except(exemplar_ids, pagination_params \\ []) do
+    Exemplar
+    |> where([e], e.id not in ^exemplar_ids)
     |> Repo.paginate(pagination_params)
   end
 
-  def list_sibling_versions(version) do
-    Version
-    |> where([v], v.work_id == ^version.work_id)
-    |> Repo.all()
-  end
-
-  @doc """
-  Gets a single version.
-
-  Raises `Ecto.NoResultsError` if the Version does not exist.
-
-  ## Examples
-
-      iex> get_version!(123)
-      %Version{}
-
-      iex> get_version!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_version!(id), do: Repo.get!(Version, id)
-
-  def get_version_by_urn!(urn), do: Repo.get_by!(Version, urn: urn)
-
-  @doc """
-  Creates a version.
-
-  ## Examples
-
-      iex> create_version(%{field: value})
-      {:ok, %Version{}}
-
-      iex> create_version(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_version(attrs \\ %{}) do
-    %Version{}
-    |> Version.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  def find_or_create_version(attrs \\ %{}) do
-    urn = Map.get(attrs, :urn, Map.get(attrs, "urn"))
-    query = from(v in Version, where: v.urn == ^urn)
-
-    case Repo.one(query) do
-      nil ->
-        create_version(attrs)
-
-      version ->
-        {:ok, version}
-    end
-  end
-
-  def create_version(attrs, project) do
-    urn = make_version_urn(attrs, project)
-
-    {:ok, version} =
-      Repo.transaction(fn ->
-        {:ok, version} =
-          %Version{}
-          |> Version.changeset(attrs |> Map.put("urn", urn))
-          |> Repo.insert()
-
-        {:ok, _project_version} =
-          %ProjectVersion{}
-          |> ProjectVersion.changeset(%{version_id: version.id, project_id: project.id})
-          |> Repo.insert()
-
-        version
-      end)
-
-    %{id: version.id}
-    |> VersionJobRunner.new()
-    |> Oban.insert()
-  end
-
-  defp make_version_urn(%{"title" => title, "work_id" => work_id} = _version_params, project) do
-    work = Works.get_work!(work_id)
-    "#{work.urn}.#{String.downcase(project.domain)}-#{Recase.to_kebab(title)}-en"
-  end
-
-  @doc """
-  Updates a version.
-
-  ## Examples
-
-      iex> update_version(version, %{field: new_value})
-      {:ok, %Version{}}
-
-      iex> update_version(version, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_version(%Version{} = version, attrs) do
-    version
-    |> Version.changeset(attrs)
-    |> Repo.update()
-  end
-
-  def create_passage(attrs) do
-    {:ok, passage} =
-      %Passage{}
-      |> Passage.changeset(attrs)
-      |> Repo.insert()
-
-    {:ok, passage}
-  end
-
-  def get_version_passage(version_id, passage_number \\ 1) do
-    total_passages = get_total_passages(version_id)
+  def get_exemplar_page(exemplar_id, page_number \\ 1) do
+    total_pages = get_total_pages(exemplar_id)
 
     n =
-      if passage_number > total_passages do
-        total_passages
+      if page_number > total_pages do
+        total_pages
       else
-        passage_number
+        page_number
       end
 
-    passage =
-      Passage
-      |> where([p], p.version_id == ^version_id and p.passage_number == ^n)
+    page =
+      Page
+      |> where([p], p.exemplar_id == ^exemplar_id and p.page_number == ^n)
       |> Repo.one()
 
-    if is_nil(passage) do
-      version = get_version!(version_id)
-      paginate_version(version.id)
-      get_version_passage(version_id, passage_number)
+    if is_nil(page) do
+      ex = get_exemplar!(exemplar_id)
+      paginate_exemplar(ex)
+      get_exemplar_page(exemplar_id, page_number)
     else
       text_nodes =
-        TextNodes.get_text_nodes_by_version_between_locations(
-          version_id,
-          passage.start_location,
-          passage.end_location
+        TextNodes.get_text_nodes_by_exemplar_between_locations(
+          exemplar_id,
+          page.start_location,
+          page.end_location
         )
 
-      %VersionPassage{
-        version_id: version_id,
-        passage: passage,
-        passage_number: passage.passage_number,
+      %ExemplarPage{
+        exemplar_id: exemplar_id,
+        page: page,
+        page_number: page.page_number,
         text_nodes: text_nodes,
-        total_passages: total_passages
+        total_pages: total_pages
       }
     end
   end
 
-  def get_version_passage_by_location(version_id, location) when is_list(location) do
-    passage =
-      Passage
+  def get_exemplar_page_by_location(exemplar_id, location) when is_list(location) do
+    page =
+      Page
       |> where(
         [p],
-        p.version_id == ^version_id and
+        p.exemplar_id == ^exemplar_id and
           p.start_location <= ^location and
           p.end_location >= ^location
       )
       |> Repo.one()
 
     text_nodes =
-      TextNodes.get_text_nodes_by_version_between_locations(
-        version_id,
-        passage.start_location,
-        passage.end_location
+      TextNodes.get_text_nodes_by_exemplar_between_locations(
+        exemplar_id,
+        page.start_location,
+        page.end_location
       )
 
-    %VersionPassage{
-      version_id: version_id,
-      passage: passage,
-      passage_number: passage.passage_number,
+    %ExemplarPage{
+      exemplar_id: exemplar_id,
+      page: page,
+      page_number: page.page_number,
       text_nodes: text_nodes,
-      total_passages: get_total_passages(version_id)
+      total_pages: get_total_pages(exemplar_id)
     }
   end
 
   @doc """
-  Returns the total number of passages for a given version.
+  Returns the total number of pages for a given exemplar.
 
   ## Examples
-    iex> get_total_passages(1)
+    iex> get_total_pages(1)
     20
   """
 
-  def get_total_passages(version_id) do
-    total_passages_query =
+  def get_total_pages(exemplar_id) do
+    total_pages_query =
       from(
-        p in Passage,
-        where: p.version_id == ^version_id,
-        select: max(p.passage_number)
+        p in Page,
+        where: p.exemplar_id == ^exemplar_id,
+        select: max(p.page_number)
       )
 
-    Repo.one(total_passages_query)
+    Repo.one(total_pages_query)
   end
 
-    @doc """
+  @doc """
   Returns a table of contents represented by a(n unordered) map of maps.
 
   ## Examples
@@ -251,8 +149,8 @@ defmodule TextServer.Versions do
     %{7 => %{1 => [1, 2, 3], 4 => [1, 2], 2 => [1, 2, 3], ...}, ...}
   """
 
-  def get_table_of_contents(version_id) do
-    locations = TextNodes.list_locations_by_version_id(version_id)
+  def get_table_of_contents(exemplar_id) do
+    locations = TextNodes.list_locations_by_exemplar_id(exemplar_id)
 
     locations |> Enum.reduce(%{}, &nest_location/2)
   end
@@ -280,16 +178,16 @@ defmodule TextServer.Versions do
     acc
   end
 
-    @doc """
-  Groups an Version's TextNodes into Pages by location.
-  Returns {:ok, total_passages} on success.
+  @doc """
+  Groups an Exemplar's TextNodes into Pages by location.
+  Returns {:ok, total_pages} on success.
   """
 
-  def paginate_version(version_id) do
+  def paginate_exemplar(exemplar) do
     q =
       from(
         t in TextNode,
-        where: t.version_id == ^version_id,
+        where: t.exemplar_id == ^exemplar.id,
         order_by: [asc: t.location]
       )
 
@@ -319,10 +217,10 @@ defmodule TextServer.Versions do
       first_node = List.first(text_nodes)
       last_node = List.last(text_nodes)
 
-      create_passage(%{
+      create_page(%{
         end_location: last_node.location,
-        version_id: version_id,
-        passage_number: i + 1,
+        exemplar_id: exemplar.id,
+        page_number: i + 1,
         start_location: first_node.location
       })
     end)
@@ -331,54 +229,165 @@ defmodule TextServer.Versions do
   end
 
   @doc """
-  Deletes a version.
+  Gets a single exemplar.
+
+  Raises `Ecto.NoResultsError` if the Exemplar does not exist.
 
   ## Examples
 
-      iex> delete_version(version)
-      {:ok, %Version{}}
+      iex> get_exemplar!(123)
+      %Exemplar{}
 
-      iex> delete_version(version)
+      iex> get_exemplar!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_exemplar!(id), do: Repo.get!(Exemplar, id)
+
+  @doc """
+  Creates an exemplar.
+
+  ## Examples
+
+      iex> create_exemplar(%{field: value})
+      {:ok, %Exemplar{}}
+
+      iex> create_exemplar(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_version(%Version{} = version) do
-    Repo.delete(version)
+  def create_exemplar(attrs) do
+    %Exemplar{}
+    |> Exemplar.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def create_exemplar(attrs, project) do
+    urn = make_exemplar_urn(attrs, project)
+
+    {:ok, exemplar} =
+      Repo.transaction(fn ->
+        {:ok, version} =
+          Versions.find_or_create_version(
+            attrs
+            |> Map.take(["description", "work_id"])
+            |> Enum.into(%{
+              "label" => Map.get(attrs, "title"),
+              # FIXME: (charles) Eventually we'll want to be more
+              # flexible on the version_type
+              "urn" => urn,
+              "version_type" => :commentary
+            })
+          )
+
+        {:ok, exemplar} =
+          %Exemplar{}
+          |> Exemplar.changeset(attrs |> Map.put("version_id", version.id) |> Map.put("urn", urn))
+          |> Repo.insert()
+
+        {:ok, _project_exemplar} =
+          %ProjectExemplar{}
+          |> ProjectExemplar.changeset(%{exemplar_id: exemplar.id, project_id: project.id})
+          |> Repo.insert()
+
+        exemplar
+      end)
+
+    %{id: exemplar.id}
+    |> ExemplarJobRunner.new()
+    |> Oban.insert()
+  end
+
+  defp make_exemplar_urn(%{"title" => title, "work_id" => work_id} = _exemplar_params, project) do
+    work = Works.get_work!(work_id)
+    "#{work.urn}:#{String.downcase(project.domain)}.#{Recase.to_kebab(title)}-en"
+  end
+
+  def find_or_create_exemplar(attrs) do
+    query = from(e in Exemplar, where: e.urn == ^attrs[:urn])
+
+    case Repo.one(query) do
+      nil -> create_exemplar(attrs)
+      exemplar -> {:ok, exemplar}
+    end
+  end
+
+  def create_page(attrs) do
+    {:ok, page} =
+      %Page{}
+      |> Page.changeset(attrs)
+      |> Repo.insert()
+
+    {:ok, page}
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking version changes.
+  Updates an exemplar.
 
   ## Examples
 
-      iex> change_version(version)
-      %Ecto.Changeset{data: %Version{}}
+      iex> update_exemplar(exemplar, %{field: new_value})
+      {:ok, %Exemplar{}}
+
+      iex> update_exemplar(exemplar, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
 
   """
-  def change_version(%Version{} = version, attrs \\ %{}) do
-    Version.changeset(version, attrs)
+  def update_exemplar(%Exemplar{} = exemplar, attrs) do
+    exemplar
+    |> Exemplar.changeset(attrs)
+    |> Repo.update()
   end
 
-  def clear_text_nodes(%Version{} = version) do
-    TextNodes.delete_text_nodes_by_version_id(version.id)
+  @doc """
+  Deletes an exemplar.
+
+  ## Examples
+
+      iex> delete_exemplar(exemplar)
+      {:ok, %Exemplar{}}
+
+      iex> delete_exemplar(exemplar)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_exemplar(%Exemplar{} = exemplar) do
+    Repo.delete(exemplar)
   end
 
-  def parse_version(%Version{} = version) do
-    clear_text_nodes(version)
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking exemplar changes.
+
+  ## Examples
+
+      iex> change_exemplar(exemplar)
+      %Ecto.Changeset{data: %Exemplar{}}
+
+  """
+  def change_exemplar(%Exemplar{} = exemplar, attrs \\ %{}) do
+    Exemplar.changeset(exemplar, attrs)
+  end
+
+  def clear_text_nodes(%Exemplar{} = exemplar) do
+    TextNodes.delete_text_nodes_by_exemplar_id(exemplar.id)
+  end
+
+  def parse_exemplar(%Exemplar{} = exemplar) do
+    clear_text_nodes(exemplar)
 
     _result =
-      if String.ends_with?(version.filename, ".docx") do
-        parse_version_docx(version)
+      if String.ends_with?(exemplar.filename, ".docx") do
+        parse_exemplar_docx(exemplar)
       else
-        parse_version_xml(version)
+        parse_exemplar_xml(exemplar)
       end
 
-    update_version(version, %{parsed_at: NaiveDateTime.utc_now()})
+    update_exemplar(exemplar, %{parsed_at: NaiveDateTime.utc_now()})
   end
 
-  def parse_version_docx(%Version{} = version) do
+  def parse_exemplar_docx(%Exemplar{} = exemplar) do
     # `track_changes: "all"` catches comments; see example below
-    {:ok, ast} = Panpipe.ast(input: version.filename, track_changes: "all")
+    {:ok, ast} = Panpipe.ast(input: exemplar.filename, track_changes: "all")
     fragments = Map.get(ast, :children, []) |> Enum.map(&collect_fragments/1)
     serialized_fragments = fragments |> Enum.map(&serialize_for_database/1)
 
@@ -388,7 +397,7 @@ defmodule TextServer.Versions do
       |> Enum.map(fn {location, text, elements} ->
         {:ok, text_node} =
           TextNodes.find_or_create_text_node(%{
-            version_id: version.id,
+            exemplar_id: exemplar.id,
             location: location,
             text: text
           })
@@ -668,7 +677,7 @@ defmodule TextServer.Versions do
     {name, collect_fragments(fragment)}
   end
 
-  defp parse_version_xml(%Version{} = version) do
-    {:ok, version}
+  defp parse_exemplar_xml(%Exemplar{} = exemplar) do
+    {:ok, exemplar}
   end
 end

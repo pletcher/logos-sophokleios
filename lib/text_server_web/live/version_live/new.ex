@@ -1,7 +1,7 @@
-defmodule TextServerWeb.ExemplarLive.New do
+defmodule TextServerWeb.VersionLive.New do
   use TextServerWeb, :live_view
 
-  alias TextServer.Exemplars.Exemplar
+  alias TextServer.Versions.Version
   alias TextServer.Projects
   alias TextServer.Repo
 
@@ -10,8 +10,8 @@ defmodule TextServerWeb.ExemplarLive.New do
     {:ok,
      socket
      |> assign(
-       exemplar: %Exemplar{} |> Repo.preload(:language),
-       page_title: "Create exemplar",
+       exemplar: %Version{} |> Repo.preload(:language),
+       page_title: "Create version",
        project: get_project!(params["id"]),
        selected_work: nil,
        works: []

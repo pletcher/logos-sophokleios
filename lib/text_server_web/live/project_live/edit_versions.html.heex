@@ -1,10 +1,10 @@
 <article class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-  <%= for exemplar <- @selected_exemplars do %>
-    <p></p>
+  <%= for version <- @selected_versions do %>
+    <p><%= version.label %></p>
   <% end %>
 
-  <%= for exemplar <- @unselected_exemplars do %>
-    <p></p>
+  <%= for version <- @unselected_versions do %>
+    <p><%= version.label %></p>
   <% end %>
 
   <section class="max-w-lg w-full space-y-8">
@@ -12,16 +12,16 @@
       let={f}
       for={@changeset}
       class="mt-8 space-y-6"
-      id="exemplar-search-form"
+      id="version-search-form"
       phx-target={@myself}
       phx-change="search"
       phx-submit="search"
     >
       <div>
-        <%= label(f, :search_exemplars, "Search for exemplars") %>
-        <%= text_input(f, :search_exemplars, phx_debounce: 1000) %>
+        <%= label(f, :search_versions, "Search for versions") %>
+        <%= text_input(f, :search_versions, phx_debounce: 1000) %>
       </div>
     </.form>
   </section>
-  <!-- Just build a happy path for uploading a docx exemplar -->
+  <!-- Just build a happy path for uploading a docx version -->
 </article>

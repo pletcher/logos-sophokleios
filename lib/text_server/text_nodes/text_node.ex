@@ -11,6 +11,7 @@ defmodule TextServer.TextNodes.TextNode do
     field :text, :string
     field :_search, TextServer.Ecto.Types.TsVector
 
+    belongs_to :exemplar, TextServer.Exemplars.Exemplar # remove after migration
     belongs_to :version, TextServer.Versions.Version
 
     has_many :text_elements, TextServer.TextElements.TextElement, foreign_key: :start_text_node_id

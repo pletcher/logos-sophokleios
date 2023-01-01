@@ -18,11 +18,8 @@ texts, e.g., "Homer's _Odyssey_" or "Lucan's _Bellum Civile_".
 A `work` can be further specified by a `version` URN component that points to
 either an `edition` (in the traditional sense of the word) or a `translation`.
 
-Each `version` can also have a specific imprint, known as an `exemplar`.
-
 So in rough database speak:
 
-- An `exemplar` belongs to a `version`
 - A `version` has a type indication of one of `commentary`, `edition`, or `translation`
 - A `version` belongs to a `work`
 - A `work` belongs to a `text_group`
@@ -34,12 +31,11 @@ In reverse:
 - A `text_group` has many `work`s
 - A `work` has many `version`s,
   each of which is typed as `commentary`, `edition`, or `translation`
-- A `version` has **one** `exemplar`
 
-Note that exemplars are kind of a weird thing in the CTS specification.
-The spec essentially admits [CITATION] that they're all but superfluous,
-and their URNs are for all practical purposes identical to their versions.
-We use exemplars to store information about the "raw" file itself, as opposed to its canonical representation.
+Note that the [CTS specification](http://cite-architecture.github.io/cts_spec/) allows for
+an additional level of granularity known as `exemplar`s. In our experience, creating
+exemplars mainly introduced unnecessary redundancy with versions, so we have
+opted not to include them in our API. See also http://capitains.org/pages/vocabulary.
 
 ## Running in development
 

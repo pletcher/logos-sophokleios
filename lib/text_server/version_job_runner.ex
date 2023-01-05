@@ -9,9 +9,6 @@ defmodule TextServer.VersionJobRunner do
   def perform(%Oban.Job{args: %{"id" => id} = _args}) do
     version = Versions.get_version!(id)
 
-    IO.puts("ABOUT TO PARSE AN VERSION FROM THE QUEUE")
-    IO.inspect(version)
-
     parse(version)
   end
 

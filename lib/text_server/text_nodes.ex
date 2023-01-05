@@ -91,7 +91,7 @@ defmodule TextServer.TextNodes do
   """
 
   def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) do
-    text_elements_query = from te in TextElement, order_by: te.start_offset
+    text_elements_query = from(te in TextElement, order_by: te.start_offset)
 
     query =
       from(

@@ -63,7 +63,9 @@ defmodule TextServer.MixProject do
       {:rambo, "~> 0.3.4"},
       {:earmark, "~> 1.4.34"},
       {:html_sanitize_ex, "~> 1.4"},
-      {:gen_smtp, "~> 1.2.0"}
+      {:gen_smtp, "~> 1.2.0"},
+      {:data_schema, "~> 0.5.0"},
+      {:sweet_xml, "~> 0.7.1"}
     ]
   end
 

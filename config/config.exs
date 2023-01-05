@@ -27,7 +27,7 @@ config :text_server, TextServerWeb.Endpoint,
 config :text_server, TextServer.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configures Oban for running background jobs (like
-# parsing uploaded/changed exemplars)
+# parsing uploaded/changed versions)
 config :text_server, Oban,
   repo: TextServer.Repo,
   plugins: [Oban.Plugins.Pruner],

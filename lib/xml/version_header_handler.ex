@@ -36,8 +36,8 @@ defmodule Xml.VersionHeaderHandler do
         {:ok, {tags, nodes}}
 
       true ->
-        [tag | tags] = tags
-        [node | nodes] = nodes
+        [tag | _tags] = tags
+        [node | xs_nodes] = nodes
 
         el =
           node
@@ -45,7 +45,7 @@ defmodule Xml.VersionHeaderHandler do
           |> Map.put(:content, chars)
           |> Map.put(:tag_stack, tags)
 
-        {:ok, {tags, [el | nodes]}}
+        {:ok, {tags, [el | xs_nodes]}}
     end
   end
 

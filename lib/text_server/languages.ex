@@ -61,8 +61,19 @@ defmodule TextServer.Languages do
     |> Repo.insert()
   end
 
-  def find_or_create_language(attrs \\ %{}) do
-    query = from(l in Language, where: l.title == ^attrs[:title])
+  def find_or_create_language(%{slug: slug, title: _title}) do
+    case get_by_slug(slug) do
+      nil ->
+        title = get_title_by_slug(slug)
+        create_language(%{slug: slug, title: title})
+      language ->
+        language
+    end
+  end
+
+  def find_or_create_language(attrs) do
+    # this is a weird query, but it's checking for erroneous XML
+    query = from(l in Language, where: l.title == ^attrs[:title] or l.slug == ^attrs[:title])
 
     case Repo.one(query) do
       nil ->
@@ -74,15 +85,38 @@ defmodule TextServer.Languages do
     end
   end
 
-  def get_by_slug(slug) do
+  def get_by_slug(slug) when is_binary(slug) do
     cleaned_slug =
-      case slug do
-        "eng" -> "english"
-        "la" -> "latin"
+      case String.downcase(slug) do
+        "eng" -> "en"
+        "greek" -> "grc"
         _ -> slug
       end
 
     Repo.get_by(Language, slug: cleaned_slug)
+  end
+
+  def get_by_slug(nil) do
+    Repo.get_by(Language, slug: "en")
+  end
+
+  def get_title_by_slug(slug) do
+    case String.downcase(slug) do
+      "arc" -> "Aramaic"
+      "cop" -> "Coptic"
+      "en" -> "English"
+      "enm" -> "Middle English"
+      "fr" -> "French"
+      "frm" -> "Middle French"
+      "fro" -> "Old French"
+      "grc" -> "Greek"
+      "gre" -> "Modern Greek"
+      "he" -> "Hebrew"
+      "heb" -> "Hebrew"
+      "it" -> "Italian"
+      "lat" -> "Latin"
+      _ -> Recase.to_sentence(slug)
+    end
   end
 
   @doc """

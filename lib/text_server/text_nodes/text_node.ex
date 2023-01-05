@@ -55,24 +55,24 @@ defmodule TextServer.TextNodes.TextNode do
       commented_graphemes
       |> Enum.reduce([], fn tagged_grapheme, acc ->
         {_i, g, tags} = tagged_grapheme
-        last = List.last(acc)
+        first = List.first(acc)
 
-        if last == nil do
+        if first == nil do
           [{[g], tags}]
         else
-          {g_list, last_tags} = last
+          {g_list, first_tags} = first
 
-          if last_tags == tags do
-            List.replace_at(acc, -1, {g_list ++ [g], tags})
+          if first_tags == tags do
+            List.replace_at(acc, 0, {g_list ++ [g], tags})
           else
             # This might be a good place to start if we need
             # to improve speed at some point --- concatenation
             # traverses the entire list each time. Not a big deal
             # at the moment (2022-09-30), though.
-            acc ++ [{[g], tags}]
+            [{[g], tags} | acc]
           end
         end
-      end)
+      end) |> Enum.reverse()
 
     %{graphemes_with_tags: grouped_graphemes, location: text_node.location}
   end

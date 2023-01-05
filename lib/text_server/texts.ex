@@ -78,7 +78,7 @@ defmodule TextServer.Texts do
 
     dest = Path.join(dir, repo_dir_name) |> Path.expand("./")
 
-    System.cmd("git",  ["-C", dest, "pull"])
+    System.cmd("git", ["-C", dest, "pull"])
   end
 
   def pull_repos() do
@@ -100,7 +100,9 @@ defmodule TextServer.Texts do
     end)
   end
 
-  def parse_version_xml(f) do
+  def parse_version_xml(
+        f \\ "tmp/canonical-greekLit/data/tlg0525/tlg001/tlg0525.tlg001.perseus-grc2.xml"
+      ) do
     IO.puts("Ingesting version XML at #{f}")
 
     file_stream = File.stream!(f)
@@ -111,67 +113,44 @@ defmodule TextServer.Texts do
         {:error, _reason} -> nil
       end
 
-    _version =
-      if is_nil(header_data) do
-        nil
-      else
-        ref_levels = TextServer.Ingestion.get_ref_levels_from_tei_header(header_data)
+    if is_nil(header_data) do
+      nil
+    else
+      ref_levels = TextServer.Ingestion.get_ref_levels_from_tei_header(header_data)
+      language = TextServer.Ingestion.find_or_create_language_from_version_header(header_data)
 
-        language_id =
-          Enum.find_value(header_data, fn d ->
-            attrs = Map.new(d[:attributes])
-            lang = Enum.find(attrs, fn a -> elem(a, 0) == "xml:lang" end)
-
-            unless is_nil(lang) do
-              language = TextServer.Languages.get_by_slug(elem(lang, 1))
-              language.id
-            else
-              IO.inspect("Could not find language for slug #{lang}. Defaulting to English.")
-              language = TextServer.Languages.get_by_slug("en")
-              language.id
-            end
-          end)
-
-        body_data =
-          case Saxy.parse_stream(file_stream, Xml.VersionBodyHandler, %{ref_levels: ref_levels}) do
-            {:ok, data} -> data
-            {:error, _reason} -> nil
-          end
-
-        %{
-          body: body_data,
-          filemd5hash:
-            :crypto.hash(:md5, Enum.to_list(file_stream)) |> Base.encode16(case: :lower),
-          filename: f,
-          header: header_data,
-          structure: Enum.join(ref_levels, "."),
-          language_id: language_id,
-          title: get_content_from_tag(header_data, :title),
-          tei_header: %{
-            file_description: %{
-              date: get_content_from_tag(header_data, :date),
-              editor: get_content_from_tag(header_data, :title),
-              principal: get_content_from_tag(header_data, :principal),
-              publisher: get_content_from_tag(header_data, :publisher),
-              publication_place: get_content_from_tag(header_data, :publication_placer),
-              responsibility:
-                Enum.filter(header_data, fn d ->
-                  d[:current_tag] == :name
-                end)
-                |> Enum.map(fn d -> d[:content] end),
-              sponsor: get_content_from_tag(header_data, :sponsor)
-            },
-            profile_description: %{},
-            revision_description: %{
-              changes:
-                Enum.filter(header_data, fn d -> d[:current_tag] == :change end)
-                |> Enum.map(fn d ->
-                  %{attributes: Map.new(d[:attributes]), description: d[:content]}
-                end)
-            }
+      %{
+        filemd5hash: :crypto.hash(:md5, Enum.to_list(file_stream)) |> Base.encode16(case: :lower),
+        filename: f,
+        header: header_data,
+        structure: ref_levels,
+        language_id: language.id,
+        title: get_content_from_tag(header_data, :title),
+        tei_header: %{
+          file_description: %{
+            date: get_content_from_tag(header_data, :date),
+            editor: get_content_from_tag(header_data, :title),
+            principal: get_content_from_tag(header_data, :principal),
+            publisher: get_content_from_tag(header_data, :publisher),
+            publication_place: get_content_from_tag(header_data, :publication_placer),
+            responsibility:
+              Enum.filter(header_data, fn d ->
+                d[:current_tag] == :name
+              end)
+              |> Enum.map(fn d -> d[:content] end),
+            sponsor: get_content_from_tag(header_data, :sponsor)
+          },
+          profile_description: %{},
+          revision_description: %{
+            changes:
+              Enum.filter(header_data, fn d -> d[:current_tag] == :change end)
+              |> Enum.map(fn d ->
+                %{attributes: Map.new(d[:attributes]), description: d[:content]}
+              end)
           }
         }
-      end
+      }
+    end
   end
 
   defp parse_text_group_cts(f, collection) do
@@ -330,9 +309,7 @@ defmodule TextServer.Texts do
       |> Stream.map(fn f -> ingest_json_collection(f, collection) end)
       |> Enum.to_list()
 
-    IO.puts(
-      "... Finished ingesting the following JSON files: ... \n #{inspect(ingested_files)}"
-    )
+    IO.puts("... Finished ingesting the following JSON files: ... \n #{inspect(ingested_files)}")
   end
 
   defp ingest_xml(dir, collection) do
@@ -357,7 +334,7 @@ defmodule TextServer.Texts do
     text_groups_data =
       Enum.map(cts_files[:text_group_files], &parse_text_group_cts(&1, collection))
 
-    works_data = Enum.map(cts_files[:work_files], &parse_work_xml/1)
+    works_data = Enum.flat_map(cts_files[:work_files], &parse_work_xml/1)
 
     _text_groups =
       text_groups_data
@@ -366,9 +343,10 @@ defmodule TextServer.Texts do
         TextServer.TextGroups.find_or_create_text_group(Map.delete(tg, :language))
       end)
 
-    works_and_versions = create_works_and_versions(works_data, collection)
+    _works =
+      Enum.filter(works_data, &Map.has_key?(&1, :text_group_urn)) |> create_works(collection)
 
-    versions = Enum.flat_map(works_and_versions, fn wvs -> Map.get(wvs, :versions, []) end)
+    versions = Enum.filter(works_data, &Map.has_key?(&1, :work_urn))
 
     _versions =
       Enum.map(versions, fn v ->
@@ -389,87 +367,56 @@ defmodule TextServer.Texts do
         |> Enum.map(fn f ->
           version_data = parse_version_xml(f)
 
-          _version =
-            if is_nil(version_data) do
-              IO.inspect("Unable to parse version file #{f}")
-              nil
-            else
-              ex_data =
-                Map.merge(
-                  Map.delete(version_data, :body),
-                  %{description: v.description, label: v.label, urn: v.urn, version_id: v.id}
-                )
+          if is_nil(version_data) do
+            IO.inspect("Unable to parse version file #{f}")
+            IO.inspect(version_data)
+          else
+            work = TextServer.Works.get_by_urn(v.work_urn)
 
-              {:ok, version} = TextServer.Versions.find_or_create_version(ex_data)
-              version
-            end
+            version_data =
+              Map.merge(
+                version_data,
+                %{
+                  description: String.trim(v.description),
+                  label: String.trim(v.label),
+                  urn: v.urn,
+                  version_type: :edition,
+                  work_id: work.id
+                }
+              )
 
-          # NOTE: (charles) This is admittedly a bit confusing. "elems" here
-          # refers to anything contained in an version's body, including
-          # TextNodes. TextNodes are differentiated from TextElements by
-          # containing a :content key.
-          # _text_elements =
-          #   unless is_nil(version) do
-          #     elems = version_data[:body][:text_elements]
+            {:ok, version} = TextServer.Versions.upsert_version(version_data)
 
-          #     if is_nil(elems) do
-          #       IO.inspect("No text elements? #{inspect(version_data[:body])}")
-          #       []
-          #     else
-          #       TextServer.Versions.process_version_text_nodes(
-          #         version,
-          #         Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
-          #       )
-
-          #       TextServer.Versions.process_version_text_elements(version, elems)
-          #     end
-          #   end
+            TextServer.VersionJobRunner.new(%{id: version.id})
+            |> Oban.insert()
+          end
 
           f
         end)
       end)
   end
 
-  defp create_works_and_versions(data, collection) do
+  defp create_works(data, collection) do
     data
-    |> Enum.map(fn ws ->
-      saved_works =
-        Enum.filter(ws, &Map.has_key?(&1, :text_group_urn))
-        |> Enum.map(fn w ->
-          text_group = TextServer.TextGroups.get_by_urn(Map.get(w, :text_group_urn))
-          work_attrs = Map.take(w, Map.keys(TextServer.Works.Work.__struct__()))
+    |> Enum.map(fn w ->
+      text_group = TextServer.TextGroups.get_by_urn(Map.get(w, :text_group_urn))
+      work_attrs = Map.take(w, Map.keys(TextServer.Works.Work.__struct__()))
 
-          if text_group != nil do
-            TextServer.Works.upsert_work(Map.put(work_attrs, :text_group_id, text_group.id))
-          else
-            {:ok, text_group} =
-              TextServer.TextGroups.find_or_create_text_group(%{
-                collection_id: collection.id,
-                title: "Orphaned Work Parent Group",
-                urn: w[:text_group_urn]
-              })
+      if text_group != nil do
+        TextServer.Works.upsert_work(Map.put(work_attrs, :text_group_id, text_group.id))
+      else
+        {:ok, text_group} =
+          TextServer.TextGroups.find_or_create_text_group(%{
+            collection_id: collection.id,
+            title: "Orphaned Work Parent Group",
+            urn: w[:text_group_urn]
+          })
 
-            {:ok, work} =
-              TextServer.Works.upsert_work(Map.put(work_attrs, :text_group_id, text_group.id))
+        {:ok, work} =
+          TextServer.Works.upsert_work(Map.put(work_attrs, :text_group_id, text_group.id))
 
-            work
-          end
-        end)
-
-      saved_versions =
-        Enum.filter(ws, &Map.has_key?(&1, :work_urn))
-        |> Enum.map(fn v ->
-          work = TextServer.Works.get_by_urn(Map.get(v, :work_urn))
-
-          version_attrs =
-            Map.take(v, Map.keys(TextServer.Versions.Version.__struct__()))
-            |> Map.put(:work_id, work.id)
-
-          {:ok, version} = TextServer.Versions.find_or_create_version(version_attrs)
-          version
-        end)
-
-      %{versions: saved_versions, works: saved_works}
+        work
+      end
     end)
   end
 

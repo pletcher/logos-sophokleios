@@ -49,8 +49,10 @@ defmodule Xml.VersionBodyHandler do
   end
 
   def handle_event(:characters, chars, state) do
+    chars = String.trim(chars)
+
     cond do
-      String.trim(chars) == "" ->
+      chars == "" ->
         {:ok, state}
 
       Enum.empty?(state[:text_elements]) ->
@@ -143,7 +145,13 @@ defmodule Xml.VersionBodyHandler do
               [int]
             else
               try do
-                state[:location] |> List.replace_at(idx, int)
+                loc = if length(state[:location]) < length(state[:ref_levels]) do
+                  [1, 1, 1]
+                else
+                  state[:location]
+                end
+
+                List.replace_at(loc, idx, int)
               rescue
                 ArgumentError -> state[:location]
               end
@@ -151,6 +159,7 @@ defmodule Xml.VersionBodyHandler do
 
           Map.put(state, :location, location)
 
+        # What is this doing here?
         Enum.count(attrs) == 1 ->
           Map.put(state, :location, [int])
 
@@ -168,4 +177,4 @@ defmodule Xml.VersionBodyHandler do
 end
 
 # elements in <body>:
-# div, p, milestone, term, add, l, lb, speaker, del, sp, quote
+# div, p, milestone, term, add, l, lb, speaker, del, sp, quote, head

@@ -10,6 +10,7 @@ defmodule TextServer.Versions.Version do
     field :parsed_at, :naive_datetime
     field :source, :string
     field :source_link, :string
+    field :structure, {:array, :string}
     field :urn, :string
     field :version_type, Ecto.Enum, values: [:commentary, :edition, :translation]
 
@@ -35,6 +36,7 @@ defmodule TextServer.Versions.Version do
       :parsed_at,
       :source,
       :source_link,
+      :structure,
       :urn,
       :version_type,
       :work_id

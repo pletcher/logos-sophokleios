@@ -73,6 +73,16 @@ section in Pausanias).
 https://research.fas.harvard.edu/deans-competitive-fund-promising-scholarship
 
 
+## TODO: Sync to Dropbox
+
+## TODO: Tagging
+
+- Don't build into the interface
+- Build into XML parser
+- Hash tags and then Word/Open XML indexes
+- We need to be able to add definitions for tags
+  - make comments about tags themselves (build this into the interface)
+
 ## TODO: Blog posts
 
 Allow writing blog posts on commentaries in progress

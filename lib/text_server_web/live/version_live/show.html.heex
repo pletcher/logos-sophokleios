@@ -49,6 +49,10 @@
         top_level_toc={@top_level_toc}
         second_level_toc={@second_level_toc}
       />
+      <Components.pagination
+        current_page={@passage.passage_number}
+        total_pages={@passage.total_passages}
+      />
     </div>
 
     <div class="max-w-xl w-xl flex-grow">
@@ -60,19 +64,21 @@
           on_change="second-reader-change"
           options={@second_reader_options}
         />
-        <%= if length(@comments) > 0 do %>
+        <%= if length(@comments) > 0 and @second_reader_selection == internal_commentary_magic_string() do %>
           <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
         <% end %>
-        <.live_component
-          id={:second_reader}
-          footnotes={[]}
-          module={TextServerWeb.ReadingEnvironment.Reader}
-          location={@location}
-          passage={@passage}
-          text_nodes={@second_reader_text_nodes}
-          top_level_toc={@top_level_toc}
-          second_level_toc={@second_level_toc}
-        />
+        <%= if @second_reader_selection != internal_commentary_magic_string() do %>
+          <.live_component
+            id={:second_reader}
+            footnotes={[]}
+            module={TextServerWeb.ReadingEnvironment.Reader}
+            location={@location}
+            passage={@passage}
+            text_nodes={@second_reader_text_nodes}
+            top_level_toc={@top_level_toc}
+            second_level_toc={@second_level_toc}
+          />
+        <% end %>
       </.form>
     </div>
   </div>

@@ -7,6 +7,8 @@ defmodule TextServerWeb.VersionLive.Show do
   alias TextServer.Versions
   alias TextServer.TextNodes
 
+  @internal_commentary_magic_string "@@oc/commentary"
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket |> assign_new(:current_user, fn -> nil end)}
@@ -39,16 +41,6 @@ defmodule TextServerWeb.VersionLive.Show do
     location = List.first(text_nodes).location
     top_level_location = List.first(location)
     second_level_location = Enum.at(location, 1)
-    sibling_versions = Versions.list_sibling_versions(version)
-
-    second_reader_options = [
-      {"This project's commentary", "@@oc/commentary"}
-      | sibling_versions
-        |> Enum.map(fn v ->
-          {v.label, v.id}
-        end)
-    ]
-    second_reader_selection = "@@oc/commentary"
 
     {top_level_toc, second_level_toc} =
       if length(location) > 2 do
@@ -72,11 +64,43 @@ defmodule TextServerWeb.VersionLive.Show do
        text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
        top_level_toc: top_level_toc,
        second_level_toc: second_level_toc,
-       second_reader_options: second_reader_options,
-       second_reader_selection: second_reader_selection,
-       second_reader_text_nodes: [],
        version: version
-     )}
+     )
+     |> sync_second_reader()}
+  end
+
+  def sync_second_reader(socket) do
+    version = socket.assigns.version
+    sibling_versions = Versions.list_sibling_versions(version)
+
+    second_reader_options = [
+      {"This project's commentary", @internal_commentary_magic_string}
+      | sibling_versions
+        |> Enum.map(fn v ->
+          {v.label, v.id}
+        end)
+    ]
+
+    socket
+    |> assign_new(:second_reader_selection, fn -> @internal_commentary_magic_string end)
+    |> assign(
+      second_reader_options: second_reader_options,
+      second_reader_text_nodes: list_second_reader_text_nodes(socket.assigns.text_nodes, version.id)
+    )
+  end
+
+  def list_second_reader_text_nodes(_main_text_nodes, @internal_commentary_magic_string), do: []
+
+  def list_second_reader_text_nodes(main_text_nodes, version_id) do
+    start_location = List.first(main_text_nodes).location
+    end_location = List.last(main_text_nodes).location
+
+    TextNodes.get_text_nodes_by_version_between_locations(
+      version_id,
+      start_location,
+      end_location
+    )
+    |> TextNodes.tag_text_nodes()
   end
 
   defp format_toc(version_id, top_level_location, second_level_location) do
@@ -121,16 +145,19 @@ defmodule TextServerWeb.VersionLive.Show do
     {:noreply, socket}
   end
 
-  def handle_event("second-reader-change", %{"second_reader" => %{"second_reader_select" => version_id}}, socket) do
-    start_location = List.first(socket.assigns.text_nodes).location
-    end_location = List.last(socket.assigns.text_nodes).location
-    second_reader_text_nodes = TextNodes.get_text_nodes_by_version_between_locations(
-        version_id,
-        start_location,
-        end_location
-      ) |> TextNodes.tag_text_nodes()
+  def handle_event(
+        "second-reader-change",
+        %{"second_reader" => %{"second_reader_select" => version_id}},
+        socket
+      ) do
+    text_nodes = list_second_reader_text_nodes(socket.assigns.text_nodes, version_id)
 
-      {:noreply, socket |> assign(second_reader_text_nodes: second_reader_text_nodes)}
+    {:noreply,
+     socket
+     |> assign(
+       second_reader_text_nodes: text_nodes,
+       second_reader_selection: version_id
+     )}
   end
 
   def handle_event("top-level-location-change", %{"location" => location}, socket) do
@@ -210,4 +237,6 @@ defmodule TextServerWeb.VersionLive.Show do
 
   defp page_title(:show), do: "Show Version"
   defp page_title(:edit), do: "Edit Version"
+
+  defp internal_commentary_magic_string, do: @internal_commentary_magic_string
 end

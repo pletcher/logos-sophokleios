@@ -1,16 +1,16 @@
-defmodule Mix.Tasks.Exemplars.Paginate do
+defmodule Mix.Tasks.Versions.Paginate do
   use Mix.Task
 
-  alias TextServer.Exemplars
+  alias TextServer.Versions
 
   def run(args) do
     Mix.Task.run("app.start")
 
     {parsed, _argv, _error} = OptionParser.parse(args, strict: [id: :integer])
 
-    exemplar_id = Keyword.get(parsed, :id)
+    version_id = Keyword.get(parsed, :id)
 
-    paginate(exemplar_id)
+    paginate(version_id)
 
     #   # pagination is actually not as straightforward as one might think:
     #   # for something that only has one level of reference,
@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Exemplars.Paginate do
     #   # to the second element in the location array
   end
 
-  defp paginate(exemplar_id) do
-    Exemplars.paginate_exemplar(exemplar_id)
+  defp paginate(version_id) do
+    Versions.paginate_version(version_id)
   end
 end

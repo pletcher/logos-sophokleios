@@ -6,7 +6,7 @@ defmodule TextServer.Languages.Language do
     field :slug, :string
     field :title, :string
 
-    has_many :exemplars, TextServer.Exemplars.Exemplar
+    has_many :versions, TextServer.Versions.Version
 
     timestamps()
   end

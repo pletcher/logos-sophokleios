@@ -24,13 +24,6 @@ defmodule TextServer.Versions do
   # directly from a comment's XML.
   @attribution_regex ~r/\[\[GN\s(\d{4}\.\d{2}\.\d{2})\]\]/
 
-  # Many of the XML files that we need to process have
-  # multiple declarations at the top of the file.
-  # Erlang is pretty strict about following the XML
-  # spec, so it chokes on the multiple declarations.
-  # We use this regex to remove them.
-  @invalid_declarations_regex ~r/<\?xml-model.*\?>/su
-
   defmodule VersionPassage do
     defstruct [:version_id, :passage, :passage_number, :text_nodes, :total_passages]
   end
@@ -59,7 +52,7 @@ defmodule TextServer.Versions do
 
   def list_sibling_versions(version) do
     Version
-    |> where([v], v.work_id == ^version.work_id)
+    |> where([v], v.work_id == ^version.work_id and v.id != ^version.id)
     |> Repo.all()
   end
 

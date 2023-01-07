@@ -338,7 +338,7 @@ defmodule TextServerWeb.Components do
 
     ~H"""
     <%= for i <- start_n..end_n do %>
-      <a href={"?page=#{i}"} aria-current="page" class={numbered_button_classes(current_page, i)}><%= i %></a>
+      <.link patch={"?page=#{i}"} aria-current="page" class={numbered_button_classes(current_page, i)}><%= i %></.link>
     <% end %>
     """
   end

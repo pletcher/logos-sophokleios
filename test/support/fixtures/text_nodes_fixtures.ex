@@ -12,7 +12,7 @@ defmodule TextServer.TextNodesFixtures do
       attrs
       |> Enum.into(%{
         version_id: version_id,
-        location: [1, 1, 1],
+        location: [200, 1, 1],
         text: "some text"
       })
       |> TextServer.TextNodes.create_text_node()
@@ -30,7 +30,7 @@ defmodule TextServer.TextNodesFixtures do
       attrs
       |> Enum.into(%{
         version_id: version_id,
-        location: [1, 1, 1],
+        location: [100, 1, 1],
         text: "some text"
       })
       |> TextServer.TextNodes.create_text_node()

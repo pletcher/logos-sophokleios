@@ -121,7 +121,7 @@ defmodule TextServer.VersionsTest do
 
       toc = Versions.get_table_of_contents(version.id)
 
-      assert Map.get(toc, 1) == %{1 => [1, 1]}
+      assert Map.get(toc, 1) == %{1 => [1]}
       assert Map.get(toc, 2) == %{1 => [1]}
       assert Map.get(toc, 3) == %{1 => [1]}
       assert Map.get(toc, 4) == %{1 => [1]}

@@ -24,6 +24,7 @@ defmodule TextServer.TextNodes.TextNode do
     |> cast(attrs, [:version_id, :location, :text])
     |> validate_required([:location, :text])
     |> assoc_constraint(:version)
+    |> unique_constraint([:version_id, :location])
   end
 
   defmodule Tag do

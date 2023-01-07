@@ -385,11 +385,22 @@ defmodule TextServer.Versions do
 
     case Path.extname(version.filename) do
       ".docx" -> parse_version_docx(version)
-      ".xml" -> parse_version_xml(version)
+      ".xml" -> queue_version_for_external_parsing(version)
       _ -> raise Xml.ParseError, version.filename
     end
 
     update_version(version, %{parsed_at: NaiveDateTime.utc_now()})
+  end
+
+  def queue_version_for_external_parsing(version) do
+    {:ok, chan} = AMQP.Application.get_channel(:cts_xml_parser)
+
+    AMQP.Basic.publish(
+      chan,
+      "",
+      Application.get_env(:amqp, :queue),
+      to_string(version.id)
+    )
   end
 
   def parse_version_docx(%Version{} = version) do
@@ -682,97 +693,5 @@ defmodule TextServer.Versions do
       |> String.to_atom()
 
     {name, collect_fragments(fragment)}
-  end
-
-  def parse_version_xml(%Version{} = version) do
-    # it's unfortunate that we need to load the whole file into
-    # memory to get rid of a few strings at the beginning ---
-    # maybe we can sort out a workaround soon.
-    file = File.read!(version.filename) |> String.replace(@invalid_declarations_regex, "")
-    {:ok, version_data} = DataSchema.to_struct(file, Xml.Versions.Version)
-
-    # text_node_schema =
-    #   DataSchema.to_runtime_schema([
-    #     has_many: {:text_nodes, version_data.cref_pattern, Xml.Versions.TextNodes.text_node_fields(version_data.cref_pattern)}
-    #   ])
-    ref_levels = version_data.structure |> Enum.reverse()
-    crefs =
-      version_data.cref_patterns
-      |> Enum.map(fn pattern ->
-        pattern
-        |> String.replace("tei:", "")
-        |> String.replace(~r/\[@n='\$[[:digit:]]+'\]/, "")
-      end)
-
-    body_fields = Enum.with_index()
-
-    ## we could potentially nest everything, but then we're just re-creating
-    # the XML structure
-    body_fields = Enum.with_index(crefs) |> Enum.map(fn {xpath, index} ->
-      name = Enum.at(ref_levels, index) |> String.to_atom()
-      {:field, {name, "#{xpath}/@n", }}
-    end)
-
-    ## this doesn't work reliably because of unpredictable child nodes
-    ## within each text node
-    text_node_fields = [
-      aggregate: {:location, body_fields, &{:ok, &1}},
-      field: {:text, ".//text()", &{:ok, &1}}
-    ]
-
-    text_node_xpath = List.first(crefs)
-    text_nodes_fields = [
-      has_many: {:text_nodes, "/#{text_node_xpath}", {%{}, text_node_fields}}
-    ]
-
-    {:ok, text_nodes} = DataSchema.to_struct(file, %{}, text_nodes_fields, Xml.XPathAccessor)
-    # if is_nil(elems) do
-    #   IO.inspect("No text elements? #{inspect(body_data)}")
-    #   []
-    # else
-    #   Enum.filter(elems, fn el -> Map.has_key?(el, :content) end)
-    #   |> Enum.map(fn tn ->
-    #     attrs = %{
-    #       location: tn.location,
-    #       text: tn.content,
-    #       version_id: version.id
-    #     }
-
-    #     TextServer.TextNodes.create_text_node(attrs)
-    #   end)
-
-    #   Enum.filter(elems, fn el ->
-    #     !Enum.all?([
-    #       Map.has_key?(el, :content),
-    #       Enum.member?(@excluded_element_types, el[:tag_name])
-    #     ])
-    #   end)
-    #   |> Enum.map(fn el ->
-    #     text_node = TextServer.TextNodes.get_by(%{location: el.location, version_id: version.id})
-
-    #     unless is_nil(text_node) do
-    #       {:ok, element_type} =
-    #         TextServer.ElementTypes.find_or_create_element_type(%{
-    #           name: el[:tag_name]
-    #         })
-
-    #       {:ok, _text_element} =
-    #         TextServer.TextElements.find_or_create_text_element(
-    #           el
-    #           |> Map.delete(:type)
-    #           |> Map.merge(%{
-    #             element_type_id: element_type.id,
-    #             end_text_node_id: text_node.id,
-    #             start_text_node_id: text_node.id
-    #           })
-    #           |> Map.put_new(:attributes, %{})
-    #           |> Map.put_new(:start_offset, el[:offset])
-    #           |> Map.put_new(:end_offset, el[:offset])
-    #         )
-    #     end
-    #   end)
-    # end
-
-    # {:ok, version}
   end
 end

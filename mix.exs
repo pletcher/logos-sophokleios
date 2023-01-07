@@ -65,7 +65,8 @@ defmodule TextServer.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:gen_smtp, "~> 1.2.0"},
       {:data_schema, "~> 0.5.0"},
-      {:sweet_xml, "~> 0.7.1"}
+      {:sweet_xml, "~> 0.7.1"},
+      {:amqp, "~> 3.2"}
     ]
   end
 

@@ -19,6 +19,16 @@ config :text_server,
   user_uploads_directory: System.get_env("USER_UPLOADS_DIRECTORY"),
   env: config_env()
 
+# Configures AMQP for queueing Version parsing
+config :amqp,
+  connections: [
+    rabbitmq_naf: [url: System.get_env("RABBITMQ_URL")],
+  ],
+  channels: [
+    cts_xml_parser: [connection: :rabbitmq_naf]
+  ],
+  queue: System.get_env("RABBITMQ_QUEUE")
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

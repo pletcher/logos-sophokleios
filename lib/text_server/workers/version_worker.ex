@@ -1,4 +1,4 @@
-defmodule TextServer.VersionJobRunner do
+defmodule TextServer.Workers.VersionWorker do
   use Oban.Worker
 
   alias TextServer.Versions

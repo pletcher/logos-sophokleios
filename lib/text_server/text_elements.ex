@@ -6,7 +6,9 @@ defmodule TextServer.TextElements do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
+  alias TextServer.ElementTypes
   alias TextServer.TextElements.TextElement
+  alias TextServer.TextNodes.TextNode
 
   @doc """
   Returns the list of text_elements.
@@ -36,6 +38,10 @@ defmodule TextServer.TextElements do
 
   """
   def get_text_element!(id), do: Repo.get!(TextElement, id)
+
+  def with_version(query) do
+    from q in query, preload: [start_text_node: :version]
+  end
 
   def get_text_elements(ids \\ []) do
     query = from(t in TextElement, where: t.id in ^ids)
@@ -76,6 +82,42 @@ defmodule TextServer.TextElements do
       element -> {:ok, element}
     end
   end
+
+  def find_or_create_text_elements(%TextNode{} = text_node, text_elements) do
+    text_elements
+    |> Enum.map(fn el ->
+      {:ok, element_type} =
+        ElementTypes.find_or_create_element_type(%{name: Atom.to_string(el[:type])})
+
+      {:ok, text_element} =
+        find_or_create_text_element(
+          el
+          |> Map.delete(:type)
+          |> Map.merge(%{
+            element_type_id: element_type.id,
+            # Right now, we follow Word's lead by assuming that an element does
+            # not span multiple text nodes. Instead, a new element is created
+            # for each text node that a single element would span.
+            end_text_node_id: text_node.id,
+            start_text_node_id: text_node.id
+          })
+          |> Map.put_new(:attributes, %{})
+          |> Map.put_new(:end_offset, el[:start_offset])
+        )
+
+      maybe_upload_to_s3(el[:type], text_element)
+
+      {:ok, {element_type, text_element}}
+    end)
+  end
+
+  defp maybe_upload_to_s3(:image, text_element) do
+    %{id: text_element.id}
+    |> TextServer.Workers.S3Worker.new()
+    |> Oban.insert()
+  end
+
+  defp maybe_upload_to_s3(_type_atom, _el), do: {:ok, nil}
 
   @doc """
   Updates a text_element.

@@ -387,7 +387,7 @@ defmodule TextServer.Texts do
 
             {:ok, version} = TextServer.Versions.upsert_version(version_data)
 
-            TextServer.VersionJobRunner.new(%{id: version.id})
+            TextServer.Workers.VersionWorker.new(%{id: version.id})
             |> Oban.insert()
           end
 

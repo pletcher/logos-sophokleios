@@ -41,9 +41,11 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   def reading_page(assigns) do
     ~H"""
     <section>
-      <%= for text_node <- @text_nodes do %>
-        <.text_node graphemes_with_tags={text_node.graphemes_with_tags} location={text_node.location} />
-      <% end %>
+      <.text_node
+        :for={text_node <- @text_nodes}
+        graphemes_with_tags={text_node.graphemes_with_tags}
+        location={text_node.location}
+      />
     </section>
     """
   end
@@ -79,6 +81,17 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
         """
 
+      Enum.member?(tags |> Enum.map(& &1.name), "image") ->
+        image = tags |> Enum.find(&(&1.name == "image"))
+        meta = Map.get(image, :metadata, %{})
+
+        if is_nil(meta) do
+          ~H"<span />"
+        else
+          src = Map.get(meta, :src)
+          ~H"<img class={classes} src={src} />"
+        end
+
       true ->
         ~H"<span class={classes}><%= @text %></span>"
     end
@@ -94,7 +107,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     ~H"""
     <p class="mb-4" title={"Location: #{location}"}>
       <span class="text-slate-500"><%= location %></span>
-      <%= for {graphemes, tags} <- @graphemes_with_tags do %><.text_element tags={tags} text={Enum.join(graphemes)} /><% end %>
+      <.text_element :for={{graphemes, tags} <- @graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
     </p>
     """
   end

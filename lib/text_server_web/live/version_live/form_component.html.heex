@@ -61,15 +61,15 @@
     <section class="relative px-4 sm:px-6 lg:px-8">
       <div class="rounded-md -space-y-px">
         <div>
-          <%= label(f, :title, "Version title", class: "block mb-1") %>
-          <%= text_input(f, :title,
+          <%= label(f, :label, "Version title", class: "block mb-1") %>
+          <%= text_input(f, :label,
             required: true,
             class:
               "appearance-none relative resize-none w-full py-2 mb-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-stone-500 focus:border-stone-500 focus:z-10 sm:text-sm",
             placeholder: "Titulus versionis"
           ) %>
         </div>
-        <%= error_tag(f, :title) %>
+        <%= error_tag(f, :label) %>
       </div>
 
       <div class="rounded-md shadow-sm -space-y-px">

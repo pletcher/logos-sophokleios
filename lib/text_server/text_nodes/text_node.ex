@@ -89,6 +89,9 @@ defmodule TextServer.TextNodes.TextNode do
             el.element_type.name == "note" && i == el.start_offset - 1 ->
               {i, g, tags ++ [%Tag{name: el.element_type.name, metadata: %{content: el.content, id: el.id}}]}
 
+            el.element_type.name == "image" && i == el.start_offset - 1 ->
+              {i, g, tags ++ [%Tag{name: el.element_type.name, metadata: %{src: el.content, id: el.id}}]}
+
             i >= el.start_offset && i < el.end_offset ->
               {i, g, tags ++ [%Tag{name: el.element_type.name}]}
 

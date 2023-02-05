@@ -6,12 +6,10 @@ defmodule TextServer.Versions do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
-  alias TextServer.ElementTypes
   alias TextServer.Projects.Version, as: ProjectVersion
   alias TextServer.TextElements
   alias TextServer.TextNodes
   alias TextServer.TextNodes.TextNode
-  alias TextServer.VersionJobRunner
   alias TextServer.Versions.Passage
   alias TextServer.Versions.Version
   alias TextServer.Works
@@ -134,13 +132,15 @@ defmodule TextServer.Versions do
       end)
 
     %{id: version.id}
-    |> VersionJobRunner.new()
+    |> TextServer.Workers.VersionWorker.new()
     |> Oban.insert()
   end
 
-  defp make_version_urn(%{"title" => title, "work_id" => work_id} = _version_params, project) do
+  defp make_version_urn(version_params, project) do
+    work_id = Map.fetch!(version_params, "work_id")
+    label = Map.fetch!(version_params, "label")
     work = Works.get_work!(work_id)
-    "#{work.urn}.#{String.downcase(project.domain)}-#{Recase.to_kebab(title)}-en"
+    "#{work.urn}.#{String.downcase(project.domain)}-#{Recase.to_kebab(label)}-en"
   end
 
   @doc """
@@ -398,13 +398,29 @@ defmodule TextServer.Versions do
 
   def parse_version_docx(%Version{} = version) do
     # `track_changes: "all"` catches comments; see example below
-    {:ok, ast} = Panpipe.ast(input: version.filename, track_changes: "all")
+    {:ok, ast} =
+      Panpipe.ast(
+        input: version.filename,
+        extract_media: version.urn,
+        track_changes: "all"
+      )
+
     fragments = Map.get(ast, :children, []) |> Enum.map(&collect_fragments/1)
-    serialized_fragments = fragments |> Enum.map(&serialize_for_database/1)
+    # we need to keep track of location fragments that have been seen and use
+    # the last-seen fragment in cases where the location gets zeroed out
+    {_last_loc, located_fragments} =
+      fragments
+      |> Enum.reduce({[0], %{}}, &set_locations/2)
+
+    joined_fragments =
+      located_fragments
+      |> Enum.map(fn {location, fragments} ->
+        serialize_fragments(location, fragments)
+      end)
 
     nodes =
-      serialized_fragments
-      |> Enum.filter(fn {_location, text, _elements} -> String.trim(text) != "" end)
+      joined_fragments
+      |> Enum.filter(fn {_location, text, _els} -> String.trim(text) != "" end)
       |> Enum.map(fn {location, text, elements} ->
         {:ok, text_node} =
           TextNodes.find_or_create_text_node(%{
@@ -413,26 +429,7 @@ defmodule TextServer.Versions do
             text: text
           })
 
-        elements
-        |> Enum.map(fn el ->
-          {:ok, element_type} =
-            ElementTypes.find_or_create_element_type(%{name: Atom.to_string(el[:type])})
-
-          {:ok, text_element} =
-            TextElements.find_or_create_text_element(
-              el
-              |> Map.delete(:type)
-              |> Map.merge(%{
-                element_type_id: element_type.id,
-                end_text_node_id: text_node.id,
-                start_text_node_id: text_node.id
-              })
-              |> Map.put_new(:attributes, %{})
-              |> Map.put_new(:end_offset, el[:start_offset])
-            )
-
-          {:ok, {element_type, text_element}}
-        end)
+        _elements_and_errors = TextElements.find_or_create_text_elements(text_node, elements)
 
         {:ok, text_node}
       end)
@@ -440,28 +437,15 @@ defmodule TextServer.Versions do
     {:ok, nodes}
   end
 
-  def serialize_for_database(list) do
-    [location | list] = set_location(list)
-    text = list |> Enum.reduce("", &flatten_string/2) |> String.trim_leading()
+  def set_locations(fragments, {prev_location, grouped_frags}) do
+    [loc | frags] = set_location(prev_location, fragments)
 
-    # if getting the location has left the node starting with a single space,
-    # pop that element off the node entirely. This helps to avoid off-by-one
-    # errors in offsets. An assumption is made that a node that begins with
-    # more than a single space character does so for a reason, so we maintain
-    # that string
-    list =
-      if List.first(list) == {:string, " "} do
-        tl(list)
-      else
-        list
-      end
+    current_fragments = Map.get(grouped_frags, loc, [])
 
-    {text_elements, _final_offset} = list |> Enum.reduce({[], 0}, &tag_elements/2)
-
-    {location, text, text_elements}
+    {loc, Map.put(grouped_frags, loc, current_fragments ++ frags)}
   end
 
-  def set_location(list) do
+  def set_location(prev_location, list) do
     [maybe_location_fragment | rest] = list
 
     maybe_location_string = get_maybe_location_string(maybe_location_fragment) || ""
@@ -473,10 +457,15 @@ defmodule TextServer.Versions do
 
         nil ->
           [0]
-          # _ -> maybe_location_fragment
       end
 
-    [location | rest]
+    if prev_location != [0] and location == [0] do
+      # note that we return the entire list here so we don't
+      # accidentally pop off important elements
+      [prev_location | list]
+    else
+      [location | rest]
+    end
   end
 
   def get_maybe_location_string(fragment) do
@@ -501,6 +490,43 @@ defmodule TextServer.Versions do
     |> String.replace("}", "")
     |> String.split(".")
     |> Enum.map(&String.to_integer/1)
+  end
+
+  def serialize_fragments(location, fragments) do
+    text = fragments |> Enum.reduce("", &flatten_string/2) |> String.trim_leading()
+
+    # if getting the location has left the node starting with a single space,
+    # pop that element off the node entirely. This helps to avoid off-by-one
+    # errors in offsets. An assumption is made that a node that begins with
+    # more than a single space character does so for a reason, so we maintain
+    # that string
+    fragments =
+      if List.first(fragments) == {:string, " "} do
+        tl(fragments)
+      else
+        fragments
+      end
+
+    {text_elements, _final_offset} = fragments |> Enum.reduce({[], 0}, &tag_elements/2)
+
+    {location, text, text_elements}
+  end
+
+  def flatten_string(fragment, string \\ "") do
+    s =
+      case fragment do
+        [string: text] -> text
+        {:string, text} -> text
+        {:note, _} -> nil
+        {:comment, _} -> nil
+        {:change, _} -> nil
+        {:image, _} -> nil
+        {:span, _} -> nil
+        {_k, v} -> Enum.reduce(v, "", &flatten_string/2)
+        _ -> nil
+      end
+
+    "#{string}#{s}"
   end
 
   def tag_elements(fragment, {elements, offset}) do
@@ -546,6 +572,18 @@ defmodule TextServer.Versions do
              }
            ], end_offset}
 
+      {:image, image} ->
+        end_offset = offset
+
+        {elements ++
+           [
+             Map.merge(image, %{
+               end_offset: end_offset,
+               start_offset: offset,
+               type: :image
+             })
+           ], end_offset}
+
       {:note, note} ->
         {elements ++
            [
@@ -589,22 +627,6 @@ defmodule TextServer.Versions do
     end
   end
 
-  def flatten_string(fragment, string \\ "") do
-    s =
-      case fragment do
-        [string: text] -> text
-        {:string, text} -> text
-        {:note, _} -> nil
-        {:comment, _} -> nil
-        {:change, _} -> nil
-        {:span, _} -> nil
-        {_k, v} -> Enum.reduce(v, "", &flatten_string/2)
-        _ -> nil
-      end
-
-    "#{string}#{s}"
-  end
-
   def get_comment_attributes(comment, s) do
     attrs = Map.get(comment, :attributes)
 
@@ -636,6 +658,10 @@ defmodule TextServer.Versions do
 
   def handle_fragment(%Panpipe.AST.Emph{} = fragment),
     do: {:emph, collect_fragments(fragment)}
+
+  def handle_fragment(%Panpipe.AST.Image{} = fragment) do
+    {:image, %{content: Map.fetch!(fragment, :target), attributes: collect_attributes(fragment)}}
+  end
 
   def handle_fragment(%Panpipe.AST.Note{} = fragment),
     do: {:note, collect_fragments(fragment)}

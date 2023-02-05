@@ -10,7 +10,7 @@ defmodule TextServerWeb.VersionLive.New do
     {:ok,
      socket
      |> assign(
-       exemplar: %Version{} |> Repo.preload(:language),
+       version: %Version{} |> Repo.preload(:language),
        page_title: "Create version",
        project: get_project!(params["id"]),
        selected_work: nil,

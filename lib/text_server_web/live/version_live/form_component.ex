@@ -64,15 +64,21 @@ defmodule TextServerWeb.VersionLive.FormComponent do
         socket,
         :version_file,
         fn %{path: path}, %{client_name: client_name} = _entry ->
-          dest =
+          dir =
             Path.join([
               Application.get_env(:text_server, :user_uploads_directory),
-              "version_files",
+              "version_files"
+            ])
+
+          dest =
+            Path.join([
+              dir,
               client_name
             ])
 
           file_body = File.read!(path)
 
+          File.mkdir_p!(dir)
           File.cp!(path, dest)
 
           {:ok,

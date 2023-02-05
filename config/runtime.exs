@@ -29,6 +29,15 @@ config :amqp,
   ],
   queue: System.get_env("RABBITMQ_QUEUE")
 
+config :ex_aws,
+  access_key_id: System.get_env("S3_ACCESS_KEY"),
+  secret_access_key: System.get_env("S3_SECRET_KEY")
+
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: System.get_env("S3_HOST"),
+  port: 9000
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

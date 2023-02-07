@@ -4,6 +4,9 @@ defmodule TextServer.Versions do
   """
 
   import Ecto.Query, warn: false
+
+  require Logger
+
   alias TextServer.Repo
 
   alias TextServer.Projects.Version, as: ProjectVersion
@@ -405,7 +408,7 @@ defmodule TextServer.Versions do
         track_changes: "all"
       )
 
-    fragments = Map.get(ast, :children, []) |> Enum.map(&collect_fragments/1)
+    fragments = collect_fragments(ast)
     # we need to keep track of location fragments that have been seen and use
     # the last-seen fragment in cases where the location gets zeroed out
     {_last_loc, located_fragments} =
@@ -435,6 +438,16 @@ defmodule TextServer.Versions do
       end)
 
     {:ok, nodes}
+  end
+
+  # It might be possible just to do elem(fragments, 1) to get the
+  # list of fragments, but checking for a paragraph seems a bit safer,
+  # even if we ultimately end up doing the same thing as below.
+
+  # FIXME: This is wrong: it's causing the :paragraph elements to get lost.
+  # We need to preserver those.
+  def set_locations({:paragraph, fragments}, {prev_location, grouped_frags}) do
+    set_locations(fragments, {prev_location, grouped_frags})
   end
 
   def set_locations(fragments, {prev_location, grouped_frags}) do
@@ -529,102 +542,125 @@ defmodule TextServer.Versions do
     "#{string}#{s}"
   end
 
+  def tag_elements([string: text], {elements, offset}) do
+    {elements, offset + String.length(text)}
+  end
+
+  def tag_elements({:string, text}, {elements, offset}) do
+    {elements, offset + String.length(text)}
+  end
+
+  def tag_elements({:comment, comment}, {elements, offset}) do
+    content =
+      Map.get(comment, :content, [])
+      |> Enum.reduce("", &flatten_string/2)
+
+    attributes = get_comment_attributes(comment, content)
+
+    {elements ++
+       [
+         %{
+           attributes: attributes,
+           content:
+             content
+             |> String.replace(@attribution_regex, "")
+             |> String.trim_leading(),
+           end_offset: offset,
+           start_offset: offset,
+           type: :comment
+         }
+       ], offset}
+  end
+
+  def tag_elements({:emph, emph}, {elements, offset}) do
+    s = emph |> Enum.reduce("", &flatten_string/2)
+    end_offset = offset + String.length(s)
+
+    {elements ++
+       [
+         %{
+           content: s,
+           end_offset: end_offset,
+           start_offset: offset,
+           type: :emph
+         }
+       ], end_offset}
+  end
+
+  def tag_elements({:image, image}, {elements, offset}) do
+    end_offset = offset
+
+    {elements ++
+       [
+         Map.merge(image, %{
+           end_offset: end_offset,
+           start_offset: offset,
+           type: :image
+         })
+       ], end_offset}
+  end
+
+  def tag_elements({:note, note}, {elements, offset}) do
+    {elements ++
+       [
+         %{
+           content: note |> Enum.reduce("", &flatten_string/2),
+           start_offset: offset,
+           type: :note
+         }
+       ], offset}
+  end
+
+  def tag_elements({:paragraph, paragraph}, {elements, offset}) do
+    dbg(paragraph)
+    s = paragraph |> Enum.reduce("", &flatten_string/2)
+    end_offset = offset + String.length(s)
+
+    {elements ++
+       [
+         %{
+           content: s,
+           start_offset: offset,
+           end_offset: end_offset,
+           type: :paragraph
+         }
+       ], end_offset}
+  end
+
+  def tag_elements({:strong, strong}, {elements, offset}) do
+    s = strong |> Enum.reduce("", &flatten_string/2)
+    end_offset = offset + String.length(s)
+
+    {elements ++
+       [
+         %{
+           content: s,
+           end_offset: end_offset,
+           start_offset: offset,
+           type: :strong
+         }
+       ], end_offset}
+  end
+
+  def tag_elements({:underline, underline}, {elements, offset}) do
+    s = underline |> Enum.reduce("", &flatten_string/2)
+    end_offset = offset + String.length(s)
+
+    {elements ++
+       [
+         %{
+           content: s,
+           end_offset: end_offset,
+           start_offset: offset,
+           type: :underline
+         }
+       ], end_offset}
+  end
+
   def tag_elements(fragment, {elements, offset}) do
-    case fragment do
-      [string: text] ->
-        {elements, offset + String.length(text)}
+    Logger.info("Unused fragment when parsing document: #{inspect(fragment)}")
 
-      {:string, text} ->
-        {elements, offset + String.length(text)}
-
-      {:comment, comment} ->
-        content =
-          Map.get(comment, :content, [])
-          |> Enum.reduce("", &flatten_string/2)
-
-        attributes = get_comment_attributes(comment, content)
-
-        {elements ++
-           [
-             %{
-               attributes: attributes,
-               content:
-                 content
-                 |> String.replace(@attribution_regex, "")
-                 |> String.trim_leading(),
-               end_offset: offset,
-               start_offset: offset,
-               type: :comment
-             }
-           ], offset}
-
-      {:emph, emph} ->
-        s = emph |> Enum.reduce("", &flatten_string/2)
-        end_offset = offset + String.length(s)
-
-        {elements ++
-           [
-             %{
-               content: s,
-               end_offset: end_offset,
-               start_offset: offset,
-               type: :emph
-             }
-           ], end_offset}
-
-      {:image, image} ->
-        end_offset = offset
-
-        {elements ++
-           [
-             Map.merge(image, %{
-               end_offset: end_offset,
-               start_offset: offset,
-               type: :image
-             })
-           ], end_offset}
-
-      {:note, note} ->
-        {elements ++
-           [
-             %{
-               content: note |> Enum.reduce("", &flatten_string/2),
-               start_offset: offset,
-               type: :note
-             }
-           ], offset}
-
-      {:strong, strong} ->
-        s = strong |> Enum.reduce("", &flatten_string/2)
-        end_offset = offset + String.length(s)
-
-        {elements ++
-           [
-             %{
-               content: s,
-               end_offset: end_offset,
-               start_offset: offset,
-               type: :strong
-             }
-           ], end_offset}
-
-      {:underline, underline} ->
-        s = underline |> Enum.reduce("", &flatten_string/2)
-        end_offset = offset + String.length(s)
-
-        {elements ++
-           [
-             %{
-               content: s,
-               end_offset: end_offset,
-               start_offset: offset,
-               type: :underline
-             }
-           ], end_offset}
-
-      _ ->
-        {elements, offset}
-    end
+    {elements, offset}
   end
 
   def get_comment_attributes(comment, s) do
@@ -653,7 +689,7 @@ defmodule TextServer.Versions do
     do: collect_fragments(node, :children)
 
   def collect_fragments(node, attr) do
-    Map.get(node, attr, []) |> Enum.map(fn n -> handle_fragment(n) end) |> List.flatten()
+    Map.get(node, attr, []) |> Enum.map(&handle_fragment/1) |> List.flatten()
   end
 
   def handle_fragment(%Panpipe.AST.Emph{} = fragment),
@@ -666,8 +702,9 @@ defmodule TextServer.Versions do
   def handle_fragment(%Panpipe.AST.Note{} = fragment),
     do: {:note, collect_fragments(fragment)}
 
-  def handle_fragment(%Panpipe.AST.Para{} = fragment),
-    do: collect_fragments(fragment)
+  def handle_fragment(%Panpipe.AST.Para{} = fragment) do
+    {:paragraph, collect_fragments(fragment)}
+  end
 
   def handle_fragment(%Panpipe.AST.Str{} = fragment),
     do: {:string, Map.get(fragment, :string, "")}

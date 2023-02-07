@@ -92,6 +92,10 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
           ~H"<img class={classes} src={src} />"
         end
 
+      Enum.member?(tags |> Enum.map(& &1.name), "paragraph") ->
+        IO.puts("paragraph!")
+        ~H"<div class={classes}><%= @text %></div>"
+
       true ->
         ~H"<span class={classes}><%= @text %></span>"
     end

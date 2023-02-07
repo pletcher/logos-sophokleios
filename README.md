@@ -1,5 +1,9 @@
 # New Alexandria Foundation Text Server
 
+## Development
+
+For now, enable S3 uploads by proxyin the MinIO server with `fly proxy 9000`.
+
 ## About the schema
 
 We follow the [CTS URN spec](http://cite-architecture.github.io/ctsurn_spec/),

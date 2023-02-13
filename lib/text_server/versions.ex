@@ -440,14 +440,11 @@ defmodule TextServer.Versions do
     {:ok, nodes}
   end
 
-  # It might be possible just to do elem(fragments, 1) to get the
-  # list of fragments, but checking for a paragraph seems a bit safer,
-  # even if we ultimately end up doing the same thing as below.
-
-  # FIXME: This is wrong: it's causing the :paragraph elements to get lost.
-  # We need to preserver those.
-  def set_locations({:paragraph, fragments}, {prev_location, grouped_frags}) do
-    set_locations(fragments, {prev_location, grouped_frags})
+  def set_locations({:paragraph, fragments}, state) do
+    {loc, located_fragments} = set_locations(fragments, state)
+    # So far, it seems to work well to treat paragraphs
+    # as simply two newlines, like in Markdown.
+    {loc, Map.update(located_fragments, loc, [], fn v -> v ++ [{:string, "\n\n"}] end)}
   end
 
   def set_locations(fragments, {prev_location, grouped_frags}) do
@@ -506,7 +503,7 @@ defmodule TextServer.Versions do
   end
 
   def serialize_fragments(location, fragments) do
-    text = fragments |> Enum.reduce("", &flatten_string/2) |> String.trim_leading()
+    text = fragments |> Enum.reduce("", &flatten_string/2)
 
     # if getting the location has left the node starting with a single space,
     # pop that element off the node entirely. This helps to avoid off-by-one
@@ -530,12 +527,13 @@ defmodule TextServer.Versions do
       case fragment do
         [string: text] -> text
         {:string, text} -> text
+        {:link, fragments, _url} -> Enum.reduce(fragments, "", &flatten_string/2)
         {:note, _} -> nil
         {:comment, _} -> nil
         {:change, _} -> nil
         {:image, _} -> nil
         {:span, _} -> nil
-        {_k, v} -> Enum.reduce(v, "", &flatten_string/2)
+        {_k, v} when not is_binary(v) -> Enum.reduce(v, "", &flatten_string/2)
         _ -> nil
       end
 
@@ -588,7 +586,8 @@ defmodule TextServer.Versions do
   end
 
   def tag_elements({:image, image}, {elements, offset}) do
-    end_offset = offset
+    s = image |> Enum.reduce("", &flatten_string/2)
+    end_offset = offset + String.length(s)
 
     {elements ++
        [
@@ -598,6 +597,20 @@ defmodule TextServer.Versions do
            type: :image
          })
        ], end_offset}
+  end
+
+  def tag_elements({:link, link, url}, {elements, offset}) do
+    s = link |> Enum.reduce("", &flatten_string/2)
+    end_offset = offset + String.length(s)
+
+    {elements ++ [
+      %{
+        content: url,
+        end_offset: end_offset,
+        start_offset: offset,
+        type: :link,
+      }
+    ], end_offset}
   end
 
   def tag_elements({:note, note}, {elements, offset}) do
@@ -611,22 +624,6 @@ defmodule TextServer.Versions do
        ], offset}
   end
 
-  def tag_elements({:paragraph, paragraph}, {elements, offset}) do
-    dbg(paragraph)
-    s = paragraph |> Enum.reduce("", &flatten_string/2)
-    end_offset = offset + String.length(s)
-
-    {elements ++
-       [
-         %{
-           content: s,
-           start_offset: offset,
-           end_offset: end_offset,
-           type: :paragraph
-         }
-       ], end_offset}
-  end
-
   def tag_elements({:strong, strong}, {elements, offset}) do
     s = strong |> Enum.reduce("", &flatten_string/2)
     end_offset = offset + String.length(s)
@@ -638,6 +635,22 @@ defmodule TextServer.Versions do
            end_offset: end_offset,
            start_offset: offset,
            type: :strong
+         }
+       ], end_offset}
+  end
+
+  def tag_elements({:superscript, superscript}, {elements, offset}) do
+    s = superscript |> Enum.reduce("", &flatten_string/2)
+
+    end_offset = offset + String.length(s)
+
+    {elements ++
+       [
+         %{
+           content: s,
+           end_offset: end_offset,
+           start_offset: offset,
+           type: :superscript
          }
        ], end_offset}
   end
@@ -697,6 +710,10 @@ defmodule TextServer.Versions do
 
   def handle_fragment(%Panpipe.AST.Image{} = fragment) do
     {:image, %{content: Map.fetch!(fragment, :target), attributes: collect_attributes(fragment)}}
+  end
+
+  def handle_fragment(%Panpipe.AST.Link{} = fragment) do
+    {:link, collect_fragments(fragment), Map.fetch!(fragment, :target)}
   end
 
   def handle_fragment(%Panpipe.AST.Note{} = fragment),

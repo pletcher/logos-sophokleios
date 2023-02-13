@@ -66,14 +66,11 @@ defmodule TextServer.TextNodes.TextNode do
           if first_tags == tags do
             List.replace_at(acc, 0, {g_list ++ [g], tags})
           else
-            # This might be a good place to start if we need
-            # to improve speed at some point --- concatenation
-            # traverses the entire list each time. Not a big deal
-            # at the moment (2022-09-30), though.
             [{[g], tags} | acc]
           end
         end
-      end) |> Enum.reverse()
+      end)
+      |> Enum.reverse()
 
     %{graphemes_with_tags: grouped_graphemes, location: text_node.location}
   end
@@ -86,14 +83,24 @@ defmodule TextServer.TextNodes.TextNode do
           {i, g, tags} = g
 
           cond do
-            el.element_type.name == "note" && i == el.start_offset - 1 ->
-              {i, g, tags ++ [%Tag{name: el.element_type.name, metadata: %{content: el.content, id: el.id}}]}
-
             el.element_type.name == "image" && i == el.start_offset - 1 ->
-              {i, g, tags ++ [%Tag{name: el.element_type.name, metadata: %{src: el.content, id: el.id}}]}
+              {i, g,
+               tags ++ [%Tag{name: el.element_type.name, metadata: %{src: el.content, id: el.id}}]}
+
+            el.element_type.name == "note" && i == el.start_offset - 1 ->
+              {i, g,
+               tags ++
+                 [%Tag{name: el.element_type.name, metadata: %{content: el.content, id: el.id}}]}
 
             i >= el.start_offset && i < el.end_offset ->
-              {i, g, tags ++ [%Tag{name: el.element_type.name}]}
+              {i, g,
+               tags ++
+                 [
+                   %Tag{
+                     name: el.element_type.name,
+                     metadata: %{src: Map.get(el, :content), id: el.id}
+                   }
+                 ]}
 
             true ->
               {i, g, tags}
@@ -108,9 +115,7 @@ defmodule TextServer.TextNodes.TextNode do
     ranged_comments =
       comments
       |> Enum.group_by(
-        fn c ->
-          comment_id(c)
-        end,
+        &comment_id/1,
         fn c ->
           author = comment_author(c)
           date = comment_date(c)

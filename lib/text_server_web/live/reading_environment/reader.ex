@@ -40,12 +40,8 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
 
   def reading_page(assigns) do
     ~H"""
-    <section>
-      <.text_node
-        :for={text_node <- @text_nodes}
-        graphemes_with_tags={text_node.graphemes_with_tags}
-        location={text_node.location}
-      />
+    <section class="whitespace-pre-wrap">
+      <.text_node :for={text_node <- @text_nodes} graphemes_with_tags={text_node.graphemes_with_tags} location={text_node.location} />
     </section>
     """
   end
@@ -73,14 +69,6 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
         """
 
-      Enum.member?(tags |> Enum.map(& &1.name), "note") ->
-        footnote = tags |> Enum.find(&(&1.name == "note"))
-        meta = footnote.metadata
-
-        ~H"""
-        <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
-        """
-
       Enum.member?(tags |> Enum.map(& &1.name), "image") ->
         image = tags |> Enum.find(&(&1.name == "image"))
         meta = Map.get(image, :metadata, %{})
@@ -92,9 +80,22 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
           ~H"<img class={classes} src={src} />"
         end
 
-      Enum.member?(tags |> Enum.map(& &1.name), "paragraph") ->
-        IO.puts("paragraph!")
-        ~H"<div class={classes}><%= @text %></div>"
+      Enum.member?(tags |> Enum.map(& &1.name), "link") ->
+        link = tags |> Enum.find(&(&1.name == "link"))
+        meta = Map.get(link, :metadata, %{})
+        src = Map.get(meta, :src)
+
+        ~H"""
+        <a class={classes} href={src}><%= @text %></a>
+        """
+
+      Enum.member?(tags |> Enum.map(& &1.name), "note") ->
+        footnote = tags |> Enum.find(&(&1.name == "note"))
+        meta = footnote.metadata
+
+        ~H"""
+        <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
+        """
 
       true ->
         ~H"<span class={classes}><%= @text %></span>"
@@ -109,8 +110,8 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
-    <p class="mb-4" title={"Location: #{location}"}>
-      <span class="text-slate-500"><%= location %></span>
+    <p class="mb-4">
+      <span class="text-slate-500" title={"Location: #{location}"}><%= location %></span>
       <.text_element :for={{graphemes, tags} <- @graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
     </p>
     """
@@ -120,6 +121,8 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     case tag.name do
       "comment" -> "bg-blue-200 cursor-pointer"
       "emph" -> "italic"
+      "image" -> "image mt-10"
+      "link" -> "link font-bold underline hover:opacity-75 visited:opacity-60"
       "strong" -> "font-bold"
       "underline" -> "underline"
       _ -> tag.name

@@ -444,7 +444,15 @@ defmodule TextServer.Versions do
     {loc, located_fragments} = set_locations(fragments, state)
     # So far, it seems to work well to treat paragraphs
     # as simply two newlines, like in Markdown.
-    {loc, Map.update(located_fragments, loc, [], fn v -> v ++ [{:string, "\n\n"}] end)}
+    {loc, Map.update(located_fragments, loc, [], fn v ->
+      # Don't add a paragraph break at the beginning of a
+      # TextNode
+      if Enum.empty?(v) do
+        v
+      else
+        v ++ [{:string, "\n\n"}]
+      end
+    end)}
   end
 
   def set_locations(fragments, {prev_location, grouped_frags}) do

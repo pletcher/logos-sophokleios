@@ -39,11 +39,6 @@ config :ex_aws, :s3,
   port: 9000
 
 if config_env() == :prod do
-  config :ex_aws, :s3,
-    scheme: "https://",
-    host: System.get_env("S3_HOST"),
-    port: 9000
-
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """

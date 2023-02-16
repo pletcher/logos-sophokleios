@@ -23,7 +23,7 @@ defmodule TextServer.Workers.S3Worker do
     bucket_name = text_element.start_text_node.version.id
     urn = text_element.start_text_node.version.urn
 
-    case S3.put_bucket(bucket_name, "us-east-1") |> ExAws.request() do
+    case S3.put_bucket(bucket_name, "us-east-1", [{:acl, :public_read}]) |> ExAws.request() do
       {:error, {:http_error, 409, _body}} ->
         # No need to worry about this error, it means we've already
         # created the bucket
@@ -43,7 +43,7 @@ defmodule TextServer.Workers.S3Worker do
       src
       |> S3.Upload.stream_file()
       |> S3.upload(bucket_name, dest)
-      |> ExAws.request(query_params: [{"x-amz-acl", "public-read"}])
+      |> ExAws.request()
 
     new_src = xpath(body, ~x"//CompleteMultipartUploadResult/Location/text()") |> to_string()
 

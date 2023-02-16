@@ -34,9 +34,9 @@ config :ex_aws,
   secret_access_key: System.get_env("S3_SECRET_KEY")
 
 config :ex_aws, :s3,
-  scheme: "http://",
+  scheme: "#{System.get_env("S3_SCHEME")}://",
   host: System.get_env("S3_HOST"),
-  port: 9000
+  port: System.get_env("S3_PORT")
 
 if config_env() == :prod do
   database_url =

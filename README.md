@@ -104,6 +104,7 @@ Migrate commentaries from oc.newalexandria to opencommentaries
 ## TODO (and notes)
 
 - [ ] Scaife viewer-like URN navigation
+- [ ] Alexandria 1.0--style comments
 - Tags and/as index (#example-tag)
 - Logging for error reports
 - Anchor comments (ask for what these are) --- longer comments that fall under
@@ -112,7 +113,7 @@ Migrate commentaries from oc.newalexandria to opencommentaries
 - Named-entity recognition from Neil Smith and Chris Blackwell
 - Mobile/responsive layout optimizations
 - Global find-and-replace
-- Exemplar diffing (where in the pipeline?)
+- Version diffing (where in the pipeline?)
 - Need to support uploading multiple docxs
 - Show that so-and-so modified a text (important scholarly principle)
 - Different approaches for translations, editions, and commentaries

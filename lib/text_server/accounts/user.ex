@@ -11,6 +11,9 @@ defmodule TextServer.Accounts.User do
     many_to_many :user_projects, TextServer.Projects.Project,
       join_through: TextServer.Projects.User
 
+    many_to_many :user_text_elements, TextServer.TextElements.TextElement,
+      join_through: TextServer.TextElements.User
+
     timestamps()
   end
 

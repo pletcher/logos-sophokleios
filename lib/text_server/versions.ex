@@ -314,7 +314,7 @@ defmodule TextServer.Versions do
       |> Enum.group_by(fn tn ->
         location = tn.location
 
-        if length(tn.location) > 1 do
+        if length(location) > 1 do
           Enum.take(location, length(tn.location) - 1)
         else
           line = List.first(location)

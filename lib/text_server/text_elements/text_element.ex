@@ -12,6 +12,9 @@ defmodule TextServer.TextElements.TextElement do
     belongs_to :end_text_node, TextServer.TextNodes.TextNode
     belongs_to :start_text_node, TextServer.TextNodes.TextNode
 
+    many_to_many :text_element_users, TextServer.Accounts.User,
+      join_through: TextServer.TextElements.User
+
     timestamps()
   end
 

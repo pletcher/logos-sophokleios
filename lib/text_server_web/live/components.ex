@@ -32,7 +32,6 @@ defmodule TextServerWeb.Components do
           highlighted_comments: highlighted_comments
         } = assigns
       ) do
-    IO.puts("HLKJLKJLKJK")
     ~H"""
     <div class="overflow-scroll bg-white sm:rounded-lg">
       <%= for c <- comments do %>

@@ -35,7 +35,6 @@ defmodule TextServerWeb.VersionLive.Show do
 
   defp create_response(socket, version_id, page) do
     %{comments: comments, footnotes: footnotes, passage: passage} = page
-
     version = Versions.get_version!(version_id) |> Repo.preload(:language)
     text_nodes = passage.text_nodes
     location = List.first(text_nodes).location
@@ -85,7 +84,8 @@ defmodule TextServerWeb.VersionLive.Show do
     |> assign_new(:second_reader_selection, fn -> @internal_commentary_magic_string end)
     |> assign(
       second_reader_options: second_reader_options,
-      second_reader_text_nodes: list_second_reader_text_nodes(socket.assigns.text_nodes, version.id)
+      second_reader_text_nodes:
+        list_second_reader_text_nodes(socket.assigns.text_nodes, version.id)
     )
   end
 
@@ -208,24 +208,31 @@ defmodule TextServerWeb.VersionLive.Show do
     comments =
       elements
       |> Enum.filter(fn te ->
-        attrs = Map.get(te, :attributes)
-        kv_pairs = Map.get(attrs, "key_value_pairs")
-
-        te.element_type.name == "comment" &&
-          kv_pairs["date"] != nil
+        # FIXME: We are already checking for this attribute
+        # in TextNode#tag_elements/1 --- why are we doing it
+        # again here?
+        te.element_type.name == "comment"
       end)
       |> Enum.map(fn c ->
         attrs = Map.get(c, :attributes)
         kv_pairs = Map.get(attrs, "key_value_pairs")
-        author = kv_pairs["author"]
 
-        {:ok, date, _} = DateTime.from_iso8601(kv_pairs["date"])
+        if is_nil(kv_pairs) do
+          Map.merge(c, %{
+            author: "Placeholder --- migration error.",
+            date: DateTime.utc_now()
+          })
+        else
+          author = Map.get(kv_pairs, "author")
+          str_date = Map.get(kv_pairs, "date")
 
-        Map.merge(c, %{
-          author: author,
-          content: c.content,
-          date: date
-        })
+          {:ok, date, _} = DateTime.from_iso8601(str_date)
+
+          Map.merge(c, %{
+            author: author,
+            date: date
+          })
+        end
       end)
 
     footnotes =

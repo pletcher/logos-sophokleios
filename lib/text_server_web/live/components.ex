@@ -32,6 +32,7 @@ defmodule TextServerWeb.Components do
           highlighted_comments: highlighted_comments
         } = assigns
       ) do
+    IO.puts("HLKJLKJLKJK")
     ~H"""
     <div class="overflow-scroll bg-white sm:rounded-lg">
       <%= for c <- comments do %>
@@ -193,7 +194,14 @@ defmodule TextServerWeb.Components do
     <.link patch="?page=1" class={classes}>
       <span class="sr-only">First page</span>
       <!-- Heroicon name: mini/chevron-double-left -->
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="h-5 w-5"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
       </svg>
     </.link>
@@ -248,7 +256,14 @@ defmodule TextServerWeb.Components do
     <.link patch={"?page=#{total_pages}"} class={classes}>
       <span class="sr-only">Last page</span>
       <!-- Heroicon name: mini/chevron-double-right -->
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="h-5 w-5"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
       </svg>
     </.link>

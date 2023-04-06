@@ -190,8 +190,11 @@ defmodule TextServer.Versions do
 
     if is_nil(passage) do
       version = get_version!(version_id)
-      paginate_version(version.id)
-      get_version_passage(version_id, passage_number)
+
+      case paginate_version(version.id) do
+        {:ok, _} -> get_version_passage(version_id, passage_number)
+        {:error, message} -> raise message
+      end
     else
       text_nodes =
         TextNodes.get_text_nodes_by_version_between_locations(
@@ -307,7 +310,14 @@ defmodule TextServer.Versions do
       )
 
     text_nodes = Repo.all(q)
+    group_and_paginate_text_nodes(version_id, text_nodes)
+  end
 
+  defp group_and_paginate_text_nodes(version_id, text_nodes) when length(text_nodes) == 0 do
+    {:error, "No text nodes found for version #{version_id}."}
+  end
+
+  defp group_and_paginate_text_nodes(version_id, text_nodes) do
     grouped_text_nodes =
       text_nodes
       |> Enum.filter(fn tn -> tn.location != [0] end)
@@ -444,15 +454,16 @@ defmodule TextServer.Versions do
     {loc, located_fragments} = set_locations(fragments, state)
     # So far, it seems to work well to treat paragraphs
     # as simply two newlines, like in Markdown.
-    {loc, Map.update(located_fragments, loc, [], fn v ->
-      # Don't add a paragraph break at the beginning of a
-      # TextNode
-      if Enum.empty?(v) do
-        v
-      else
-        v ++ [{:string, "\n\n"}]
-      end
-    end)}
+    {loc,
+     Map.update(located_fragments, loc, [], fn v ->
+       # Don't add a paragraph break at the beginning of a
+       # TextNode
+       if Enum.empty?(v) do
+         v
+       else
+         v ++ [{:string, "\n\n"}]
+       end
+     end)}
   end
 
   def set_locations(fragments, {prev_location, grouped_frags}) do
@@ -611,14 +622,15 @@ defmodule TextServer.Versions do
     s = link |> Enum.reduce("", &flatten_string/2)
     end_offset = offset + String.length(s)
 
-    {elements ++ [
-      %{
-        content: url,
-        end_offset: end_offset,
-        start_offset: offset,
-        type: :link,
-      }
-    ], end_offset}
+    {elements ++
+       [
+         %{
+           content: url,
+           end_offset: end_offset,
+           start_offset: offset,
+           type: :link
+         }
+       ], end_offset}
   end
 
   def tag_elements({:note, note}, {elements, offset}) do

@@ -208,31 +208,13 @@ defmodule TextServerWeb.VersionLive.Show do
     comments =
       elements
       |> Enum.filter(fn te ->
-        # FIXME: We are already checking for this attribute
-        # in TextNode#tag_elements/1 --- why are we doing it
-        # again here?
-        te.element_type.name == "comment"
+        te.element_type.name == "comment" && !is_nil(te.content)
       end)
       |> Enum.map(fn c ->
-        attrs = Map.get(c, :attributes)
-        kv_pairs = Map.get(attrs, "key_value_pairs")
-
-        if is_nil(kv_pairs) do
-          Map.merge(c, %{
-            author: "Placeholder --- migration error.",
-            date: DateTime.utc_now()
-          })
-        else
-          author = Map.get(kv_pairs, "author")
-          str_date = Map.get(kv_pairs, "date")
-
-          {:ok, date, _} = DateTime.from_iso8601(str_date)
-
-          Map.merge(c, %{
-            author: author,
-            date: date
-          })
-        end
+        Map.merge(c, %{
+          author: c.text_element_users |> Enum.map(& &1.email) |> Enum.join(", "),
+          date: c.updated_at
+        })
       end)
 
     footnotes =

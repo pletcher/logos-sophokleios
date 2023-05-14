@@ -33,7 +33,7 @@ defmodule TextServerWeb.Components do
         } = assigns
       ) do
     ~H"""
-    <div class="overflow-scroll bg-white sm:rounded-lg">
+    <div class="bg-white sm:rounded-lg">
       <%= for c <- comments do %>
         <div class={comment_class(c, highlighted_comments)}>
           <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
@@ -47,9 +47,9 @@ defmodule TextServerWeb.Components do
 
   defp comment_class(comment, highlighted_comments) do
     if Enum.member?(highlighted_comments, Map.get(comment, :id, nil)) do
-      "border-2 border-stone-800 p-4 rounded-lg"
+      "border-2 border-stone-800 p-4 rounded-lg mb-2"
     else
-      "border-2 rounded-lg p-4"
+      "border-2 rounded-lg p-4 mb-2"
     end
   end
 

@@ -14,10 +14,20 @@
     <div class="max-w-xl pr-4 text-justify">
       <.form :let={f} for={:location} phx-submit="change-location">
         <section class="flex">
-          <Components.select_dropdown form={f} name={:top_level_location} on_change="top-level-location-change" options={@top_level_toc} />
+          <Components.select_dropdown
+            form={f}
+            name={:top_level_location}
+            on_change="top-level-location-change"
+            options={@top_level_toc}
+          />
           <%= unless is_nil(@second_level_toc) do %>
             <div class="mr-2" />
-            <Components.select_dropdown form={f} name={:second_level_location} on_change="second-level-location-change" options={@second_level_toc} />
+            <Components.select_dropdown
+              form={f}
+              name={:second_level_location}
+              on_change="second-level-location-change"
+              options={@second_level_toc}
+            />
           <% end %>
 
           <%= submit("Go", class: ~w(
@@ -49,10 +59,7 @@
         top_level_toc={@top_level_toc}
         second_level_toc={@second_level_toc}
       />
-      <Components.pagination
-        current_page={@passage.passage_number}
-        total_pages={@passage.total_passages}
-      />
+      <Components.pagination current_page={@passage.passage_number} total_pages={@passage.total_passages} />
     </div>
 
     <div class="max-w-xl w-xl flex-grow">
@@ -64,22 +71,22 @@
           on_change="second-reader-change"
           options={@second_reader_options}
         />
-        <%= if length(@comments) > 0 and @second_reader_selection == internal_commentary_magic_string() do %>
-          <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
-        <% end %>
-        <%= if @second_reader_selection != internal_commentary_magic_string() do %>
-          <.live_component
-            id={:second_reader}
-            footnotes={[]}
-            module={TextServerWeb.ReadingEnvironment.Reader}
-            location={@location}
-            passage={@passage}
-            text_nodes={@second_reader_text_nodes}
-            top_level_toc={@top_level_toc}
-            second_level_toc={@second_level_toc}
-          />
-        <% end %>
       </.form>
+      <%= if length(@comments) > 0 and @second_reader_selection == internal_commentary_magic_string() do %>
+        <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
+      <% end %>
+      <%= if @second_reader_selection != internal_commentary_magic_string() do %>
+        <.live_component
+          id={:second_reader}
+          footnotes={[]}
+          module={TextServerWeb.ReadingEnvironment.Reader}
+          location={@location}
+          passage={@passage}
+          text_nodes={@second_reader_text_nodes}
+          top_level_toc={@top_level_toc}
+          second_level_toc={@second_level_toc}
+        />
+      <% end %>
     </div>
   </div>
 </article>

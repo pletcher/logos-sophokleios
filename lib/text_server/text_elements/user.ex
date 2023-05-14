@@ -3,7 +3,6 @@ defmodule TextServer.TextElements.User do
   import Ecto.Changeset
 
   schema "text_element_users" do
-
     field :text_element_id, :id
     field :user_id, :id
 

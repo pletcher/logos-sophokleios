@@ -2,7 +2,15 @@
   <section class="max-w-2xl w-full space-y-8">
     <h2 class="font-semibold text-lg"><%= @title %></h2>
 
-    <.form :let={f} for={@changeset} class="mt-8 space-y-6" id="project-form" phx-target={@myself} phx-change="validate" phx-submit="save">
+    <.form
+      :let={f}
+      for={@changeset}
+      class="mt-8 space-y-6"
+      id="project-form"
+      phx-target={@myself}
+      phx-change="validate"
+      phx-submit="save"
+    >
       <%= hidden_input(f, :created_by_id, value: @user.id) %>
       <div class="max-w-lg rounded-md -space-y-px">
         <div>
@@ -67,7 +75,7 @@
         Markdown preview (click to refresh):
       </h3>
       <div class="@@oc/user-markdown border border-stone-200 p-4 rounded-sm">
-        <%= raw @markdown_preview %>
+        <%= raw(@markdown_preview) %>
       </div>
 
       <div>

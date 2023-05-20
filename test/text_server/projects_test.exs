@@ -15,7 +15,13 @@ defmodule TextServer.ProjectsTest do
   import TextServer.VersionsFixtures
   import TextServer.ProjectsFixtures
 
-  @invalid_attrs %{created_by_id: nil, description: nil, domain: "some domain", homepage_copy: "# Markdown", title: nil}
+  @invalid_attrs %{
+    created_by_id: nil,
+    description: nil,
+    domain: "some domain",
+    homepage_copy: "# Markdown",
+    title: nil
+  }
 
   defp create_creator(_) do
     user = user_fixture()
@@ -38,7 +44,8 @@ defmodule TextServer.ProjectsTest do
         title: "some title"
       }
 
-      assert %Ecto.InvalidChangesetError{} = catch_error(Projects.create_project(bad_domain_attrs))
+      assert %Ecto.InvalidChangesetError{} =
+               catch_error(Projects.create_project(bad_domain_attrs))
     end
 
     test "create_project/1 with valid data creates a project" do

@@ -9,6 +9,7 @@ defmodule TextServer.TextElementsFixtures do
   """
   def text_element_fixture(attrs \\ %{}) do
     text_node = text_node_fixture()
+
     {:ok, text_element} =
       attrs
       |> Enum.into(%{

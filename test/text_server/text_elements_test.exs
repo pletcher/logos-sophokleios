@@ -10,7 +10,7 @@ defmodule TextServer.TextElementsTest do
     attributes: %{},
     content: "some content",
     end_offset: 5,
-    start_offset: 0,
+    start_offset: 0
   }
   @invalid_attrs %{attributes: nil, end_urn: nil}
 
@@ -28,14 +28,17 @@ defmodule TextServer.TextElementsTest do
     test "create_text_element/1 with valid data creates a text_element" do
       element_type = TextServer.ElementTypesFixtures.element_type_fixture()
       end_text_node = TextServer.TextNodesFixtures.text_node_fixture()
-      start_text_node = TextServer.TextNodesFixtures.version_text_node_fixture(end_text_node.version_id)
+
+      start_text_node =
+        TextServer.TextNodesFixtures.version_text_node_fixture(end_text_node.version_id)
 
       assert {:ok, %TextElement{} = text_element} =
-        @valid_attrs
-        |> Map.put(:element_type_id, element_type.id)
-        |> Map.put(:end_text_node_id, end_text_node.id)
-        |> Map.put(:start_text_node_id, start_text_node.id)
-        |> TextElements.create_text_element()
+               @valid_attrs
+               |> Map.put(:element_type_id, element_type.id)
+               |> Map.put(:end_text_node_id, end_text_node.id)
+               |> Map.put(:start_text_node_id, start_text_node.id)
+               |> TextElements.create_text_element()
+
       assert text_element.attributes == %{}
       assert text_element.content == "some content"
       assert text_element.end_offset == 5

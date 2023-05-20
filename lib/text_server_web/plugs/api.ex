@@ -15,7 +15,9 @@ defmodule TextServerWeb.Plugs.API do
     |> case do
       {:ok, user_id} ->
         assign(conn, :current_user, user_id)
-      _unauthorized -> assign(conn, :current_user, nil)
+
+      _unauthorized ->
+        assign(conn, :current_user, nil)
     end
   end
 

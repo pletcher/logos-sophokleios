@@ -2,12 +2,7 @@
   <div class="max-w-md w-full space-y-8">
     <h2>Sign up</h2>
 
-    <.form
-      let={f}
-      for={@changeset}
-      action={Routes.user_registration_path(@conn, :create)}
-      class="mt-8 space-y-6"
-    >
+    <.form :let={f} for={@changeset} action={Routes.user_registration_path(@conn, :create)} class="mt-8 space-y-6">
       <%= if @changeset.action do %>
         <div class="alert alert-danger">
           <p>Oops, something went wrong! Please check the errors below.</p>
@@ -60,7 +55,8 @@
                 clip-rule="evenodd"
               />
             </svg>
-          </span> Sign up
+          </span>
+          Sign up
         </button>
       </div>
     </.form>

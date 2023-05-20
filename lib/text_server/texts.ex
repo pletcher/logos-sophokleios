@@ -100,6 +100,11 @@ defmodule TextServer.Texts do
     end)
   end
 
+  # FIXME: instead of this craziness, let's start using the xml_versions
+  # table: pull in the entire XML file here, then kick off an Oban task
+  # to finish ingestion using built-in Postgres XML functions to build 
+  # tables of contents, views, etc.
+
   def parse_version_xml(
         f \\ "tmp/canonical-greekLit/data/tlg0525/tlg001/tlg0525.tlg001.perseus-grc2.xml"
       ) do

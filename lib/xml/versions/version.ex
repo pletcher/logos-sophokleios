@@ -21,7 +21,8 @@ defmodule Xml.Versions.Version do
        &__MODULE__.xpath_from_cref/1},
     field: {:label, "/TEI/teiHeader/fileDesc/titleStmt/title/text()", &{:ok, to_string(&1)}},
     field: {:language_slug, "/TEI/text/body/div/@xml:lang", &{:ok, to_string(&1)}},
-    list_of: {:structure, "/TEI/teiHeader/encodingDesc/refsDecl/refState/@unit", &{:ok, to_string(&1)}},
+    list_of:
+      {:structure, "/TEI/teiHeader/encodingDesc/refsDecl/refState/@unit", &{:ok, to_string(&1)}},
     field: {:urn, "/TEI/text/body/div/@n", &{:ok, to_string(&1)}},
     field: {:version_type, "/TEI/text/body/div/@type", &{:ok, to_string(&1)}}
   )

@@ -21,7 +21,8 @@ config :text_server, TextServerWeb.Endpoint,
   force_ssl: [
     host: nil,
     rewrite_on: [:x_forwarded_port, :x_forwarded_proto],
-    hsts: false, # maybe true when we use this for real
+    # maybe true when we use this for real
+    hsts: false
   ]
 
 config :swoosh, :api_client, Swoosh.ApiClient.Hackney

@@ -145,11 +145,12 @@ defmodule Xml.VersionBodyHandler do
               [int]
             else
               try do
-                loc = if length(state[:location]) < length(state[:ref_levels]) do
-                  [1, 1, 1]
-                else
-                  state[:location]
-                end
+                loc =
+                  if length(state[:location]) < length(state[:ref_levels]) do
+                    [1, 1, 1]
+                  else
+                    state[:location]
+                  end
 
                 List.replace_at(loc, idx, int)
               rescue

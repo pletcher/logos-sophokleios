@@ -14,6 +14,7 @@ defmodule TextServer.Works do
 
   def search_works(term, params \\ []) do
     term = Regex.replace(~r/[^[:word:][:space:]]/u, term, "") <> ":*"
+
     Work
     |> where(
       [w],
@@ -47,6 +48,14 @@ defmodule TextServer.Works do
   def get_work!(id), do: Repo.get!(Work, id)
 
   def get_work(id), do: Repo.get(Work, id)
+
+  def get_work_by_urn("urn:cts:" <> _rest = urn) do
+    Work |> where([w], w.urn == ^urn) |> Repo.one()
+  end
+
+  def get_work_by_urn(urn) do
+    get_work_by_urn("urn:cts:#{urn}")
+  end
 
   @doc """
   Creates a work.

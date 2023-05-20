@@ -55,7 +55,6 @@ defmodule TextServer.Repo.Migrations.MergeExemplarsIntoVersions do
     move_exemplar_pages_to_version_passages()
     delete_versions_with_no_files()
 
-
     alter table(:text_nodes) do
       remove(:exemplar_id)
     end

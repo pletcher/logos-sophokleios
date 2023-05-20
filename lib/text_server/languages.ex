@@ -66,6 +66,7 @@ defmodule TextServer.Languages do
       nil ->
         title = get_title_by_slug(slug)
         create_language(%{slug: slug, title: title})
+
       language ->
         language
     end

@@ -1,6 +1,6 @@
 <h1>Confirm account</h1>
 
-<.form let={_f} for={:user} action={Routes.user_confirmation_path(@conn, :update, @token)}>
+<.form :let={_f} for={:user} action={Routes.user_confirmation_path(@conn, :update, @token)}>
   <div>
     <button
       type="submit"
@@ -8,24 +8,21 @@
     >
       <span class="absolute left-0 inset-y-0 flex items-center pl-3">
         <!-- Heroicon name: solid/check (https://heroicons.com/) -->
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
             fill-rule="evenodd"
             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
             clip-rule="evenodd"
           />
         </svg>
-      </span> Confirm my account
+      </span>
+      Confirm my account
     </button>
   </div>
 </.form>
 
 <div class="flex items-center justify-between text-sm">
-  <%= link("Register", to: Routes.user_registration_path(@conn, :new)) %> |
-  <%= link("Log in", to: Routes.user_session_path(@conn, :new)) %>
+  <%= link("Register", to: Routes.user_registration_path(@conn, :new)) %> | <%= link("Log in",
+    to: Routes.user_session_path(@conn, :new)
+  ) %>
 </div>

@@ -10,6 +10,8 @@ import Config
 config :text_server,
   ecto_repos: [TextServer.Repo]
 
+config :text_server, TextServer.Repo, types: TextServer.Postgrex.Types
+
 # Configures the endpoint
 config :text_server, TextServerWeb.Endpoint,
   url: [host: "localhost"],

@@ -19,7 +19,7 @@ defmodule TextServerWeb.CollectionLiveTest do
       assert html =~ collection.repository
     end
 
-   test "deletes collection in listing", %{conn: conn, collection: collection} do
+    test "deletes collection in listing", %{conn: conn, collection: collection} do
       user = TextServer.AccountsFixtures.user_fixture()
       conn = log_in_user(conn, user)
 

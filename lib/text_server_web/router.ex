@@ -114,7 +114,10 @@ defmodule TextServerWeb.Router do
     scope "/" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: TextServerWeb.Telemetry
+      live_dashboard "/dashboard",
+        metrics: TextServerWeb.Telemetry,
+        ecto_repos: [TextServer.Repo],
+        ecto_psql_extras_options: [long_running_queries: [threshold: "200 milliseconds"]]
     end
   end
 

@@ -52,18 +52,14 @@ defmodule TextServerWeb.WorkLive.Search do
   attr :selected_work, TextServer.Works.Work
   attr :works, :list
 
-  slot :selected_work_slot, required: true
+  slot(:selected_work_slot, required: true)
 
   def render(assigns) do
     ~H"""
     <div clas="w-full">
       <%= if @selected_work do %>
         <%= render_slot(@selected_work_slot, @selected_work) %>
-        <a
-          class="cursor-pointer text-stone-600 underline"
-          phx-click="reset_search"
-          phx-target={@myself}
-        >
+        <a class="cursor-pointer text-stone-600 underline" phx-click="reset_search" phx-target={@myself}>
           &lsaquo; Search again
         </a>
       <% else %>

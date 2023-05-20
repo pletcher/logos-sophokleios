@@ -40,7 +40,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
 
   def reading_page(assigns) do
     ~H"""
-    <section class="whitespace-pre-wrap">
+    <section class="whitespace-break-spaces">
       <.text_node
         :for={text_node <- @text_nodes}
         graphemes_with_tags={text_node.graphemes_with_tags}

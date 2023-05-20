@@ -81,7 +81,6 @@ defmodule TextServerWeb.ProjectLiveTest do
   describe "Show" do
     setup [:create_project]
 
-
     test "displays project", %{conn: conn, project: project} do
       {:ok, _show_live, html} = live(conn, Routes.project_show_path(conn, :show, project))
 

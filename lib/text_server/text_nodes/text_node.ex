@@ -39,6 +39,7 @@ defmodule TextServer.TextNodes.TextNode do
 
     comments =
       text_node.text_elements |> Enum.filter(fn e -> e.element_type.name == "comment" end)
+
     text = text_node.text
 
     # turn the bare graphemes list into an indexed list of tuples

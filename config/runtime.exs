@@ -22,7 +22,7 @@ config :text_server,
 # Configures AMQP for queueing Version parsing
 config :amqp,
   connections: [
-    rabbitmq_naf: [url: System.get_env("RABBITMQ_URL")],
+    rabbitmq_naf: [url: System.get_env("RABBITMQ_URL")]
   ],
   channels: [
     cts_xml_parser: [connection: :rabbitmq_naf]

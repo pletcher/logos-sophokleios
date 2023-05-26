@@ -32,7 +32,7 @@ defmodule TextServer.Workers.VersionWorker do
   end
 
   defp set_refs_decl(version) do
-    case XML.set_version_refs_declaration(version) do
+    case Xml.set_version_refs_declaration(version) do
       {:ok, version} ->
         {:ok, version}
 

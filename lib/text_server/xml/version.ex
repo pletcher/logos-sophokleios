@@ -1,4 +1,4 @@
-defmodule TextServer.XML.Version do
+defmodule TextServer.Xml.Version do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -9,7 +9,7 @@ defmodule TextServer.XML.Version do
 
     belongs_to :work, TextServer.Works.Work
 
-    has_one :refs_declaration, TextServer.XML.RefsDeclaration, foreign_key: :xml_version_id
+    has_one :refs_declaration, TextServer.Xml.RefsDeclaration, foreign_key: :xml_version_id
 
     timestamps()
   end

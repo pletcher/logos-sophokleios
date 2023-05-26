@@ -1,7 +1,7 @@
-defmodule TextServer.XMLFixtures do
+defmodule TextServer.XmlFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `TextServer.XML` context.
+  entities via the `TextServer.Xml` context.
   """
 
   def unique_version_urn, do: "some:urn#{System.unique_integer([:positive])}"
@@ -18,7 +18,7 @@ defmodule TextServer.XMLFixtures do
         work_id: work_fixture().id,
         xml_document: "<ul><li>foo</li></ul>"
       })
-      |> TextServer.XML.create_version()
+      |> TextServer.Xml.create_version()
 
     version
   end

@@ -1,0 +1,210 @@
+<!-- livebook:{"app_settings":{"slug":"tei"}} -->
+
+# TEI XML Explorations
+
+```elixir
+text_server_root = Path.join(__DIR__, "..")
+
+Mix.install(
+  [
+    {:text_server, path: text_server_root, env: :dev}
+  ],
+  config_path: Path.join(text_server_root, "config/config.exs"),
+  lockfile: Path.join(text_server_root, "mix.lock")
+)
+```
+
+## Read XML file and get replacement patterns from TEI header
+
+```elixir
+pausanias_f = "tmp/canonical-greekLit/data/tlg0525/tlg001/tlg0525.tlg001.perseus-grc2.xml"
+xml_document = File.read!(pausanias_f)
+work = TextServer.Works.get_work_by_urn("greekLit:tlg0525.tlg001")
+
+{:ok, version} =
+  TextServer.Xml.find_or_create_version(%{
+    version_type: :edition,
+    urn: "urn:cts:greekLit:tlg0525.tlg001.perseus-grc2",
+    xml_document: xml_document,
+    work_id: work.id
+  })
+```
+
+## What do we need from the document?
+
+```elixir
+defmodule TeiExplorer do
+  alias TextServer.Repo
+  alias TextServer.Xml.Version
+
+  import Ecto.Query
+
+  @doc """
+  Get the list of possible references.
+  What if instead of doing all of this reference build-up
+  for marginal gain, we just expanded to the second-deepest
+  level of the citation schema and highlighted the requested node?
+
+  Eg., "get Pausanias 3.4.2" would retrieve all of 
+  Book 3 Chapter 4, and highlight Section 2.
+
+  "get Pausanias 3.4" would get the same page but not
+  highlight anything.
+
+  "get Pausanias 3" would get Book 3 Chapter 1 and not
+  highlight anything.
+
+  For two levels of citation, the top one is our page? (Should we
+  should display whole books of Homer at once? Or at least fetch them?)
+
+  For one level of citation, fetch a reasonable number of nodes.
+  (One level often means tragedy --- how to include speaker tags?)
+  """
+  def get_table_of_contents(%Version{} = version) do
+    version.refs_declaration.replacement_patterns
+    |> Enum.map(fn pattern ->
+      path = clean_xpath_string(pattern)
+      get_xpath_result(version, path <> "/@n")
+    end)
+    |> TeiExplorer.TableOfContents.collect_citations()
+  end
+
+  @doc """
+  Get all of the leaf nodes in the text tree.
+  """
+  def get_text_nodes(%Version{} = version) do
+    pattern = List.first(version.refs_declaration.replacement_patterns)
+    path = clean_xpath_string(pattern)
+
+    get_xpath_result(version, path)
+  end
+
+  def get_pages(%Version{} = version) do
+    patterns = version.refs_declaration.replacement_patterns |> Enum.reverse()
+    pattern = Enum.at(patterns, 1)
+    path = clean_xpath_string(pattern)
+
+    get_xpath_result(version, path)
+  end
+
+  @doc """
+  Get the set of element names that are children
+  of any text node in the document.
+  """
+  def get_element_names(%Version{} = _version) do
+  end
+
+  def clean_xpath_string(s) do
+    Regex.named_captures(~r/\#xpath\((?<path>.*)\)/, s)
+    |> Map.get("path")
+    |> String.replace(~r/\[@n='\$\d+'\]/, "")
+  end
+
+  @doc """
+  Queries the given version using PostgreSQL's built-in
+  xpath support.
+  """
+  def get_xpath_result(%Version{} = version, path) do
+    Version
+    |> where([v], v.id == ^version.id)
+    |> select(
+      fragment(
+        """
+        xpath(
+          ?,
+          xml_document,
+          ARRAY[ARRAY['tei', 'http://www.tei-c.org/ns/1.0']]
+        )::text[]
+        """,
+        ^path
+      )
+    )
+    |> Repo.one()
+  end
+end
+```
+
+```elixir
+defmodule TeiExplorer.TableOfContents do
+  def collect_citations(passage_refs) when length(passage_refs) == 1 do
+    passage_refs |> List.first() |> Enum.map(&String.to_integer/1)
+  end
+
+  def collect_citations(passage_refs, grouped \\ [])
+
+  def collect_citations([], grouped), do: grouped
+
+  def collect_citations(passage_refs, grouped) when length(passage_refs) == 3 do
+    [sections, chapters, books] = passage_refs
+
+    current_sections = get_current_level(sections)
+    [current_chapter | rest_chapters] = chapters
+    [current_book | rest_books] = books
+
+    citations =
+      for section <- current_sections do
+        {current_book, current_chapter, section}
+      end
+
+    rest_sections = sections -- current_sections
+
+    if Enum.count(rest_sections) == 0 do
+      [citations | grouped] |> List.flatten()
+    else
+      next_books =
+        if is_greater(current_chapter, List.first(rest_chapters)) do
+          rest_books
+        else
+          books
+        end
+
+      collect_citations([rest_sections, rest_chapters, next_books], [citations | grouped])
+    end
+  end
+
+  def collect_citations(passage_refs, grouped) when length(passage_refs) == 2 do
+    [lines, books] = passage_refs
+
+    current_lines = get_current_level(lines)
+    [current_book | rest_books] = books
+
+    citations =
+      for line <- lines do
+        {current_book, line}
+      end
+
+    rest_lines = lines -- current_lines
+
+    if Enum.count(rest_lines) == 0 do
+      [citations | grouped] |> List.flatten()
+    else
+      collect_citations([rest_lines, rest_books], [citations | grouped])
+    end
+  end
+
+  defp get_current_level(sections) do
+    sections
+    |> Enum.reduce_while([], fn section, acc ->
+      if is_greater(section, List.first(acc)) do
+        {:cont, [section | acc]}
+      else
+        {:halt, acc}
+      end
+    end)
+  end
+
+  defp is_greater(x, y) do
+    to_comparable(x) > to_comparable(y)
+  end
+
+  defp to_comparable(x) when is_nil(x), do: 0
+  defp to_comparable(x) when is_binary(x), do: String.to_integer(x, 10)
+  defp to_comparable(x) when is_integer(x), do: x
+end
+```
+
+```elixir
+v = TextServer.Xml.get_version_by_urn!("urn:cts:greekLit:tlg0525.tlg001.perseus-grc2")
+
+t = TeiExplorer.get_table_of_contents(v)
+```

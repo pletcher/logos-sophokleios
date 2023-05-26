@@ -93,8 +93,6 @@ defmodule TextServer.Works do
     end
   end
 
-  def get_by_urn(urn), do: Repo.get_by(Work, %{urn: urn})
-
   @doc """
   Updates a work.
 

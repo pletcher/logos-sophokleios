@@ -2,7 +2,7 @@ defmodule TextServer.Workers.VersionWorker do
   use Oban.Worker
 
   alias TextServer.Versions
-  alias TextServer.XML
+  alias TextServer.Xml
 
   # We can implement different actions by passing additional
   # args to Oban when adding an item to the queue
@@ -14,7 +14,7 @@ defmodule TextServer.Workers.VersionWorker do
   end
 
   def perform(%Oban.Job{args: %{"id" => id, "task" => "set_refs_decl"} = _args}) do
-    version = XML.get_version!(id)
+    version = Xml.get_version!(id)
 
     set_refs_decl(version)
   end

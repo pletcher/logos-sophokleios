@@ -1,4 +1,4 @@
-defmodule TextServer.XML.RefsDeclaration do
+defmodule TextServer.Xml.RefsDeclaration do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -17,7 +17,7 @@ defmodule TextServer.XML.RefsDeclaration do
     field :replacement_patterns, {:array, :string}
     field :units, {:array, :string}
 
-    belongs_to :xml_version, TextServer.XML.Version, foreign_key: :xml_version_id
+    belongs_to :xml_version, TextServer.Xml.Version, foreign_key: :xml_version_id
 
     timestamps()
   end

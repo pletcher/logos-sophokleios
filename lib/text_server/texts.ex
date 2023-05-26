@@ -102,7 +102,7 @@ defmodule TextServer.Texts do
 
   # FIXME: instead of this craziness, let's start using the xml_versions
   # table: pull in the entire XML file here, then kick off an Oban task
-  # to finish ingestion using built-in Postgres XML functions to build 
+  # to finish ingestion using built-in Postgres XML functions to build
   # tables of contents, views, etc.
 
   def parse_version_xml(
@@ -376,7 +376,7 @@ defmodule TextServer.Texts do
             IO.inspect("Unable to parse version file #{f}")
             IO.inspect(version_data)
           else
-            work = TextServer.Works.get_by_urn(v.work_urn)
+            work = TextServer.Works.get_work_by_urn(v.work_urn)
 
             version_data =
               Map.merge(

@@ -30,6 +30,20 @@ But there's a catch: Postgres doesn't support default namespaces, so we need eit
 
 See https://www.postgresql.org/docs/current/functions-xml.html#FUNCTIONS-XML-PROCESSING-XMLTABLE
 
+## Some things worth considering
+
+We'll still have to deal with the problems posed by the XML node hierarchy when it comes to commentaries and annotations. It's a win to have text and commentary/annotation separated, because they represent different textual traditions.
+
+The way TEI XML works right now is kind of just a modern version of the medieval scribes putting text and commentary side by side --- and then later readers getting them mixed up.
+
+Can we use XSL in a pre-processing step to separate text from commentary?
+
+- Each annotation needs to have a URN pointing to the text that it annotates.
+- When we call the text from the database, we should try just to get the `text()` of the canonical citation (from the references declaration).
+- But the way that XML works, we'll also get the `text()` of every citation that occurs as a child node of the parent (reference) element.
+  - There are ostensibly ways around this, but they seem to require knowing a lot more about the hierarchy than we do.
+
+
 ## Example queries
 
 ### Get lines from Homer

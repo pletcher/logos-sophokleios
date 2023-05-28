@@ -150,23 +150,7 @@ defmodule TextServer.Xml do
     version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
     path = get_ref_xpath(passage, version.refs_declaration)
 
-    # NOTE: We cannot use SweetXML/:xmerl because
-    # it chokes on the xml-model declaration. So
-    # unfortunately we need to make another database query.
-    Version
-    |> where([v], v.id == ^version.id)
-    |> select(
-      fragment(
-        """
-        xpath(?,
-          xml_document,
-          ARRAY[ARRAY['tei', 'http://www.tei-c.org/ns/1.0']]
-        )::text[]
-        """,
-        ^path
-      )
-    )
-    |> Repo.one()
+    get_xpath_result(version, path)
     |> List.first()
   end
 
@@ -226,21 +210,30 @@ defmodule TextServer.Xml do
   end
 
   def get_refs_decl(%Version{} = version) do
+    get_xpath_result(version, refs_decl_xpath())
+    |> List.first()
+  end
+
+    @doc """
+  Queries the given version using PostgreSQL's built-in
+  xpath support.
+  """
+  def get_xpath_result(%Version{} = version, path) do
     Version
     |> where([v], v.id == ^version.id)
     |> select(
       fragment(
         """
-        xpath(?,
+        xpath(
+          ?,
           xml_document,
           ARRAY[ARRAY['tei', 'http://www.tei-c.org/ns/1.0']]
         )::text[]
         """,
-        ^refs_decl_xpath()
+        ^path
       )
     )
     |> Repo.one()
-    |> List.first()
   end
 
   defp refs_decl_xpath() do

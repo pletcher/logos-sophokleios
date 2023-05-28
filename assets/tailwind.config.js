@@ -1,5 +1,8 @@
 // See the Tailwind configuration guide for advanced usage
 // https://tailwindcss.com/docs/configuration
+
+const defaultTheme = require('tailwindcss/defaultTheme');
+
 module.exports = {
   content: ["./js/**/*.js", "../lib/*_web.ex", "../lib/*_web/**/*.*ex"],
   theme: {
@@ -11,6 +14,10 @@ module.exports = {
           "url('/images/Pausanias_Description_of_Greece.jpg')",
       },
     },
+    fontFamily: {
+      // Helvetica messes up kerning when diacritics are involved
+      'sans': ["Arial", ...defaultTheme.fontFamily.sans]
+    }
   },
   plugins: [require("@tailwindcss/forms")],
 };

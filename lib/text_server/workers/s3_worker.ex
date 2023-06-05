@@ -36,6 +36,14 @@ defmodule TextServer.Workers.S3Worker do
         IO.inspect(result)
     end
 
+    case S3.put_bucket_policy(bucket_name, bucket_policy(bucket_name)) |> ExAws.request() do
+      {:ok, _} ->
+        nil
+
+      {:error, error} ->
+        IO.inspect(error)
+    end
+
     src = text_element.content
     dest = String.replace(src, "#{urn}/", "")
 
@@ -48,5 +56,36 @@ defmodule TextServer.Workers.S3Worker do
     new_src = xpath(body, ~x"//CompleteMultipartUploadResult/Location/text()") |> to_string()
 
     TextElements.update_text_element(text_element, %{content: new_src})
+  end
+
+  @doc """
+  Returns a JSON string policy that, when applied, allows
+  public read access to all of the objects in the bucket.
+  It does not allow public write or listing of objects
+  in the bucket --- those actions still require the
+  access key etc.
+  """
+  def bucket_policy(bucket) do
+    %{
+      Version: "2012-10-17",
+      Statement: [
+        %{
+          Sid: "Stmt1405592139000",
+          Effect: "Allow",
+          Principal: %{
+            AWS: [
+              "*"
+            ]
+          },
+          Action: [
+            "s3:GetObject"
+          ],
+          Resource: [
+            "arn:aws:s3:::#{bucket}/*"
+          ]
+        }
+      ]
+    }
+    |> Jason.encode!()
   end
 end

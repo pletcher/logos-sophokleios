@@ -147,15 +147,27 @@ defmodule TextServer.Xml do
 
   def get_version_reference("urn:cts:" <> _rest = urn) do
     ["urn", "cts", collection, work, passage] = String.split(urn, ":")
+    passages = String.split(passage, "-")
     version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
-    path = get_ref_xpath(passage, version.refs_declaration)
+    path = get_ref_xpath(passages, version.refs_declaration)
 
     get_xpath_result(version, path)
     |> List.first()
   end
 
-  def get_ref_xpath(passage, refs_decl) do
-    get_replacement_pattern(passage, refs_decl.replacement_patterns, refs_decl.match_patterns)
+  def get_ref_xpath(passages, %RefsDeclaration{} = refs_decl) when length(passages) == 1 do
+    get_replacement_pattern(List.first(passages), refs_decl.replacement_patterns, refs_decl.match_patterns)
+  end
+
+  def get_ref_xpath(passages, %RefsDeclaration{} = refs_decl) when length(passages) == 2 do
+    delimiters = refs_decl.delimiters
+    # FIXME: The delimiter will not always be a "." --- we should get this from the XML file.
+    start_refs = List.first(passages) |> String.split(".")
+    end_refs = List.last(passages) |> String.split(".")
+
+    ranges = for s_ref <- start_refs, e_ref <- end_refs do
+
+    end
   end
 
   defp get_replacement_pattern(_passage, _replacement_patterns, []) do

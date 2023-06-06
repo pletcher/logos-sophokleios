@@ -75,9 +75,9 @@ defmodule TextServerWeb.Components do
   def select_dropdown(assigns) do
     ~H"""
     <%= select(
-      assigns[:form],
-      assigns[:name],
-      assigns[:options],
+      @form,
+      @name,
+      @options,
       class: ~w(
                 appearance-none
                 relative
@@ -94,7 +94,7 @@ defmodule TextServerWeb.Components do
                 focus:border-stone-500
                 focus:z-10
                 sm:text-sm
-                #{assigns[:classes]}
+                #{@classes}
               ),
       "phx-change": assigns[:on_change]
     ) %>

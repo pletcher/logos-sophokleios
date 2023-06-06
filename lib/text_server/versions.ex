@@ -53,7 +53,7 @@ defmodule TextServer.Versions do
 
   def list_sibling_versions(version) do
     Version
-    |> where([v], v.work_id == ^version.work_id and v.id != ^version.id)
+    |> where([v], v.work_id == ^version.work_id)
     |> Repo.all()
   end
 
@@ -71,9 +71,9 @@ defmodule TextServer.Versions do
       ** (Ecto.NoResultsError)
 
   """
-  def get_version!(id), do: Repo.get!(Version, id)
+  def get_version!(id), do: Repo.get!(Version, id) |> Repo.preload(:language)
 
-  def get_version_by_urn!(urn), do: Repo.get_by!(Version, urn: urn)
+  def get_version_by_urn!(urn), do: Repo.get_by!(Version, urn: urn) |> Repo.preload(:language)
 
   @doc """
   Creates a version.
@@ -214,30 +214,34 @@ defmodule TextServer.Versions do
   end
 
   def get_version_passage_by_location(version_id, location) when is_list(location) do
-    passage =
-      Passage
-      |> where(
-        [p],
-        p.version_id == ^version_id and
-          p.start_location <= ^location and
-          p.end_location >= ^location
-      )
-      |> Repo.one()
+    case Passage
+         |> where(
+           [p],
+           p.version_id == ^version_id and
+             p.start_location <= ^location and
+             p.end_location >= ^location
+         )
+         |> Repo.one() do
+      nil ->
+        Logger.warn("No text_nodes found.")
+        nil
 
-    text_nodes =
-      TextNodes.get_text_nodes_by_version_between_locations(
-        version_id,
-        passage.start_location,
-        passage.end_location
-      )
+      passage ->
+        text_nodes =
+          TextNodes.get_text_nodes_by_version_between_locations(
+            version_id,
+            passage.start_location,
+            passage.end_location
+          )
 
-    %VersionPassage{
-      version_id: version_id,
-      passage: passage,
-      passage_number: passage.passage_number,
-      text_nodes: text_nodes,
-      total_passages: get_total_passages(version_id)
-    }
+        %VersionPassage{
+          version_id: version_id,
+          passage: passage,
+          passage_number: passage.passage_number,
+          text_nodes: text_nodes,
+          total_passages: get_total_passages(version_id)
+        }
+    end
   end
 
   @doc """

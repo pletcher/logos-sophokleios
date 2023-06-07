@@ -37,6 +37,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   end
 
   attr :text_nodes, :list, required: true
+  attr :version_urn, :string, required: true
 
   def reading_page(assigns) do
     ~H"""
@@ -45,6 +46,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         :for={text_node <- @text_nodes}
         graphemes_with_tags={text_node.graphemes_with_tags}
         location={text_node.location}
+        version_urn={@version_urn}
       />
     </section>
     """
@@ -108,13 +110,14 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
 
   attr :graphemes_with_tags, :list, required: true
   attr :location, :integer, required: true
+  attr :version_urn, :string, required: true
 
   def text_node(assigns) do
     location = assigns[:location] |> Enum.join(".")
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
-    <p class="mb-4">
+    <p class="mb-4 cursor-context-menu" phx-click="focus-text-node" phx-value-urn={"#{@version_urn}:#{location}"}>
       <span class="text-slate-500" title={"Location: #{location}"}><%= location %></span>
       <.text_element :for={{graphemes, tags} <- @graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
     </p>

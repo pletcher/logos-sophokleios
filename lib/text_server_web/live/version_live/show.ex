@@ -43,7 +43,9 @@ defmodule TextServerWeb.VersionLive.Show do
 
     sibling_versions =
       Versions.list_sibling_versions(version)
-      |> Enum.map(fn v -> [key: v.label, value: Integer.to_string(v.id), selected: version.id == v.id] end)
+      |> Enum.map(fn v ->
+        [key: v.label, value: Integer.to_string(v.id), selected: version.id == v.id]
+      end)
 
     text_nodes = passage.text_nodes
     location = List.first(text_nodes).location
@@ -89,7 +91,9 @@ defmodule TextServerWeb.VersionLive.Show do
     {format_top_level_toc(toc, top_level_location), nil}
   end
 
-  @spec format_second_level_toc(map(), pos_integer(), pos_integer()) :: [[key: string(), value: string(), selected: boolean()]]
+  @spec format_second_level_toc(map(), pos_integer(), pos_integer()) :: [
+          [key: String.t(), value: String.t(), selected: boolean()]
+        ]
   def format_second_level_toc(toc, top_level_location, location \\ 1) do
     Map.get(toc, top_level_location)
     |> Map.keys()
@@ -97,7 +101,9 @@ defmodule TextServerWeb.VersionLive.Show do
     |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == location])
   end
 
-  @spec format_top_level_toc(map(), pos_integer()) :: [[key: string(), value: string(), selected: boolean()]]
+  @spec format_top_level_toc(map(), pos_integer()) :: [
+          [key: String.t(), value: String.t(), selected: boolean()]
+        ]
   def format_top_level_toc(toc, location \\ 1) do
     Map.keys(toc)
     |> Enum.sort()
@@ -114,7 +120,7 @@ defmodule TextServerWeb.VersionLive.Show do
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
 
-  def handle_event("location-change", %{"location" => location} = params, socket) do
+  def handle_event("location-change", %{"location" => location} = _params, socket) do
     version_id = Map.get(location, "version_select")
     top_level = Map.get(location, "top_level_location") |> String.to_integer()
     second_level = Map.get(location, "second_level_location") |> String.to_integer()
@@ -123,17 +129,20 @@ defmodule TextServerWeb.VersionLive.Show do
 
     top_level_toc = format_top_level_toc(toc, top_level)
     second_level_toc = format_second_level_toc(toc, top_level, second_level)
-    versions = socket.assigns.versions |> Enum.map(fn v ->
-      id = Keyword.get(v, :value)
-      Keyword.merge(v, selected: id == version_id)
-    end)
+
+    versions =
+      socket.assigns.versions
+      |> Enum.map(fn v ->
+        id = Keyword.get(v, :value)
+        Keyword.merge(v, selected: id == version_id)
+      end)
 
     {:noreply,
      socket
      |> assign(
        second_level_toc: second_level_toc,
        versions: versions,
-       top_level_toc: top_level_toc,
+       top_level_toc: top_level_toc
      )}
   end
 

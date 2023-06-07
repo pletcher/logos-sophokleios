@@ -4,6 +4,12 @@
 
 For now, enable S3 uploads by proxyin the MinIO server with `fly proxy 9000`.
 
+## What are we doing?
+
+We have canonical texts that have been digitized, and we have people who have been writing commentaries in formats that are not compatible with these digital versions. How do we fit these two things together?
+
+Digital preservation and presentation.
+
 ## About the schema
 
 We follow the [CTS URN spec](http://cite-architecture.github.io/ctsurn_spec/),

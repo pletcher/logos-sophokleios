@@ -6,7 +6,6 @@ defmodule TextServer.TextNodes do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
-  alias TextServer.TextElements.TextElement
   alias TextServer.TextNodes.TextNode
   alias TextServer.Versions.Version
 
@@ -46,14 +45,12 @@ defmodule TextServer.TextNodes do
       }
   """
   def list_text_nodes_by_version_id(version_id, params \\ [page_size: 20]) do
-    text_elements_query = from te in TextElement, order_by: te.start_offset
-
     query =
       from(
         t in TextNode,
         where: t.version_id == ^version_id,
         order_by: [asc: t.location],
-        preload: [text_elements: ^{text_elements_query, [:element_type]}]
+        preload: [text_elements: :element_type]
       )
 
     Repo.paginate(query, params)
@@ -91,8 +88,6 @@ defmodule TextServer.TextNodes do
       [%TextNode{location: [1, 1, 1], ...}, %TextNode{location: [1, 1, 2], ...}]
   """
   def get_text_nodes_by_version_between_locations(%Version{} = version, start_location, end_location) do
-    text_elements_query = from(te in TextElement, order_by: te.start_offset)
-
     query =
       from(
         t in TextNode,
@@ -101,7 +96,7 @@ defmodule TextServer.TextNodes do
             t.location >= ^start_location and
             t.location <= ^end_location,
         order_by: [asc: t.location],
-        preload: [text_elements: ^{text_elements_query, [:element_type, :text_element_users]}]
+        preload: [text_elements: [:element_type, :text_element_users]]
       )
 
     Repo.all(query)
@@ -117,8 +112,6 @@ defmodule TextServer.TextNodes do
 
   @spec get_text_nodes_by_version_from_start_location(%Version{}, [...]) :: [%TextNode{}]
   def get_text_nodes_by_version_from_start_location(%Version{} = version, start_location) do
-    text_elements_query = from(te in TextElement, order_by: te.start_offset)
-
     cardinality = Enum.count(start_location)
     pseudo_page_number = Enum.at(start_location, cardinality - 2)
     query =
@@ -130,7 +123,7 @@ defmodule TextServer.TextNodes do
             fragment("location[?] = ?", ^cardinality - 1, ^pseudo_page_number) and
             fragment("location[1] = ?", ^List.first(start_location)),
         order_by: [asc: t.location],
-        preload: [text_elements: ^{text_elements_query, [:element_type, :text_element_users]}]
+        preload: [text_elements: [:element_type, :text_element_users]]
       )
 
     Repo.all(query)
@@ -154,7 +147,9 @@ defmodule TextServer.TextNodes do
       ** (Ecto.NoResultsError)
 
   """
-  def get_text_node!(id), do: Repo.get!(TextNode, id)
+  def get_text_node!(id) do
+    Repo.get!(TextNode, id) |> Repo.preload(:text_elements)
+  end
 
   def get_by(attrs \\ %{}) do
     Repo.get_by(TextNode, attrs)

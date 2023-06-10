@@ -110,10 +110,9 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
             tags |> Enum.find(&(&1.name == "note")) |> Map.get(:metadata, %{})
           )
 
+        # NOTE: This element must be on a single line because we're preserving paragraph breaks from the original docx.
         ~H"""
-        <span class={@classes}>
-          <%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a>
-        </span>
+        <span class={@classes}><%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a></span>
         """
 
       true ->

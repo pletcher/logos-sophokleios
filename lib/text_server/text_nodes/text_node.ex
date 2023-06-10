@@ -13,7 +13,9 @@ defmodule TextServer.TextNodes.TextNode do
 
     belongs_to :version, TextServer.Versions.Version
 
-    has_many :text_elements, TextServer.TextElements.TextElement, foreign_key: :start_text_node_id
+    has_many :text_elements, TextServer.TextElements.TextElement,
+      foreign_key: :start_text_node_id,
+      preload_order: [asc: :start_offset]
 
     timestamps()
   end

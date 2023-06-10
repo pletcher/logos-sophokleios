@@ -11,7 +11,7 @@ defmodule TextServer.VersionsFixtures do
   @doc """
   Generate a unique version urn.
   """
-  def unique_version_urn, do: "some:urn#{System.unique_integer([:positive])}"
+  def unique_version_urn, do: "urn:cts:greekLit:tlg0012.#{System.unique_integer([:positive])}"
 
   @doc """
   Generate a version.

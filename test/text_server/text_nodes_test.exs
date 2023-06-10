@@ -74,7 +74,7 @@ defmodule TextServer.TextNodesTest do
       end)
 
       text_nodes =
-        TextNodes.get_text_nodes_by_version_between_locations(version.id, [1, 2], [1, 4])
+        TextNodes.get_text_nodes_by_version_between_locations(version, [1, 2], [1, 4])
 
       locations = Enum.map(text_nodes, & &1.location)
 

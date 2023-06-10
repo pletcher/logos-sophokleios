@@ -173,6 +173,41 @@ defmodule TextServer.Versions do
     {:ok, passage}
   end
 
+  def get_passage_by_urn("urn:cts:" <> collection_work = _urn) do
+    {collection, work, passages} = case String.split(collection_work, ":") do
+      [collection, work, passage] ->
+        {collection, work, String.split(passage, "-")}
+      [collection, work] ->
+        {collection, work, nil}
+    end
+
+    version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
+    _text_nodes = get_version_text_nodes(version, passages)
+  end
+
+  def get_version_text_nodes(%Version{} = version, passages) when is_nil(passages) do
+    cardinality =
+      TextNode
+      |> where([t], t.version_id == ^version.id)
+      |> select(
+        fragment("max(cardinality(location))")
+      )
+      |> Repo.one()
+    start_location = List.duplicate(1, cardinality)
+    TextNodes.get_text_nodes_by_version_from_start_location(version, start_location)
+  end
+
+  def get_version_text_nodes(%Version{} = version, passages) when length(passages) == 1 do
+    start_location = List.first(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
+    TextNodes.get_text_nodes_by_version_from_start_location(version, start_location)
+  end
+
+  def get_version_text_nodes(%Version{} = version, passages) when length(passages) == 2 do
+    start_location = List.first(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
+    end_location = List.last(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
+    TextNodes.get_text_nodes_by_version_between_locations(version, start_location, end_location)
+  end
+
   def get_version_passage(version_id, passage_number \\ 1) do
     total_passages = get_total_passages(version_id)
 

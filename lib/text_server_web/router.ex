@@ -87,8 +87,6 @@ defmodule TextServerWeb.Router do
       live "/projects", ProjectLive.Index, :index
       live "/projects/:id", ProjectLive.Show, :show
 
-      live "/read/:urn", XmlVersionLive.Show, :show
-
       live "/text_groups", TextGroupLive.Index, :index
       live "/text_groups/:id", TextGroupLive.Show, :show
 
@@ -97,6 +95,7 @@ defmodule TextServerWeb.Router do
 
       live "/versions", VersionLive.Index, :index
       live "/versions/:id", VersionLive.Show, :show
+      live "/read/:urn", VersionLive.Show, :read
 
       live "/works", WorkLive.Index, :index
       live "/works/:id", WorkLive.Show, :show

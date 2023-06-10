@@ -8,6 +8,7 @@ defmodule TextServer.TextNodes do
 
   alias TextServer.TextElements.TextElement
   alias TextServer.TextNodes.TextNode
+  alias TextServer.Versions.Version
 
   @doc """
   Returns the list of text_nodes.
@@ -86,20 +87,48 @@ defmodule TextServer.TextNodes do
 
   ## Examples
 
-      iex> get_text_nodes_by_version_between_locations(1, [1, 1, 1], [1, 1, 2])
+      iex> get_text_nodes_by_version_between_locations(%Version{id: 1}, [1, 1, 1], [1, 1, 2])
       [%TextNode{location: [1, 1, 1], ...}, %TextNode{location: [1, 1, 2], ...}]
   """
-
-  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) do
+  def get_text_nodes_by_version_between_locations(%Version{} = version, start_location, end_location) do
     text_elements_query = from(te in TextElement, order_by: te.start_offset)
 
     query =
       from(
         t in TextNode,
         where:
-          t.version_id == ^version_id and
+          t.version_id == ^version.id and
             t.location >= ^start_location and
             t.location <= ^end_location,
+        order_by: [asc: t.location],
+        preload: [text_elements: ^{text_elements_query, [:element_type, :text_element_users]}]
+      )
+
+    Repo.all(query)
+  end
+
+  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) when is_integer(version_id) do
+    get_text_nodes_by_version_between_locations(%Version{id: version_id}, start_location, end_location)
+  end
+
+  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) when is_binary(version_id) do
+    get_text_nodes_by_version_between_locations(%Version{id: version_id}, start_location, end_location)
+  end
+
+  @spec get_text_nodes_by_version_from_start_location(%Version{}, [...]) :: [%TextNode{}]
+  def get_text_nodes_by_version_from_start_location(%Version{} = version, start_location) do
+    text_elements_query = from(te in TextElement, order_by: te.start_offset)
+
+    cardinality = Enum.count(start_location)
+    pseudo_page_number = Enum.at(start_location, cardinality - 2)
+    query =
+      from(
+        t in TextNode,
+        where:
+          t.version_id == ^version.id and
+            t.location >= ^start_location and
+            fragment("location[?] = ?", ^cardinality - 1, ^pseudo_page_number) and
+            fragment("location[1] = ?", ^List.first(start_location)),
         order_by: [asc: t.location],
         preload: [text_elements: ^{text_elements_query, [:element_type, :text_element_users]}]
       )

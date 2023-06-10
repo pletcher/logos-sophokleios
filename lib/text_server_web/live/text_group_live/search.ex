@@ -64,7 +64,7 @@ defmodule TextServerWeb.TextGroupLive.Search do
                 title: @selected_text_group.title
               }
             }
-            url={nil}
+            url={""}
           >
             <%= @selected_text_group.title %>
           </Components.card>

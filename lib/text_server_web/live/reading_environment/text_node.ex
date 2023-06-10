@@ -13,7 +13,6 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
   @impl true
   def render(assigns) do
-    location = assigns[:location] |> Enum.join(".")
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
@@ -24,7 +23,9 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
       phx-target={@myself}
       phx-value-urn={@id}
     >
-      <span class="text-slate-500" title={"Location: #{location}"}><%= location %></span>
+      <span class="text-slate-500" title={"Location: #{@location |> Enum.join(".")}"}>
+        <%= @location |> Enum.join(".") %>
+      </span>
       <.text_element :for={{graphemes, tags} <- @graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
     </p>
     """
@@ -54,53 +55,69 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
   def text_element(assigns) do
     tags = assigns[:tags]
 
-    classes =
-      tags
-      |> Enum.map(&tag_classes/1)
-      |> Enum.join(" ")
+    assigns =
+      assign(
+        assigns,
+        :classes,
+        tags
+        |> Enum.map(&tag_classes/1)
+        |> Enum.join(" ")
+      )
 
     cond do
       Enum.member?(tags |> Enum.map(& &1.name), "comment") ->
-        comments =
-          tags
-          |> Enum.filter(&(&1.name == "comment"))
-          |> Enum.map(& &1.metadata[:id])
-          |> Jason.encode!()
+        assigns =
+          assign(
+            assigns,
+            :comments,
+            tags
+            |> Enum.filter(&(&1.name == "comment"))
+            |> Enum.map(& &1.metadata[:id])
+            |> Jason.encode!()
+          )
 
         ~H"""
-        <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
+        <span class={@classes} phx-click="highlight-comments" phx-value-comments={@comments}><%= @text %></span>
         """
 
       Enum.member?(tags |> Enum.map(& &1.name), "image") ->
-        image = tags |> Enum.find(&(&1.name == "image"))
-        meta = Map.get(image, :metadata, %{})
+        assigns =
+          assign(
+            assigns,
+            src:
+              tags |> Enum.find(&(&1.name == "image")) |> Map.get(:metadata, %{}) |> Map.get(:src)
+          )
 
-        if is_nil(meta) do
-          ~H"<span />"
-        else
-          src = Map.get(meta, :src)
-          ~H"<img class={classes} src={src} />"
-        end
+        ~H"<img class={@classes} src={@src} />"
 
       Enum.member?(tags |> Enum.map(& &1.name), "link") ->
-        link = tags |> Enum.find(&(&1.name == "link"))
-        meta = Map.get(link, :metadata, %{})
-        src = Map.get(meta, :src)
+        assigns =
+          assign(
+            assigns,
+            :src,
+            tags |> Enum.find(&(&1.name == "link")) |> Map.get(:metadata, %{}) |> Map.get(:src)
+          )
 
         ~H"""
-        <a class={classes} href={src}><%= @text %></a>
+        <a class={@classes} href={@src}><%= @text %></a>
         """
 
       Enum.member?(tags |> Enum.map(& &1.name), "note") ->
-        footnote = tags |> Enum.find(&(&1.name == "note"))
-        meta = footnote.metadata
+        assigns =
+          assign(
+            assigns,
+            :footnote,
+            tags |> Enum.find(&(&1.name == "note")) |> Map.get(:metadata, %{})
+          )
 
         ~H"""
-        <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
+        <span class={@classes}>
+          <%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a>
+        </span>
         """
 
       true ->
-        ~H"<span class={classes}><%= @text %></span>"
+        ~H"<span class={@classes}><%= @text %></span>"
     end
   end
 

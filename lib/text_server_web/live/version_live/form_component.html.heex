@@ -17,7 +17,7 @@
       >
         <:selected_work_slot :let={work}>
           <%= hidden_input(:selected_work, :work_id, value: work.id) %>
-          <Components.card item={%{description: work.urn, title: work.english_title}} url={nil}>
+          <Components.card item={%{description: work.urn, title: work.english_title}} url={""}>
             <%= work.title %>
           </Components.card>
         </:selected_work_slot>

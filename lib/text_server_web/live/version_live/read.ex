@@ -1,14 +1,21 @@
 defmodule TextServerWeb.VersionLive.Read do
   use TextServerWeb, :live_view
 
-  alias TextServerWeb.Components
+  # alias TextServerWeb.Components
 
-  alias TextServer.TextNodes
+  # alias TextServer.TextNodes
   alias TextServer.Versions
 
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket |> assign_new(:current_user, fn -> nil end)}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <div>Read version</div>
+    """
   end
 
   @impl true
@@ -30,8 +37,9 @@ defmodule TextServerWeb.VersionLive.Read do
     )
   end
 
-  def create_response(socket, urn, %{comments: comments, footnotes: footnotes, passage: passage} = page) do
-
+  def create_response(socket, urn, page) do
+    # %{comments: comments, footnotes: footnotes, passage: passage}
+    {:noreply, socket |> assign(page) |> assign(urn: urn)}
   end
 
   def get_passage_by_urn(urn) do

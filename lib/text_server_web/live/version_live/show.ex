@@ -120,7 +120,7 @@ defmodule TextServerWeb.VersionLive.Show do
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
 
-  def handle_event("location-change", %{"location" => location} = _params, socket) do
+  def handle_event("location-change", location, socket) do
     version_id = Map.get(location, "version_select")
     top_level = Map.get(location, "top_level_location") |> String.to_integer()
     second_level = Map.get(location, "second_level_location") |> String.to_integer()
@@ -146,7 +146,7 @@ defmodule TextServerWeb.VersionLive.Show do
      )}
   end
 
-  def handle_event("change-location", %{"location" => location}, socket) do
+  def handle_event("change-location", location, socket) do
     top_level = Map.get(location, "top_level_location")
     second_level = Map.get(location, "second_level_location")
     version_id = Map.get(location, "version_select", socket.assigns.version.id)

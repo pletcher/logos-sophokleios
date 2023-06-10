@@ -10,7 +10,7 @@ defmodule TextServerWeb.ReadingEnvironment.LocationForm do
   def render(assigns) do
     ~H"""
     <div>
-      <.form :let={f} for={:location} phx-change="location-change" phx-submit="change-location">
+      <.form :let={f} for={%{}} phx-change="location-change" phx-submit="change-location">
         <Components.select_dropdown
           classes="w-full max-w-full min-w-full"
           form={f}

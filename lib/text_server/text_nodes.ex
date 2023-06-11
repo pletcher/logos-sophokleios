@@ -133,6 +133,10 @@ defmodule TextServer.TextNodes do
     Enum.map(text_nodes, &TextNode.tag_graphemes/1)
   end
 
+  def tag_text_node(%TextNode{} = text_node) do
+    TextNode.tag_graphemes(text_node)
+  end
+
   @doc """
   Gets a single text_node.
 
@@ -148,7 +152,7 @@ defmodule TextServer.TextNodes do
 
   """
   def get_text_node!(id) do
-    Repo.get!(TextNode, id) |> Repo.preload(:text_elements)
+    Repo.get!(TextNode, id) |> Repo.preload(text_elements: [:element_type, :text_element_users])
   end
 
   def get_by(attrs \\ %{}) do

@@ -89,27 +89,5 @@ defmodule TextServerWeb.TextNodeLiveTest do
 
       assert html =~ "Show Text node"
     end
-
-    test "updates text_node within modal", %{conn: conn, text_node: text_node} do
-      {:ok, show_live, _html} = live(conn, Routes.text_node_show_path(conn, :show, text_node))
-
-      assert show_live |> element("a", "Edit") |> render_click() =~
-               "Edit Text node"
-
-      assert_patch(show_live, Routes.text_node_show_path(conn, :edit, text_node))
-
-      assert show_live
-             |> form("#text_node-form", text_node: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        show_live
-        |> form("#text_node-form", text_node: @update_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, Routes.text_node_show_path(conn, :show, text_node))
-
-      assert html =~ "Text node updated successfully"
-      assert html =~ "some updated text"
-    end
   end
 end

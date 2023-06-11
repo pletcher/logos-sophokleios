@@ -35,6 +35,10 @@ defmodule TextServer.TextNodes.TextNode do
     defstruct [:name, :metadata]
   end
 
+  defmodule TaggedNode do
+    defstruct [:graphemes_with_tags, :id, :location, :text]
+  end
+
   def tag_graphemes(text_node) do
     elements =
       text_node.text_elements |> Enum.filter(fn e -> e.element_type.name != "comment" end)
@@ -74,7 +78,12 @@ defmodule TextServer.TextNodes.TextNode do
       end)
       |> Enum.reverse()
 
-    %{graphemes_with_tags: grouped_graphemes, location: text_node.location}
+    %TaggedNode{
+      graphemes_with_tags: grouped_graphemes,
+      id: text_node.id,
+      location: text_node.location,
+      text: text
+    }
   end
 
   defp apply_tags(elements, graphemes) do

@@ -47,7 +47,7 @@ defmodule TextServerWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {TextServerWeb.LayoutView, "live.html"}
+        layout: {TextServerWeb.LayoutView, :live}
 
       unquote(view_helpers())
     end

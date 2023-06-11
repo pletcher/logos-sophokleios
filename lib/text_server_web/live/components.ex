@@ -154,8 +154,6 @@ defmodule TextServerWeb.Components do
         "items-center",
         "rounded-l-md",
         "border",
-        "border-y-gray-300",
-        "border-l-gray-300",
         "bg-white",
         "px-2",
         "py-2",
@@ -192,10 +190,8 @@ defmodule TextServerWeb.Components do
         "relative",
         "inline-flex",
         "items-center",
-        "rounded-l-md",
+        "rounded-r-md",
         "border",
-        "border-y-gray-300",
-        "border-l-gray-300",
         "bg-white",
         "px-2",
         "py-2",
@@ -232,10 +228,7 @@ defmodule TextServerWeb.Components do
         "relative",
         "inline-flex",
         "items-center",
-        "rounded-l-md",
         "border",
-        "border-y-gray-300",
-        "border-l-gray-300",
         "bg-white",
         "px-2",
         "py-2",
@@ -259,32 +252,13 @@ defmodule TextServerWeb.Components do
   end
 
   attr :current_page, :integer, required: true
-  attr :max_buttons, :integer, default: 6
+  attr :max_buttons, :integer, default: 4
   attr :total_pages, :integer, required: true
 
   defp numbered_buttons(assigns) do
-    current_page = assigns[:current_page]
-    max_buttons = assigns[:max_buttons]
-    total_pages = assigns[:total_pages]
-    halfway = Integer.floor_div(max_buttons, 2)
-
-    assigns = assign(
-      assigns,
-      start_n: cond do
-        current_page - halfway <= 0 -> 1
-        current_page + halfway - 1 > total_pages -> total_pages - max_buttons + 1
-        true -> current_page - halfway
-      end,
-      end_n: cond do
-        current_page - halfway <= 0 -> max_buttons
-        current_page + halfway - 1 > total_pages -> total_pages
-        true -> current_page + halfway - 1
-      end
-    )
-
     ~H"""
-    <%= for i <- @start_n..@end_n do %>
-      <.link patch={"?page=#{i}"} aria-current="page" class={numbered_button_classes(current_page, i)}><%= i %></.link>
+    <%= for i <- max(@current_page - 1, 1)..min(@current_page + @max_buttons, @total_pages) do %>
+      <.link patch={"?page=#{i}"} aria-current="page" class={numbered_button_classes(@current_page, i)}><%= i %></.link>
     <% end %>
     """
   end
@@ -296,13 +270,11 @@ defmodule TextServerWeb.Components do
       "inline-flex",
       "items-center",
       "border",
-      "border-stone-500",
-      "bg-stone-100",
       "px-4",
       "py-2",
       "text-sm",
       "font-medium",
-      if(current_page == i, do: "text-stone-600 z-20", else: "text-gray-500")
+      if(current_page == i, do: "bg-stone-100 border-stone-500 text-stone-600 z-20", else: "text-gray-500")
     ]
   end
 
@@ -316,10 +288,7 @@ defmodule TextServerWeb.Components do
         "relative",
         "inline-flex",
         "items-center",
-        "rounded-l-md",
         "border",
-        "border-y-gray-300",
-        "border-l-gray-300",
         "bg-white",
         "px-2",
         "py-2",

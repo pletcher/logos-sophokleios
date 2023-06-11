@@ -32,20 +32,30 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   `nodes`.
   """
 
+  attr :command_palette_open, :boolean, default: false
+  attr :focused_text_node, :any, default: nil
   attr :text_nodes, :list, required: true
   attr :version_urn, :string, required: true
 
   def reading_page(assigns) do
     ~H"""
-    <section class="whitespace-break-spaces">
+    <div>
+      <section class="whitespace-break-spaces">
+        <.live_component
+          :for={text_node <- @text_nodes}
+          module={TextServerWeb.ReadingEnvironment.TextNode}
+          id={"#{@version_urn}:#{text_node.location}"}
+          graphemes_with_tags={text_node.graphemes_with_tags}
+          location={text_node.location}
+        />
+      </section>
       <.live_component
-        :for={text_node <- @text_nodes}
-        module={TextServerWeb.ReadingEnvironment.TextNode}
-        id={"#{@version_urn}:#{text_node.location}"}
-        graphemes_with_tags={text_node.graphemes_with_tags}
-        location={text_node.location}
+        module={TextServerWeb.ReadingEnvironment.CommandPalette}
+        id={:reading_env_command_palette}
+        is_open={@command_palette_open}
+        text_node={@focused_text_node}
       />
-    </section>
+    </div>
     """
   end
 end

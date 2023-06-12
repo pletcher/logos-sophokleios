@@ -1,8 +1,6 @@
 defmodule TextServerWeb.ReadingEnvironment.Reader do
   use TextServerWeb, :live_component
 
-  alias TextServerWeb.Components
-
   @moduledoc """
   Every screen of TextNodes can be represented as a map of
   List<nodes> and List<elements>.
@@ -32,21 +30,23 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   `nodes`.
   """
 
+  alias TextServerWeb.Components
+
   attr :command_palette_open, :boolean, default: false
   attr :focused_text_node, :any, default: nil
   attr :text_nodes, :list, required: true
   attr :version_urn, :string, required: true
 
-  def reading_page(assigns) do
+  def render(assigns) do
     ~H"""
-    <div>
+    <article>
       <section class="whitespace-break-spaces">
         <.live_component
           :for={text_node <- @text_nodes}
           module={TextServerWeb.ReadingEnvironment.TextNode}
-          id={"#{@version_urn}:#{text_node.location}"}
-          graphemes_with_tags={text_node.graphemes_with_tags}
-          location={text_node.location}
+          id={text_node.id}
+          is_focused={is_focused(@focused_text_node, text_node)}
+          text_node={text_node}
         />
       </section>
       <.live_component
@@ -54,8 +54,18 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         id={:reading_env_command_palette}
         is_open={@command_palette_open}
         text_node={@focused_text_node}
+        urn={@version_urn}
       />
-    </div>
+      <Components.footnotes footnotes={@footnotes} />
+    </article>
     """
+  end
+
+  defp is_focused(focused_text_node, _text_node) when is_nil(focused_text_node) do
+    false
+  end
+
+  defp is_focused(focused_text_node, text_node) do
+    focused_text_node == text_node
   end
 end

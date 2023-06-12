@@ -1,10 +1,8 @@
 defmodule TextServerWeb.ReadingEnvironment.TextNode do
   use TextServerWeb, :live_component
 
-  attr :id, :string, required: true
   attr :is_focused, :boolean, default: false
-  attr :graphemes_with_tags, :list, required: true
-  attr :location, :integer, required: true
+  attr :text_node, :any, required: true
 
   @impl true
   def mount(socket) do
@@ -17,16 +15,14 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
     <p
-      class={["mb-4", "px-4", "rounded", text_node_classes(@is_focused)]}
+      class={["cursor-pointer", "mb-4", "px-4", "rounded", text_node_classes(@is_focused)]}
       phx-click="text-node-click"
-      phx-click-away="text-node-click-away"
       phx-target={@myself}
-      phx-value-urn={@id}
     >
-      <span class="text-slate-500" title={"Location: #{@location |> Enum.join(".")}"}>
-        <%= @location |> Enum.join(".") %>
+      <span class="text-slate-500" title={"Location: #{@text_node.location |> Enum.join(".")}"}>
+        <%= @text_node.location |> Enum.join(".") %>
       </span>
-      <.text_element :for={{graphemes, tags} <- @graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
+      <.text_element :for={{graphemes, tags} <- @text_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
     </p>
     """
   end
@@ -34,19 +30,16 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
   @spec text_node_classes(boolean()) :: String.t()
   defp text_node_classes(is_focused) do
     if is_focused do
-      "cursor-context-menu ring-4"
+      "ring-4"
     else
-      "cursor-pointer"
+      ""
     end
   end
 
   @impl true
-  def handle_event("text-node-click", %{"urn" => urn}, socket) do
-    {:noreply, socket |> assign(focused_text_node: urn, is_focused: !socket.assigns.is_focused)}
-  end
-
-  def handle_event("text-node-click-away", %{"urn" => _urn}, socket) do
-    {:noreply, socket |> assign(focused_text_node: nil, is_focused: false)}
+  def handle_event("text-node-click", _, socket) do
+    send self(), {:focused_text_node, socket.assigns.text_node}
+    {:noreply, socket}
   end
 
   attr :tags, :list, default: []

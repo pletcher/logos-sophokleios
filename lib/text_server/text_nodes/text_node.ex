@@ -29,6 +29,15 @@ defmodule TextServer.TextNodes.TextNode do
     |> unique_constraint([:version_id, :location])
   end
 
+  @search_types %{location: {:array, :any}, search_string: :string, urn: :string}
+
+  def search_changeset(attrs \\ %{}) do
+    cast({%{}, @search_types}, attrs, [:location, :search_string, :urn])
+    |> validate_required([:search_string,])
+    |> update_change(:search_string, &String.trim/1)
+    |> validate_length(:search_string, min: 2)
+  end
+
   defmodule Tag do
     @enforce_keys [:name]
 

@@ -22,8 +22,10 @@
 
       <.live_component
         id={:reader}
-        footnotes={@footnotes}
         module={TextServerWeb.ReadingEnvironment.Reader}
+        command_palette_open={@focused_text_node != nil}
+        focused_text_node={@focused_text_node}
+        footnotes={@footnotes}
         location={@location}
         passage={@passage}
         text_nodes={@text_nodes}

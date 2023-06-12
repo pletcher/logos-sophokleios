@@ -1,12 +1,15 @@
 defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
   use TextServerWeb, :live_component
 
+  alias TextServer.TextNodes.TextNode
+  alias TextServerWeb.Icons
+
   def mount(socket) do
-    {:ok, socket |> assign(form: to_form(%{"search_string" => ""}), search_string: "")}
+    {:ok, socket |> assign(changeset: to_form(TextNode.search_changeset(), as: :search))}
   end
 
   attr :field, Phoenix.HTML.FormField
-  attr :rest, :global, include: ~w(type)
+  attr :rest, :global, include: ~w(class type)
 
   def input(assigns) do
     ~H"""
@@ -14,14 +17,16 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
     """
   end
 
-  attr :form, :any
+  attr :changeset, :any
+  attr :is_open, :boolean, default: false
   attr :search_results, :list, default: []
-  attr :search_string, :string, default: ""
+  attr :text_node, :map
+  attr :urn, :string, required: true
 
   def render(assigns) do
     # https://tailwindui.com/components/application-ui/navigation/command-palettes#component-5e859372042e1b3b308dc51f3ac8bad6
     ~H"""
-    <div>
+    <div class={unless @is_open, do: "hidden"}>
       <div class="relative z-10" role="dialog" aria-modal="true">
         <!--
           Background backdrop, show/hide based on modal state.
@@ -46,26 +51,15 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
               From: "opacity-100 scale-100"
               To: "opacity-0 scale-95"
           -->
-          <div class="mx-auto max-w-3xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all">
+          <div class="mx-auto max-w-3xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all" phx-click-away="command-palette-click-away" phx-target={@myself}>
             <div class="relative">
-              <svg
-                class="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <.form for={@form} phx-change="search" phx-target={@myself}>
+              <Icons.search_icon />
+              <.form for={@changeset} phx-change="search" phx-target={@myself}>
                 <.input
                   type="text"
-                  field={@form[:search]}
+                  field={@changeset[:search_string]}
                   class="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-800 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-                  placeholder="Search..."
+                  placeholder="Search for critica in other versions"
                   role="combobox"
                   aria-expanded="false"
                   aria-controls="options"
@@ -74,22 +68,7 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
             </div>
             <!-- Empty state, show/hide based on command palette state -->
             <div :if={@search_results == []} class="px-6 py-14 text-center text-sm sm:px-14">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="mx-auto h-6 w-6 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-6 h-6"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"
-                />
-              </svg>
+              <Icons.critica_icon />
               <p class="mt-4 font-semibold text-gray-900">No critica found.</p>
               <p class="mt-2 text-gray-500">We couldn&apos;t find anything with that term. Please try again.</p>
             </div>
@@ -296,7 +275,16 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
     """
   end
 
-  def handle_event("search", %{"search" => search_string}, socket) do
-    {:noreply, socket |> assign(search_string: search_string)}
+  def handle_event("search", %{"search" => search_params}, socket) do
+    changeset =
+      TextNode.search_changeset(search_params)
+      |> to_form(as: :search)
+
+    {:noreply, socket |> assign(changeset: changeset)}
+  end
+
+  def handle_event("command-palette-click-away", _, socket) do
+    send self(), {:focused_text_node, nil}
+    {:noreply, socket}
   end
 end

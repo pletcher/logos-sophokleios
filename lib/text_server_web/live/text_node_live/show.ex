@@ -17,8 +17,7 @@ defmodule TextServerWeb.TextNodeLive.Show do
       <.live_component
         module={TextServerWeb.ReadingEnvironment.TextNode}
         id={:text_node}
-        graphemes_with_tags={@text_node.graphemes_with_tags}
-        location={@text_node.location}
+        text_node={@text_node}
       />
     </div>
     """

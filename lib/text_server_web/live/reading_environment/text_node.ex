@@ -32,7 +32,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
     if is_focused do
       "ring-4"
     else
-      ""
+      "hover:ring-4"
     end
   end
 

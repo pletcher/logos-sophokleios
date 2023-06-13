@@ -5,8 +5,22 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
   alias TextServer.TextNodes.TextNode
   alias TextServerWeb.Icons
 
+  @moduledoc """
+  TODO: - Show all for entire page
+  - Fix clicking on text elements
+  - Show box on mouseover
+  - Make refs declaration clearer
+  - Orient user to what each comparandum is
+  """
+
   def mount(socket) do
-    {:ok, socket |> assign(changeset: to_form(TextNode.search_changeset(), as: :search))}
+    {:ok,
+     socket
+     |> assign(
+       changeset: to_form(TextNode.search_changeset(), as: :search),
+       focused_index: 0,
+       previewed_text_node_id: nil
+     )}
   end
 
   def update(assigns, socket) do
@@ -93,11 +107,19 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
               <div class="max-h-96 min-w-0 flex-auto scroll-py-4 overflow-y-auto px-6 py-4 sm:h-96">
                 <!-- Default state, show/hide based on command palette state. -->
                 <h2 class="mb-4 mt-2 text-xs font-semibold text-gray-500">Comparanda</h2>
-                <ul class="-mx-2 text-sm text-gray-700" id="recent" role="listbox">
-                  <.list_item :for={text_node <- @search_results} text_node={text_node} />
+                <ul class="-mx-2 text-sm text-gray-700" id="text-node-command-palette_search-results" role="listbox">
+                  <.list_item
+                    :for={text_node <- @search_results}
+                    active={@previewed_text_node_id == Integer.to_string(text_node.id)}
+                    text_node={text_node}
+                  />
                 </ul>
               </div>
-              <.preview text_node={List.first(@search_results)} />
+              <.preview text_node={
+                Enum.find(@search_results, List.first(@search_results), fn tn ->
+                  Integer.to_string(tn.id) == @previewed_text_node_id
+                end)
+              } />
             </div>
           </div>
         </div>
@@ -113,14 +135,17 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
     ~H"""
     <!-- Active: "bg-gray-100 text-gray-900" -->
     <li
-      class="group flex cursor-default select-none items-center rounded-md p-2"
+      class="group flex cursor-pointer select-none items-center rounded-md p-2 hover:bg-stone-200"
       id={"text_node_preview-#{@text_node.id}"}
       role="option"
       tabindex="-1"
+      phx-click="preview_text_node"
+      phx-value-text_node_id={@text_node.id}
+      phx-target="#text-node-command-palette_search-results"
     >
       <section class="truncate">
         <h1 class="font-bold"><%= @text_node.version.label %></h1>
-        <span class="text-gray-400"><%= @text_node.version.urn %></span>
+        <span class="text-gray-400"><%= @text_node.version.description %></span>
         <p class="flex-auto truncate"><%= @text_node.text %></p>
       </section>
       <!-- Not Active: "hidden" -->
@@ -137,7 +162,10 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
     <div class="hidden h-96 w-1/2 flex-none flex-col divide-y divide-gray-100 overflow-y-auto sm:flex">
       <div class="flex-none p-6 text-center">
         <h2 class="mt-3 font-semibold text-gray-900"><%= @text_node.version.label %></h2>
-        <p class="text-sm leading-6 text-gray-500"><%= @text_node.version.urn %></p>
+        <h3 class="text-sm leading-6 text-gray-500">
+          <%= @text_node.version.urn %>:<%= @text_node.location |> Enum.join(".") %>
+        </h3>
+        <p class="text-sm leading-6 text-gray-500"><%= @text_node.version.description %></p>
       </div>
       <div class="flex flex-auto flex-col justify-between p-6">
         <p class="flex-auto"><%= @text_node.text %></p>
@@ -152,16 +180,20 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
     """
   end
 
+  def handle_event("command-palette-click-away", _, socket) do
+    send(self(), {:focused_text_node, nil})
+    {:noreply, socket}
+  end
+
+  def handle_event("preview_text_node", %{"text_node_id" => id}, socket) do
+    {:noreply, socket |> assign(previewed_text_node_id: id)}
+  end
+
   def handle_event("search", %{"search" => search_params}, socket) do
     changeset =
       TextNode.search_changeset(search_params)
       |> to_form(as: :search)
 
     {:noreply, socket |> assign(changeset: changeset)}
-  end
-
-  def handle_event("command-palette-click-away", _, socket) do
-    send(self(), {:focused_text_node, nil})
-    {:noreply, socket}
   end
 end

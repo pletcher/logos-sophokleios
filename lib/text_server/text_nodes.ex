@@ -7,6 +7,7 @@ defmodule TextServer.TextNodes do
   alias TextServer.Repo
 
   alias TextServer.TextNodes.TextNode
+  alias TextServer.Versions
   alias TextServer.Versions.Version
 
   @doc """
@@ -78,16 +79,43 @@ defmodule TextServer.TextNodes do
   end
 
   @doc """
+  Lists TextNodes from other versions of the same work
+  at the same location.
+  """
+  def list_text_node_critica(nil), do: []
+
+  def list_text_node_critica(%TextNode{} = text_node) do
+    version = Versions.get_version!(text_node.version_id)
+    [text_group, work, _version] = String.split(version.urn, ".")
+    work_urn = "#{text_group}.#{work}"
+
+    version_ids =
+      from(v in Version, where: ilike(v.urn, ^"#{work_urn}%"), select: v.id) |> Repo.all()
+
+    from(
+      t in TextNode,
+      where: t.version_id in ^version_ids and t.location == ^text_node.location,
+      limit: 10,
+      preload: :version
+    )
+    |> Repo.all()
+  end
+
+  @doc """
   Returns a list of TextNodes between start_location and end_location.
 
   Used by Exemplars.get_version_page/2 and Exemplars.get_version_page_by_location/2.
 
   ## Examples
 
-      iex> get_text_nodes_by_version_between_locations(%Version{id: 1}, [1, 1, 1], [1, 1, 2])
+      iex> list_text_nodes_by_version_between_locations(%Version{id: 1}, [1, 1, 1], [1, 1, 2])
       [%TextNode{location: [1, 1, 1], ...}, %TextNode{location: [1, 1, 2], ...}]
   """
-  def get_text_nodes_by_version_between_locations(%Version{} = version, start_location, end_location) do
+  def list_text_nodes_by_version_between_locations(
+        %Version{} = version,
+        start_location,
+        end_location
+      ) do
     query =
       from(
         t in TextNode,
@@ -102,18 +130,29 @@ defmodule TextServer.TextNodes do
     Repo.all(query)
   end
 
-  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) when is_integer(version_id) do
-    get_text_nodes_by_version_between_locations(%Version{id: version_id}, start_location, end_location)
+  def list_text_nodes_by_version_between_locations(version_id, start_location, end_location)
+      when is_integer(version_id) do
+    list_text_nodes_by_version_between_locations(
+      %Version{id: version_id},
+      start_location,
+      end_location
+    )
   end
 
-  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) when is_binary(version_id) do
-    get_text_nodes_by_version_between_locations(%Version{id: version_id}, start_location, end_location)
+  def list_text_nodes_by_version_between_locations(version_id, start_location, end_location)
+      when is_binary(version_id) do
+    list_text_nodes_by_version_between_locations(
+      %Version{id: version_id},
+      start_location,
+      end_location
+    )
   end
 
-  @spec get_text_nodes_by_version_from_start_location(%Version{}, [...]) :: [%TextNode{}]
-  def get_text_nodes_by_version_from_start_location(%Version{} = version, start_location) do
+  @spec list_text_nodes_by_version_from_start_location(%Version{}, [...]) :: [%TextNode{}]
+  def list_text_nodes_by_version_from_start_location(%Version{} = version, start_location) do
     cardinality = Enum.count(start_location)
     pseudo_page_number = Enum.at(start_location, cardinality - 2)
+
     query =
       from(
         t in TextNode,

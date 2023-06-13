@@ -8,7 +8,7 @@ defmodule TextServerWeb.TextNodeLive.Show do
     {:ok, socket}
   end
 
-  attr :text_node, TextServer.TextNodes.TextNode.TaggedNode, required: true
+  attr :text_node, TextServer.TextNodes.TextNode, required: true
 
   @impl true
   def render(assigns) do

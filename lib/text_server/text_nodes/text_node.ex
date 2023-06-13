@@ -11,6 +11,8 @@ defmodule TextServer.TextNodes.TextNode do
     field :text, :string
     field :_search, TextServer.Ecto.Types.TsVector
 
+    field :graphemes_with_tags, :any, virtual: true
+
     belongs_to :version, TextServer.Versions.Version
 
     has_many :text_elements, TextServer.TextElements.TextElement,
@@ -42,10 +44,6 @@ defmodule TextServer.TextNodes.TextNode do
     @enforce_keys [:name]
 
     defstruct [:name, :metadata]
-  end
-
-  defmodule TaggedNode do
-    defstruct [:graphemes_with_tags, :id, :location, :text]
   end
 
   def tag_graphemes(text_node) do
@@ -87,12 +85,7 @@ defmodule TextServer.TextNodes.TextNode do
       end)
       |> Enum.reverse()
 
-    %TaggedNode{
-      graphemes_with_tags: grouped_graphemes,
-      id: text_node.id,
-      location: text_node.location,
-      text: text
-    }
+      %{text_node | graphemes_with_tags: grouped_graphemes}
   end
 
   defp apply_tags(elements, graphemes) do

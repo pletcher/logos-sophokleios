@@ -182,10 +182,10 @@ defmodule TextServer.Versions do
     end
 
     version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
-    _text_nodes = get_version_text_nodes(version, passages)
+    _text_nodes = list_version_text_nodes(version, passages)
   end
 
-  def get_version_text_nodes(%Version{} = version, passages) when is_nil(passages) do
+  def list_version_text_nodes(%Version{} = version, passages) when is_nil(passages) do
     cardinality =
       TextNode
       |> where([t], t.version_id == ^version.id)
@@ -194,18 +194,18 @@ defmodule TextServer.Versions do
       )
       |> Repo.one()
     start_location = List.duplicate(1, cardinality)
-    TextNodes.get_text_nodes_by_version_from_start_location(version, start_location)
+    TextNodes.list_text_nodes_by_version_from_start_location(version, start_location)
   end
 
-  def get_version_text_nodes(%Version{} = version, passages) when length(passages) == 1 do
+  def list_version_text_nodes(%Version{} = version, passages) when length(passages) == 1 do
     start_location = List.first(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
-    TextNodes.get_text_nodes_by_version_from_start_location(version, start_location)
+    TextNodes.list_text_nodes_by_version_from_start_location(version, start_location)
   end
 
-  def get_version_text_nodes(%Version{} = version, passages) when length(passages) == 2 do
+  def list_version_text_nodes(%Version{} = version, passages) when length(passages) == 2 do
     start_location = List.first(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
     end_location = List.last(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
-    TextNodes.get_text_nodes_by_version_between_locations(version, start_location, end_location)
+    TextNodes.list_text_nodes_by_version_between_locations(version, start_location, end_location)
   end
 
   def get_version_passage(version_id, passage_number \\ 1) do
@@ -232,7 +232,7 @@ defmodule TextServer.Versions do
       end
     else
       text_nodes =
-        TextNodes.get_text_nodes_by_version_between_locations(
+        TextNodes.list_text_nodes_by_version_between_locations(
           version_id,
           passage.start_location,
           passage.end_location
@@ -263,7 +263,7 @@ defmodule TextServer.Versions do
 
       passage ->
         text_nodes =
-          TextNodes.get_text_nodes_by_version_between_locations(
+          TextNodes.list_text_nodes_by_version_between_locations(
             version_id,
             passage.start_location,
             passage.end_location

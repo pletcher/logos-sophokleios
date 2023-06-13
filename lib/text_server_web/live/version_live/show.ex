@@ -164,7 +164,6 @@ defmodule TextServerWeb.VersionLive.Show do
 
   @impl true
   def handle_info({:focused_text_node, text_node}, socket) do
-    IO.inspect(text_node)
     {:noreply, socket |> assign(focused_text_node: text_node)}
   end
 

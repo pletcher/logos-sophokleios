@@ -1,7 +1,7 @@
 defmodule TextServerWeb.Icons do
   use TextServerWeb, :component
 
-  def critica_icon(assigns) do
+  def comparanda_icon(assigns) do
     ~H"""
     <svg
       xmlns="http://www.w3.org/2000/svg"

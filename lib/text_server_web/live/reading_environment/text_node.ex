@@ -2,7 +2,8 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
   use TextServerWeb, :live_component
 
   attr :is_focused, :boolean, default: false
-  attr :text_node, :any, required: true
+  attr :sibling_node, :map, default: nil
+  attr :text_node, :map, required: true
 
   @impl true
   def mount(socket) do
@@ -14,16 +15,25 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
-    <p
-      class={["cursor-pointer", "mb-4", "px-4", "rounded", text_node_classes(@is_focused)]}
-      phx-click="text-node-click"
-      phx-target={@myself}
-    >
-      <span class="text-slate-500" title={"Location: #{@text_node.location |> Enum.join(".")}"}>
-        <%= @text_node.location |> Enum.join(".") %>
-      </span>
-      <.text_element :for={{graphemes, tags} <- @text_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
-    </p>
+    <div class="flex w-full">
+      <p
+        class={["cursor-pointer", "mb-4", "px-4", "rounded", text_node_classes(@is_focused)]}
+        phx-click="text-node-click"
+        phx-target={@myself}
+      >
+        <span class="text-slate-500" title={"Location: #{@text_node.location |> Enum.join(".")}"}>
+          <%= @text_node.location |> Enum.join(".") %>
+        </span>
+        <.text_element :for={{graphemes, tags} <- @text_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
+      </p>
+
+      <div :if={@sibling_node != nil} class="px-4 whitespace-normal">
+        <h3 class="font-bold text-md"><%= @sibling_node.version.label %></h3>
+        <p class="mb-4">
+          <.text_element :for={{graphemes, tags} <- @sibling_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
+        </p>
+      </div>
+    </div>
     """
   end
 
@@ -38,7 +48,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
   @impl true
   def handle_event("text-node-click", _, socket) do
-    send self(), {:focused_text_node, socket.assigns.text_node}
+    send(self(), {:focused_text_node, socket.assigns.text_node})
     {:noreply, socket}
   end
 

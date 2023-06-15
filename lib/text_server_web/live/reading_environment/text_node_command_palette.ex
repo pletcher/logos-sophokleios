@@ -1,4 +1,4 @@
-defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
+defmodule TextServerWeb.ReadingEnvironment.TextNodeCommandPalette do
   use TextServerWeb, :live_component
 
   alias TextServer.TextNodes
@@ -46,7 +46,7 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
   attr :changeset, :any
   attr :is_open, :boolean, default: false
   attr :search_results, :list, default: []
-  attr :text_node, :map
+  attr :text_node, TextServer.TextNodes.TextNode
   attr :urn, :string, required: true
 
   def render(assigns) do
@@ -77,11 +77,21 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
               From: "opacity-100 scale-100"
               To: "opacity-0 scale-95"
           -->
-          <div
-            class="mx-auto max-w-3xl transform divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 transition-all"
-            phx-click-away="command-palette-click-away"
-            phx-target={@myself}
-          >
+          <div class={~w(
+              mx-auto
+              max-w-3xl
+              transform
+              divide-y
+              divide-gray-100
+              overflow-hidden
+              rounded-xl
+              bg-white
+              shadow-2xl
+              ring-1
+              ring-black
+              ring-opacity-5
+              transition-all
+            )} phx-click-away="command-palette-click-away" phx-target={@myself}>
             <div class="relative">
               <Icons.search_icon />
               <.form for={@changeset} phx-change="search" phx-target={@myself}>
@@ -89,7 +99,7 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
                   type="text"
                   field={@changeset[:search_string]}
                   class="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-800 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-                  placeholder="Search for critica in other versions"
+                  placeholder="Search for comparanda in other versions"
                   role="combobox"
                   aria-expanded="false"
                   aria-controls="options"
@@ -98,8 +108,8 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
             </div>
             <!-- Empty state, show/hide based on command palette state -->
             <div :if={@search_results == []} class="px-6 py-14 text-center text-sm sm:px-14">
-              <Icons.critica_icon />
-              <p class="mt-4 font-semibold text-gray-900">No critica found.</p>
+              <Icons.comparanda_icon />
+              <p class="mt-4 font-semibold text-gray-900">No comparanda found.</p>
               <p class="mt-2 text-gray-500">We couldn&apos;t find anything with that term. Please try again.</p>
             </div>
             <div :if={@search_results != []} class="flex divide-x divide-gray-100">
@@ -171,7 +181,26 @@ defmodule TextServerWeb.ReadingEnvironment.CommandPalette do
         <p class="flex-auto"><%= @text_node.text %></p>
         <button
           type="button"
-          class="mt-6 w-full rounded-md bg-stone-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-stone-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-600"
+          class={~w(
+              mt-6
+              w-full
+              rounded-md
+              bg-stone-600
+              px-3
+              py-2
+              text-sm
+              font-semibold
+              text-white
+              shadow-sm
+              hover:bg-stone-500
+              focus-visible:outline
+              focus-visible:outline-2
+              focus-visible:outline-offset-2
+              focus-visible:outline-stone-600
+            )}
+          phx-click="select-sibling-node"
+          phx-target="#reading-environment-reader"
+          phx-value-text_node_id={@text_node.id}
         >
           Select
         </button>

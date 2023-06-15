@@ -17,6 +17,7 @@ defmodule TextServerWeb.TextNodeLive.Show do
       <.live_component
         module={TextServerWeb.ReadingEnvironment.TextNode}
         id={:text_node}
+        sibling_node={nil}
         text_node={@text_node}
       />
     </div>

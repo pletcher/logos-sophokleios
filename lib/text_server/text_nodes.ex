@@ -84,13 +84,26 @@ defmodule TextServer.TextNodes do
   """
   def list_text_node_critica(nil), do: []
 
+  def list_text_node_critica([%TextNode{}] = text_nodes) do
+    [tn | _rest] = text_nodes
+    work_urn = get_work_urn(tn)
+    version_ids = list_versions_for_work_urn(work_urn) |> Enum.reject(&(&1 == tn.version_id))
+    locations = Enum.map(text_nodes, & &1.location)
+
+    from(
+      t in TextNode,
+      where: t.version_id in ^version_ids and t.location in ^locations,
+      limit: 10,
+      preload: :version
+    )
+    |> Repo.all()
+  end
+
   def list_text_node_critica(%TextNode{} = text_node) do
-    version = Versions.get_version!(text_node.version_id)
-    [text_group, work, _version] = String.split(version.urn, ".")
-    work_urn = "#{text_group}.#{work}"
+    work_urn = get_work_urn(text_node)
 
     version_ids =
-      from(v in Version, where: ilike(v.urn, ^"#{work_urn}%"), select: v.id) |> Repo.all()
+      list_versions_for_work_urn(work_urn) |> Enum.reject(&(&1 == text_node.version_id))
 
     from(
       t in TextNode,
@@ -99,6 +112,17 @@ defmodule TextServer.TextNodes do
       preload: :version
     )
     |> Repo.all()
+  end
+
+  def list_versions_for_work_urn(work_urn) do
+    from(v in Version, where: ilike(v.urn, ^"#{work_urn}%"), select: v.id) |> Repo.all()
+  end
+
+  def get_work_urn(%TextNode{} = text_node) do
+    version = Versions.get_version!(text_node.version_id)
+    [text_group, work, _version] = String.split(version.urn, ".")
+
+    "#{text_group}.#{work}"
   end
 
   @doc """
@@ -191,7 +215,8 @@ defmodule TextServer.TextNodes do
 
   """
   def get_text_node!(id) do
-    Repo.get!(TextNode, id) |> Repo.preload(text_elements: [:element_type, :text_element_users])
+    Repo.get!(TextNode, id)
+    |> Repo.preload([:version, text_elements: [:element_type, :text_element_users]])
   end
 
   def get_by(attrs \\ %{}) do

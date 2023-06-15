@@ -224,6 +224,15 @@ defmodule TextServerWeb.CoreComponents do
     """
   end
 
+  attr :field, Phoenix.HTML.FormField
+  attr :rest, :global, include: ~w(class type)
+
+  def basic_input(assigns) do
+    ~H"""
+    <input id={@field.id} name={@field.name} value={@field.value} {@rest} />
+    """
+  end
+
   @doc """
   Renders an input with label and error messages.
 

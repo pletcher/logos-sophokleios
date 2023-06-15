@@ -8,7 +8,10 @@ defmodule TextServerWeb.VersionLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign_new(:current_user, fn -> nil end) |> assign(focused_text_node: nil)}
+    {:ok,
+     socket
+     |> assign_new(:current_user, fn -> nil end)
+     |> assign(focused_text_node: nil, version_command_palette_open: false)}
   end
 
   @impl true
@@ -165,6 +168,10 @@ defmodule TextServerWeb.VersionLive.Show do
   @impl true
   def handle_info({:focused_text_node, text_node}, socket) do
     {:noreply, socket |> assign(focused_text_node: text_node)}
+  end
+
+  def handle_info({:version_command_palette_open, state}, socket) do
+    {:noreply, socket |> assign(version_command_palette_open: state)}
   end
 
   defp get_passage(version_id, passage_number) when is_binary(passage_number),

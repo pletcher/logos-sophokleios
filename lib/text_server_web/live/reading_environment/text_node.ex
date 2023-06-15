@@ -27,9 +27,11 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
         <.text_element :for={{graphemes, tags} <- @text_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
       </p>
 
-      <div :if={@sibling_node != nil} class="px-4 whitespace-normal">
-        <h3 class="font-bold text-md"><%= @sibling_node.version.label %></h3>
-        <p class="mb-4">
+      <div :if={@sibling_node != nil} class="max-w-xl">
+        <h3 class="font-bold text-md">
+          <%= @sibling_node.version.label %>
+        </h3>
+        <p class="mb-4 px-4 whitespace-normal">
           <.text_element :for={{graphemes, tags} <- @sibling_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
         </p>
       </div>

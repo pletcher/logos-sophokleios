@@ -19,16 +19,16 @@
         top_level_toc={@top_level_toc}
         versions={@versions}
       />
-
       <.live_component
         id={:reader}
         module={TextServerWeb.ReadingEnvironment.Reader}
-        command_palette_open={@focused_text_node != nil}
         focused_text_node={@focused_text_node}
         footnotes={@footnotes}
         location={@location}
         passage={@passage}
+        version_command_palette_open={@version_command_palette_open}
         text_nodes={@text_nodes}
+        text_node_command_palette_open={@focused_text_node != nil}
         top_level_toc={@top_level_toc}
         second_level_toc={@second_level_toc}
         version_urn={@version.urn}

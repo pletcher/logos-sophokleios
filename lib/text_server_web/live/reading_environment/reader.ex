@@ -31,16 +31,18 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   """
 
   alias TextServer.TextNodes
+  alias TextServer.Versions
   alias TextServerWeb.Components
 
   def mount(socket) do
     {:ok, socket |> assign(sibling_nodes: %{})}
   end
 
-  attr :command_palette_open, :boolean, default: false
   attr :focused_text_node, :any, default: nil
+  attr :version_command_palette_open, :boolean, default: false
   attr :sibling_nodes, :map, default: %{}
   attr :text_nodes, :list, required: true
+  attr :text_node_command_palette_open, :boolean, default: false
   attr :version_urn, :string, required: true
 
   def render(assigns) do
@@ -48,14 +50,13 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
     <article id="reading-environment-reader">
       <button
         type="button"
-        class="rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-        phx-click="show-palette-for-page"
+        class="rounded bg-stone-600 text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-stone-500"
+        phx-click="show-version-command-palette"
         phx-target={@myself}
       >
         Select comparanda for entire page
       </button>
       <section class="whitespace-break-spaces">
-        <!-- add parallel list of sibling nodes that can be matched on IDs -->
         <.live_component
           :for={text_node <- @text_nodes}
           module={TextServerWeb.ReadingEnvironment.TextNode}
@@ -68,11 +69,16 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
       <.live_component
         module={TextServerWeb.ReadingEnvironment.TextNodeCommandPalette}
         id={:text_node_command_palette}
-        is_open={@command_palette_open}
+        is_open={@text_node_command_palette_open}
         text_node={@focused_text_node}
         urn={@version_urn}
       />
-      <!-- use a different command palette for the whole page -->
+      <.live_component
+        module={TextServerWeb.ReadingEnvironment.VersionCommandPalette}
+        id={:version_command_palette}
+        is_open={@version_command_palette_open}
+        urn={@version_urn}
+      />
       <Components.footnotes footnotes={@footnotes} />
     </article>
     """
@@ -81,17 +87,39 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   def handle_event("select-sibling-node", %{"text_node_id" => id}, socket) do
     new_sibling = TextNodes.get_text_node!(id) |> TextNodes.tag_text_node()
 
-    send self(), {:focused_text_node, nil}
+    send(self(), {:focused_text_node, nil})
 
     {:noreply,
      socket
      |> assign(
-       command_palette_open: false,
-       sibling_nodes: Map.put(socket.assigns.sibling_nodes, new_sibling.location, new_sibling)
+       sibling_nodes: Map.put(socket.assigns.sibling_nodes, new_sibling.location, new_sibling),
+       text_node_command_palette_open: false
      )}
   end
 
-  def handle_event("show-palette-for-page", _, socket) do
+  def handle_event("select-sibling-version", %{"version_id" => id}, socket) do
+    version = Versions.get_version!(id)
+    start_location = List.first(socket.assigns.text_nodes) |> Map.get(:location)
+    end_location = List.last(socket.assigns.text_nodes) |> Map.get(:location)
+
+    new_siblings =
+      TextNodes.list_text_nodes_by_version_between_locations(
+        version,
+        start_location,
+        end_location
+      )
+      |> TextNodes.tag_text_nodes()
+      |> Map.new(fn tn ->
+        {tn.location, tn}
+      end)
+
+    send self(), {:version_command_palette_open, false}
+
+    {:noreply, socket |> assign(sibling_nodes: new_siblings)}
+  end
+
+  def handle_event("show-version-command-palette", _, socket) do
+    send self(), {:version_command_palette_open, true}
     {:noreply, socket}
   end
 

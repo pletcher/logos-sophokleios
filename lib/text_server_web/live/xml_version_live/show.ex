@@ -10,10 +10,11 @@ defmodule TextServerWeb.XmlVersionLive.Show do
 
   @impl true
   def handle_params(%{"urn" => urn}, _, socket) do
+    {:ok, version} = Xml.get_version_reference(urn)
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:version, Xml.get_version_reference(urn))}
+     |> assign(:version, version)}
   end
 
   @impl true
@@ -21,11 +22,11 @@ defmodule TextServerWeb.XmlVersionLive.Show do
     ~H"""
     <article class="p-8">
       <section id="xml">
-        <%= raw(@version) %>
+        <%= @version %>
       </section>
     </article>
     """
   end
 
-  defp page_title(:show), do: "Show Work"
+  defp page_title(:show), do: "Show XML Version"
 end

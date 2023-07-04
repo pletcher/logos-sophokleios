@@ -66,7 +66,7 @@ defmodule TextServer.TextNodesTest do
       assert %Ecto.Changeset{} = TextNodes.change_text_node(text_node)
     end
 
-    test "get_text_nodes_by_version_between_locations/3 returns text nodes between the given locations" do
+    test "list_text_nodes_by_version_between_locations/3 returns text nodes between the given locations" do
       version = TextServer.VersionsFixtures.version_fixture()
 
       Enum.each(1..5, fn i ->
@@ -74,7 +74,7 @@ defmodule TextServer.TextNodesTest do
       end)
 
       text_nodes =
-        TextNodes.get_text_nodes_by_version_between_locations(version.id, [1, 2], [1, 4])
+        TextNodes.list_text_nodes_by_version_between_locations(version, [1, 2], [1, 4])
 
       locations = Enum.map(text_nodes, & &1.location)
 

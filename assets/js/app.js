@@ -30,6 +30,17 @@ let csrfToken = document
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   hooks,
+  metadata: {
+    click(e, _el) {
+      return {
+        altKey: e.altKey,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        pageX: e.pageX,
+        pageY: e.pageY
+      };
+    }
+  },
   uploaders,
 });
 

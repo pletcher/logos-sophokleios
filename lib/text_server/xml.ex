@@ -10,6 +10,8 @@ defmodule TextServer.Xml do
   alias TextServer.Xml.RefsDeclaration
   alias TextServer.Xml.Version
 
+  require Logger
+
   @doc """
   Returns the list of xml_versions.
 
@@ -149,26 +151,46 @@ defmodule TextServer.Xml do
     ["urn", "cts", collection, work, passage] = String.split(urn, ":")
     passages = String.split(passage, "-")
     version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
-    path = get_ref_xpath(passages, version.refs_declaration)
 
-    get_xpath_result(version, path)
-    |> List.first()
+    path =
+      case get_ref_xpath(passages, version.refs_declaration) do
+        {:ok, path} ->
+          path
+
+        {:error, error} ->
+          Logger.error(error)
+          nil
+      end
+
+    if is_nil(path) do
+      {:error, "Reference not found!"}
+    else
+      result =
+        get_xpath_result(version, path)
+        |> List.first()
+
+      {:ok, result}
+    end
   end
 
   def get_ref_xpath(passages, %RefsDeclaration{} = refs_decl) when length(passages) == 1 do
-    get_replacement_pattern(List.first(passages), refs_decl.replacement_patterns, refs_decl.match_patterns)
+    get_replacement_pattern(
+      List.first(passages),
+      refs_decl.replacement_patterns,
+      refs_decl.match_patterns
+    )
   end
 
-  def get_ref_xpath(passages, %RefsDeclaration{} = refs_decl) when length(passages) == 2 do
-    delimiters = refs_decl.delimiters
-    # FIXME: The delimiter will not always be a "." --- we should get this from the XML file.
-    start_refs = List.first(passages) |> String.split(".")
-    end_refs = List.last(passages) |> String.split(".")
+  # def get_ref_xpath(passages, %RefsDeclaration{} = refs_decl) when length(passages) == 2 do
+  #   delimiters = refs_decl.delimiters
+  #   # FIXME: The delimiter will not always be a "." --- we should get this from the XML file.
+  #   start_refs = List.first(passages) |> String.split(".")
+  #   end_refs = List.last(passages) |> String.split(".")
 
-    ranges = for s_ref <- start_refs, e_ref <- end_refs do
+  #   ranges = for s_ref <- start_refs, e_ref <- end_refs do
 
-    end
-  end
+  #   end
+  # end
 
   defp get_replacement_pattern(_passage, _replacement_patterns, []) do
     {:error, "Passage reference not found!"}
@@ -201,7 +223,7 @@ defmodule TextServer.Xml do
   @tei_xpath_regex ~r/xpath\((?<path>.*)\)/
 
   defp extract_path(s) do
-    Regex.named_captures(@tei_xpath_regex, s) |> Map.get("path")
+    {:ok, Regex.named_captures(@tei_xpath_regex, s) |> Map.get("path")}
   end
 
   def set_version_refs_declaration(%Version{} = version) do
@@ -226,7 +248,7 @@ defmodule TextServer.Xml do
     |> List.first()
   end
 
-    @doc """
+  @doc """
   Queries the given version using PostgreSQL's built-in
   xpath support.
   """
@@ -285,7 +307,7 @@ defmodule TextServer.Xml do
   end
 
   @doc """
-  Determine's a version's table of contents as an array of
+  Determines a version's table of contents as an array of
   xpath queries. So far, it looks like Perseus and First Thousand Years
   break documents up either as <card> elements or as <milestone unit="card">
   elements.

@@ -11,82 +11,29 @@
   <hr class="mb-4" />
 
   <div class="flex">
-    <div class="max-w-xl pr-4 text-justify">
-      <.form :let={f} for={:location} phx-submit="change-location">
-        <section class="flex">
-          <Components.select_dropdown
-            form={f}
-            name={:top_level_location}
-            on_change="top-level-location-change"
-            options={@top_level_toc}
-          />
-          <%= unless is_nil(@second_level_toc) do %>
-            <div class="mr-2" />
-            <Components.select_dropdown
-              form={f}
-              name={:second_level_location}
-              on_change="second-level-location-change"
-              options={@second_level_toc}
-            />
-          <% end %>
-
-          <%= submit("Go", class: ~w(
-            mb-4
-            ml-2
-            px-4
-            border
-            border-transparent
-            text-sm
-            font-medium
-            text-white
-            bg-stone-600
-            hover:bg-stone-700
-            focus:outline-none
-            focus:ring-2
-            focus:ring-offset-2
-            focus:ring-stone-500
-          )) %>
-        </section>
-      </.form>
-
+    <div class="pr-4 text-justify">
+      <.live_component
+        id={:location}
+        module={TextServerWeb.ReadingEnvironment.LocationForm}
+        second_level_toc={@second_level_toc}
+        top_level_toc={@top_level_toc}
+        versions={@versions}
+      />
       <.live_component
         id={:reader}
-        footnotes={@footnotes}
         module={TextServerWeb.ReadingEnvironment.Reader}
+        focused_text_node={@focused_text_node}
+        footnotes={@footnotes}
         location={@location}
         passage={@passage}
+        version_command_palette_open={@version_command_palette_open}
         text_nodes={@text_nodes}
+        text_node_command_palette_open={@focused_text_node != nil}
         top_level_toc={@top_level_toc}
         second_level_toc={@second_level_toc}
+        version_urn={@version.urn}
       />
       <Components.pagination current_page={@passage.passage_number} total_pages={@passage.total_passages} />
-    </div>
-
-    <div class="max-w-xl w-xl flex-grow">
-      <.form :let={f} for={:second_reader} phx-submit="second-reader-change">
-        <Components.select_dropdown
-          classes="w-full max-w-full min-w-full"
-          form={f}
-          name={:second_reader_select}
-          on_change="second-reader-change"
-          options={@second_reader_options}
-        />
-      </.form>
-      <%= if length(@comments) > 0 and @second_reader_selection == internal_commentary_magic_string() do %>
-        <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
-      <% end %>
-      <%= if @second_reader_selection != internal_commentary_magic_string() do %>
-        <.live_component
-          id={:second_reader}
-          footnotes={[]}
-          module={TextServerWeb.ReadingEnvironment.Reader}
-          location={@location}
-          passage={@passage}
-          text_nodes={@second_reader_text_nodes}
-          top_level_toc={@top_level_toc}
-          second_level_toc={@second_level_toc}
-        />
-      <% end %>
     </div>
   </div>
 </article>

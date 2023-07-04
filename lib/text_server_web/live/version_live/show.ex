@@ -3,15 +3,15 @@ defmodule TextServerWeb.VersionLive.Show do
 
   alias TextServerWeb.Components
 
-  alias TextServer.Repo
-  alias TextServer.Versions
   alias TextServer.TextNodes
-
-  @internal_commentary_magic_string "@@oc/commentary"
+  alias TextServer.Versions
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign_new(:current_user, fn -> nil end)}
+    {:ok,
+     socket
+     |> assign_new(:current_user, fn -> nil end)
+     |> assign(focused_text_node: nil, version_command_palette_open: false)}
   end
 
   @impl true
@@ -22,7 +22,13 @@ defmodule TextServerWeb.VersionLive.Show do
   def handle_params(%{"id" => id, "location" => raw_location}, _session, socket) do
     location = raw_location |> String.split(".") |> Enum.map(&String.to_integer/1)
 
-    create_response(socket, id, get_passage_by_location(id, location))
+    passage_page = get_passage_by_location(id, location)
+
+    if is_nil(passage_page) do
+      {:noreply, socket |> put_flash(:error, "No text nodes found for the given passage.")}
+    else
+      create_response(socket, id, passage_page)
+    end
   end
 
   def handle_params(params, session, socket) do
@@ -35,17 +41,26 @@ defmodule TextServerWeb.VersionLive.Show do
 
   defp create_response(socket, version_id, page) do
     %{comments: comments, footnotes: footnotes, passage: passage} = page
-    version = Versions.get_version!(version_id) |> Repo.preload(:language)
+
+    version = Versions.get_version!(version_id)
+
+    sibling_versions =
+      Versions.list_sibling_versions(version)
+      |> Enum.map(fn v ->
+        [key: v.label, value: Integer.to_string(v.id), selected: version.id == v.id]
+      end)
+
     text_nodes = passage.text_nodes
     location = List.first(text_nodes).location
     top_level_location = List.first(location)
     second_level_location = Enum.at(location, 1)
+    toc = Versions.get_table_of_contents(version_id)
 
     {top_level_toc, second_level_toc} =
       if length(location) > 2 do
-        format_toc(version_id, top_level_location, second_level_location)
+        format_toc(toc, top_level_location, second_level_location)
       else
-        format_toc(version_id, top_level_location)
+        format_toc(toc, top_level_location)
       end
 
     {:noreply,
@@ -59,76 +74,43 @@ defmodule TextServerWeb.VersionLive.Show do
          "second_level_location" => second_level_location
        },
        passage: Map.delete(passage, :text_nodes),
-       page_title: page_title(socket.assigns.live_action),
+       page_title: version.label,
+       versions: sibling_versions,
        text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
+       top_level_location: top_level_location,
        top_level_toc: top_level_toc,
+       second_level_location: second_level_location,
        second_level_toc: second_level_toc,
        version: version
-     )
-     |> sync_second_reader()}
+     )}
   end
 
-  def sync_second_reader(socket) do
-    version = socket.assigns.version
-    sibling_versions = Versions.list_sibling_versions(version)
-
-    second_reader_options = [
-      {"This project's commentary", @internal_commentary_magic_string}
-      | sibling_versions
-        |> Enum.map(fn v ->
-          {v.label, v.id}
-        end)
-    ]
-
-    socket
-    |> assign_new(:second_reader_selection, fn -> @internal_commentary_magic_string end)
-    |> assign(
-      second_reader_options: second_reader_options,
-      second_reader_text_nodes:
-        list_second_reader_text_nodes(socket.assigns.text_nodes, version.id)
-    )
+  def format_toc(toc, top_level_location, second_level_location) do
+    {format_top_level_toc(toc, top_level_location),
+     format_second_level_toc(toc, top_level_location, second_level_location)}
   end
 
-  def list_second_reader_text_nodes(_main_text_nodes, @internal_commentary_magic_string), do: []
-
-  def list_second_reader_text_nodes(main_text_nodes, version_id) do
-    start_location = List.first(main_text_nodes).location
-    end_location = List.last(main_text_nodes).location
-
-    TextNodes.get_text_nodes_by_version_between_locations(
-      version_id,
-      start_location,
-      end_location
-    )
-    |> TextNodes.tag_text_nodes()
+  def format_toc(toc, top_level_location) do
+    {format_top_level_toc(toc, top_level_location), nil}
   end
 
-  defp format_toc(version_id, top_level_location, second_level_location) do
-    toc = Versions.get_table_of_contents(version_id)
-
-    top_level_toc =
-      Map.keys(toc)
-      |> Enum.sort()
-      |> Enum.map(&[key: "Book #{&1}", value: &1, selected: &1 == top_level_location])
-
-    second_level_toc =
-      Map.get(toc, top_level_location)
-      |> Map.keys()
-      |> Enum.sort()
-      |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == second_level_location])
-
-    {top_level_toc, second_level_toc}
+  @spec format_second_level_toc(map(), pos_integer(), pos_integer()) :: [
+          [key: String.t(), value: String.t(), selected: boolean()]
+        ]
+  def format_second_level_toc(toc, top_level_location, location \\ 1) do
+    Map.get(toc, top_level_location)
+    |> Map.keys()
+    |> Enum.sort()
+    |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == location])
   end
 
-  defp format_toc(version_id, top_level_location) do
-    toc = Versions.get_table_of_contents(version_id)
-
-    top_level_toc =
-      Map.keys(toc)
-      |> Enum.sort()
-      |> Enum.map(&[key: "Book #{&1}", value: &1, selected: &1 == top_level_location])
-
-    {top_level_toc, nil}
+  @spec format_top_level_toc(map(), pos_integer()) :: [
+          [key: String.t(), value: String.t(), selected: boolean()]
+        ]
+  def format_top_level_toc(toc, location \\ 1) do
+    Map.keys(toc)
+    |> Enum.sort()
+    |> Enum.map(&[key: "Book #{&1}", value: &1, selected: &1 == location])
   end
 
   @impl true
@@ -141,47 +123,55 @@ defmodule TextServerWeb.VersionLive.Show do
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
 
-  def handle_event("second-level-location-change", _, socket) do
-    {:noreply, socket}
-  end
+  def handle_event("location-change", location, socket) do
+    version_id = Map.get(location, "version_select")
+    top_level = Map.get(location, "top_level_location") |> String.to_integer()
+    second_level = Map.get(location, "second_level_location") |> String.to_integer()
 
-  def handle_event(
-        "second-reader-change",
-        %{"second_reader" => %{"second_reader_select" => version_id}},
-        socket
-      ) do
-    text_nodes = list_second_reader_text_nodes(socket.assigns.text_nodes, version_id)
+    toc = Versions.get_table_of_contents(version_id)
+
+    top_level_toc = format_top_level_toc(toc, top_level)
+    second_level_toc = format_second_level_toc(toc, top_level, second_level)
+
+    versions =
+      socket.assigns.versions
+      |> Enum.map(fn v ->
+        id = Keyword.get(v, :value)
+        Keyword.merge(v, selected: id == version_id)
+      end)
 
     {:noreply,
      socket
      |> assign(
-       second_reader_text_nodes: text_nodes,
-       second_reader_selection: version_id
+       second_level_toc: second_level_toc,
+       versions: versions,
+       top_level_toc: top_level_toc
      )}
   end
 
-  def handle_event("top-level-location-change", %{"location" => location}, socket) do
-    version = socket.assigns.version
-    top_level = Map.get(location, "top_level_location") |> String.to_integer()
-
-    {top_level_toc, second_level_toc} = format_toc(version.id, top_level, 1)
-
-    {:noreply, socket |> assign(top_level_toc: top_level_toc, second_level_toc: second_level_toc)}
-  end
-
-  def handle_event("change-location", %{"location" => location}, socket) do
+  def handle_event("change-location", location, socket) do
     top_level = Map.get(location, "top_level_location")
     second_level = Map.get(location, "second_level_location")
-    version = socket.assigns.version
+    version_id = Map.get(location, "version_select", socket.assigns.version.id)
     location_s = "#{top_level}.#{second_level}.1"
 
-    {:noreply, socket |> push_patch(to: "/versions/#{version.id}?location=#{location_s}")}
+    {:noreply, socket |> push_patch(to: "/versions/#{version_id}?location=#{location_s}")}
   end
 
-  def handle_event(event, _, socket) do
+  def handle_event(event, params, socket) do
     IO.puts("Failed to capture event #{event}")
+    IO.inspect(params)
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:focused_text_node, text_node}, socket) do
+    {:noreply, socket |> assign(focused_text_node: text_node)}
+  end
+
+  def handle_info({:version_command_palette_open, state}, socket) do
+    {:noreply, socket |> assign(version_command_palette_open: state)}
   end
 
   defp get_passage(version_id, passage_number) when is_binary(passage_number),
@@ -198,6 +188,8 @@ defmodule TextServerWeb.VersionLive.Show do
 
     organize_passage(passage)
   end
+
+  defp organize_passage(passage) when is_nil(passage), do: nil
 
   defp organize_passage(passage) do
     elements =
@@ -223,9 +215,4 @@ defmodule TextServerWeb.VersionLive.Show do
 
     %{comments: comments, footnotes: footnotes, passage: passage}
   end
-
-  defp page_title(:show), do: "Show Version"
-  defp page_title(:edit), do: "Edit Version"
-
-  defp internal_commentary_magic_string, do: @internal_commentary_magic_string
 end

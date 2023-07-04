@@ -11,9 +11,13 @@ defmodule TextServer.TextNodes.TextNode do
     field :text, :string
     field :_search, TextServer.Ecto.Types.TsVector
 
+    field :graphemes_with_tags, :any, virtual: true
+
     belongs_to :version, TextServer.Versions.Version
 
-    has_many :text_elements, TextServer.TextElements.TextElement, foreign_key: :start_text_node_id
+    has_many :text_elements, TextServer.TextElements.TextElement,
+      foreign_key: :start_text_node_id,
+      preload_order: [asc: :start_offset]
 
     timestamps()
   end
@@ -25,6 +29,15 @@ defmodule TextServer.TextNodes.TextNode do
     |> validate_required([:location, :text])
     |> assoc_constraint(:version)
     |> unique_constraint([:version_id, :location])
+  end
+
+  @search_types %{location: {:array, :any}, search_string: :string, urn: :string}
+
+  def search_changeset(attrs \\ %{}) do
+    cast({%{}, @search_types}, attrs, [:location, :search_string, :urn])
+    |> validate_required([:search_string,])
+    |> update_change(:search_string, &String.trim/1)
+    |> validate_length(:search_string, min: 2)
   end
 
   defmodule Tag do
@@ -72,7 +85,7 @@ defmodule TextServer.TextNodes.TextNode do
       end)
       |> Enum.reverse()
 
-    %{graphemes_with_tags: grouped_graphemes, location: text_node.location}
+      %{text_node | graphemes_with_tags: grouped_graphemes}
   end
 
   defp apply_tags(elements, graphemes) do

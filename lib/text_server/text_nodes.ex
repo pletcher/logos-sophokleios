@@ -6,8 +6,9 @@ defmodule TextServer.TextNodes do
   import Ecto.Query, warn: false
   alias TextServer.Repo
 
-  alias TextServer.TextElements.TextElement
   alias TextServer.TextNodes.TextNode
+  alias TextServer.Versions
+  alias TextServer.Versions.Version
 
   @doc """
   Returns the list of text_nodes.
@@ -45,14 +46,12 @@ defmodule TextServer.TextNodes do
       }
   """
   def list_text_nodes_by_version_id(version_id, params \\ [page_size: 20]) do
-    text_elements_query = from te in TextElement, order_by: te.start_offset
-
     query =
       from(
         t in TextNode,
         where: t.version_id == ^version_id,
         order_by: [asc: t.location],
-        preload: [text_elements: ^{text_elements_query, [:element_type]}]
+        preload: [text_elements: :element_type]
       )
 
     Repo.paginate(query, params)
@@ -80,28 +79,114 @@ defmodule TextServer.TextNodes do
   end
 
   @doc """
+  Lists TextNodes from other versions of the same work
+  at the same location.
+  """
+  def list_text_node_critica(nil), do: []
+
+  def list_text_node_critica([%TextNode{}] = text_nodes) do
+    [tn | _rest] = text_nodes
+    work_urn = get_work_urn(tn)
+    version_ids = list_versions_for_work_urn(work_urn) |> Enum.reject(&(&1 == tn.version_id))
+    locations = Enum.map(text_nodes, & &1.location)
+
+    from(
+      t in TextNode,
+      where: t.version_id in ^version_ids and t.location in ^locations,
+      limit: 10,
+      preload: :version
+    )
+    |> Repo.all()
+  end
+
+  def list_text_node_critica(%TextNode{} = text_node) do
+    work_urn = get_work_urn(text_node)
+
+    version_ids =
+      list_versions_for_work_urn(work_urn) |> Enum.reject(&(&1 == text_node.version_id))
+
+    from(
+      t in TextNode,
+      where: t.version_id in ^version_ids and t.location == ^text_node.location,
+      limit: 10,
+      preload: :version
+    )
+    |> Repo.all()
+  end
+
+  def list_versions_for_work_urn(work_urn) do
+    from(v in Version, where: ilike(v.urn, ^"#{work_urn}%"), select: v.id) |> Repo.all()
+  end
+
+  def get_work_urn(%TextNode{} = text_node) do
+    version = Versions.get_version!(text_node.version_id)
+    [text_group, work, _version] = String.split(version.urn, ".")
+
+    "#{text_group}.#{work}"
+  end
+
+  @doc """
   Returns a list of TextNodes between start_location and end_location.
 
   Used by Exemplars.get_version_page/2 and Exemplars.get_version_page_by_location/2.
 
   ## Examples
 
-      iex> get_text_nodes_by_version_between_locations(1, [1, 1, 1], [1, 1, 2])
+      iex> list_text_nodes_by_version_between_locations(%Version{id: 1}, [1, 1, 1], [1, 1, 2])
       [%TextNode{location: [1, 1, 1], ...}, %TextNode{location: [1, 1, 2], ...}]
   """
+  def list_text_nodes_by_version_between_locations(
+        %Version{} = version,
+        start_location,
+        end_location
+      ) do
+    query =
+      from(
+        t in TextNode,
+        where:
+          t.version_id == ^version.id and
+            t.location >= ^start_location and
+            t.location <= ^end_location,
+        order_by: [asc: t.location],
+        preload: [:version, text_elements: [:element_type, :text_element_users]]
+      )
 
-  def get_text_nodes_by_version_between_locations(version_id, start_location, end_location) do
-    text_elements_query = from(te in TextElement, order_by: te.start_offset)
+    Repo.all(query)
+  end
+
+  def list_text_nodes_by_version_between_locations(version_id, start_location, end_location)
+      when is_integer(version_id) do
+    list_text_nodes_by_version_between_locations(
+      %Version{id: version_id},
+      start_location,
+      end_location
+    )
+  end
+
+  def list_text_nodes_by_version_between_locations(version_id, start_location, end_location)
+      when is_binary(version_id) do
+    list_text_nodes_by_version_between_locations(
+      %Version{id: version_id},
+      start_location,
+      end_location
+    )
+  end
+
+  @spec list_text_nodes_by_version_from_start_location(%Version{}, [...]) :: [%TextNode{}]
+  def list_text_nodes_by_version_from_start_location(%Version{} = version, start_location) do
+    cardinality = Enum.count(start_location)
+    pseudo_page_number = Enum.at(start_location, cardinality - 2)
 
     query =
       from(
         t in TextNode,
         where:
-          t.version_id == ^version_id and
+          t.version_id == ^version.id and
             t.location >= ^start_location and
-            t.location <= ^end_location,
+            fragment("location[?] = ?", ^cardinality - 1, ^pseudo_page_number) and
+            fragment("location[1] = ?", ^List.first(start_location)),
         order_by: [asc: t.location],
-        preload: [text_elements: ^{text_elements_query, [:element_type, :text_element_users]}]
+        preload: [text_elements: [:element_type, :text_element_users]]
       )
 
     Repo.all(query)
@@ -109,6 +194,10 @@ defmodule TextServer.TextNodes do
 
   def tag_text_nodes(text_nodes \\ []) do
     Enum.map(text_nodes, &TextNode.tag_graphemes/1)
+  end
+
+  def tag_text_node(%TextNode{} = text_node) do
+    TextNode.tag_graphemes(text_node)
   end
 
   @doc """
@@ -125,7 +214,10 @@ defmodule TextServer.TextNodes do
       ** (Ecto.NoResultsError)
 
   """
-  def get_text_node!(id), do: Repo.get!(TextNode, id)
+  def get_text_node!(id) do
+    Repo.get!(TextNode, id)
+    |> Repo.preload([:version, text_elements: [:element_type, :text_element_users]])
+  end
 
   def get_by(attrs \\ %{}) do
     Repo.get_by(TextNode, attrs)

@@ -1,8 +1,6 @@
 defmodule TextServerWeb.ReadingEnvironment.Reader do
   use TextServerWeb, :live_component
 
-  alias TextServerWeb.Components
-
   @moduledoc """
   Every screen of TextNodes can be represented as a map of
   List<nodes> and List<elements>.
@@ -32,104 +30,104 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   `nodes`.
   """
 
-  def update(%{text_nodes: _text_nodes} = assigns, socket) do
-    {:ok, socket |> assign(assigns)}
+  alias TextServer.TextNodes
+  alias TextServer.Versions
+  alias TextServerWeb.Components
+
+  def mount(socket) do
+    {:ok, socket |> assign(sibling_nodes: %{})}
   end
 
+  attr :focused_text_node, :any, default: nil
+  attr :version_command_palette_open, :boolean, default: false
+  attr :sibling_nodes, :map, default: %{}
   attr :text_nodes, :list, required: true
+  attr :text_node_command_palette_open, :boolean, default: false
+  attr :version_urn, :string, required: true
 
-  def reading_page(assigns) do
+  def render(assigns) do
     ~H"""
-    <section class="whitespace-break-spaces">
-      <.text_node
-        :for={text_node <- @text_nodes}
-        graphemes_with_tags={text_node.graphemes_with_tags}
-        location={text_node.location}
+    <article id="reading-environment-reader">
+      <button
+        type="button"
+        class="rounded bg-stone-600 text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-stone-500"
+        phx-click="show-version-command-palette"
+        phx-target={@myself}
+      >
+        Select comparanda for entire page
+      </button>
+      <section class="whitespace-break-spaces">
+        <.live_component
+          :for={text_node <- @text_nodes}
+          module={TextServerWeb.ReadingEnvironment.TextNode}
+          id={text_node.id}
+          is_focused={is_focused(@focused_text_node, text_node)}
+          sibling_node={@sibling_nodes |> Map.get(text_node.location)}
+          text_node={text_node}
+        />
+      </section>
+      <.live_component
+        module={TextServerWeb.ReadingEnvironment.TextNodeCommandPalette}
+        id={:text_node_command_palette}
+        is_open={@text_node_command_palette_open}
+        text_node={@focused_text_node}
+        urn={@version_urn}
       />
-    </section>
+      <.live_component
+        module={TextServerWeb.ReadingEnvironment.VersionCommandPalette}
+        id={:version_command_palette}
+        is_open={@version_command_palette_open}
+        urn={@version_urn}
+      />
+      <Components.footnotes footnotes={@footnotes} />
+    </article>
     """
   end
 
-  attr :tags, :list, default: []
-  attr :text, :string
+  def handle_event("select-sibling-node", %{"text_node_id" => id}, socket) do
+    new_sibling = TextNodes.get_text_node!(id) |> TextNodes.tag_text_node()
 
-  def text_element(assigns) do
-    tags = assigns[:tags]
+    send(self(), {:focused_text_node, nil})
 
-    classes =
-      tags
-      |> Enum.map(&tag_classes/1)
-      |> Enum.join(" ")
-
-    cond do
-      Enum.member?(tags |> Enum.map(& &1.name), "comment") ->
-        comments =
-          tags
-          |> Enum.filter(&(&1.name == "comment"))
-          |> Enum.map(& &1.metadata[:id])
-          |> Jason.encode!()
-
-        ~H"""
-        <span class={classes} phx-click="highlight-comments" phx-value-comments={comments}><%= @text %></span>
-        """
-
-      Enum.member?(tags |> Enum.map(& &1.name), "image") ->
-        image = tags |> Enum.find(&(&1.name == "image"))
-        meta = Map.get(image, :metadata, %{})
-
-        if is_nil(meta) do
-          ~H"<span />"
-        else
-          src = Map.get(meta, :src)
-          ~H"<img class={classes} src={src} />"
-        end
-
-      Enum.member?(tags |> Enum.map(& &1.name), "link") ->
-        link = tags |> Enum.find(&(&1.name == "link"))
-        meta = Map.get(link, :metadata, %{})
-        src = Map.get(meta, :src)
-
-        ~H"""
-        <a class={classes} href={src}><%= @text %></a>
-        """
-
-      Enum.member?(tags |> Enum.map(& &1.name), "note") ->
-        footnote = tags |> Enum.find(&(&1.name == "note"))
-        meta = footnote.metadata
-
-        ~H"""
-        <span class={classes}><%= @text %><a href={"#_fn-#{meta[:id]}"} id={"_fn-ref-#{meta[:id]}"}><sup>*</sup></a></span>
-        """
-
-      true ->
-        ~H"<span class={classes}><%= @text %></span>"
-    end
+    {:noreply,
+     socket
+     |> assign(
+       sibling_nodes: Map.put(socket.assigns.sibling_nodes, new_sibling.location, new_sibling),
+       text_node_command_palette_open: false
+     )}
   end
 
-  attr :graphemes_with_tags, :list, required: true
-  attr :location, :integer, required: true
+  def handle_event("select-sibling-version", %{"version_id" => id}, socket) do
+    version = Versions.get_version!(id)
+    start_location = List.first(socket.assigns.text_nodes) |> Map.get(:location)
+    end_location = List.last(socket.assigns.text_nodes) |> Map.get(:location)
 
-  def text_node(assigns) do
-    location = assigns[:location] |> Enum.join(".")
-    # NOTE: (charles) It's important, unfortunately, for the `for` statement
-    # to be on one line so that we don't get extra spaces around elements.
-    ~H"""
-    <p class="mb-4">
-      <span class="text-slate-500" title={"Location: #{location}"}><%= location %></span>
-      <.text_element :for={{graphemes, tags} <- @graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
-    </p>
-    """
+    new_siblings =
+      TextNodes.list_text_nodes_by_version_between_locations(
+        version,
+        start_location,
+        end_location
+      )
+      |> TextNodes.tag_text_nodes()
+      |> Map.new(fn tn ->
+        {tn.location, tn}
+      end)
+
+    send self(), {:version_command_palette_open, false}
+
+    {:noreply, socket |> assign(sibling_nodes: new_siblings)}
   end
 
-  defp tag_classes(tag) do
-    case tag.name do
-      "comment" -> "bg-blue-200 cursor-pointer"
-      "emph" -> "italic"
-      "image" -> "image mt-10"
-      "link" -> "link font-bold underline hover:opacity-75 visited:opacity-60"
-      "strong" -> "font-bold"
-      "underline" -> "underline"
-      _ -> tag.name
-    end
+  def handle_event("show-version-command-palette", _, socket) do
+    send self(), {:version_command_palette_open, true}
+    {:noreply, socket}
+  end
+
+  defp is_focused(focused_text_node, _text_node) when is_nil(focused_text_node) do
+    false
+  end
+
+  defp is_focused(focused_text_node, text_node) do
+    focused_text_node == text_node
   end
 end

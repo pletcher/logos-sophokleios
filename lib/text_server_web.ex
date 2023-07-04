@@ -35,7 +35,7 @@ defmodule TextServerWeb do
 
       # Import convenience functions from controllers
       import Phoenix.Controller,
-        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
+        only: [get_csrf_token: 0, get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
 
       import Phoenix.Component
 
@@ -47,7 +47,7 @@ defmodule TextServerWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {TextServerWeb.LayoutView, "live.html"}
+        layout: {TextServerWeb.LayoutView, :live}
 
       unquote(view_helpers())
     end
@@ -92,7 +92,7 @@ defmodule TextServerWeb do
       use Phoenix.HTML
 
       # Import LiveView and .heex helpers (live_render, live_patch, <.form>, etc)
-      import Phoenix.LiveView.Helpers
+      import Phoenix.Component
       import TextServerWeb.LiveHelpers
 
       # Import basic rendering functionality (render, render_layout, etc)

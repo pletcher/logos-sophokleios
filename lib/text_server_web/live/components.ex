@@ -1,7 +1,12 @@
 defmodule TextServerWeb.Components do
   use TextServerWeb, :component
 
-  def card(%{item: item, url: url} = assigns) do
+  attr :item, :map, required: true
+  attr :url, :string, required: true
+
+  slot :inner_block
+
+  def card(assigns) do
     ~H"""
     <div class="group relative">
       <div class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none">
@@ -12,11 +17,11 @@ defmodule TextServerWeb.Components do
       <div class="mt-4 flex justify-between">
         <div>
           <h3 class="font-bold text-gray-700">
-            <a href={url}>
-              <span aria-hidden="true" class="absolute inset-0"></span> <%= item.title %>
+            <a href={@url}>
+              <span aria-hidden="true" class="absolute inset-0"></span> <%= @item.title %>
             </a>
           </h3>
-          <p class="mt-1 text-sm text-gray-500"><%= item.description %></p>
+          <p class="mt-1 text-sm text-gray-500"><%= @item.description %></p>
         </div>
       </div>
     </div>
@@ -26,21 +31,14 @@ defmodule TextServerWeb.Components do
   attr :comments, :list, default: []
   attr :highlighted_comments, :list, default: []
 
-  def floating_comments(
-        %{
-          comments: comments,
-          highlighted_comments: highlighted_comments
-        } = assigns
-      ) do
+  def floating_comments(assigns) do
     ~H"""
     <div class="bg-white sm:rounded-lg">
-      <%= for c <- comments do %>
-        <div class={comment_class(c, highlighted_comments)}>
-          <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
-          <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
-          <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
-        </div>
-      <% end %>
+      <div :for={c <- @comments} class={comment_class(c, @highlighted_comments)}>
+        <h3 class="text-lg font-medium leading-6 text-gray-900"><%= c.author %></h3>
+        <small class="mt-1 mx-w-2xl text-sm text-gray-500"><%= c.date %></small>
+        <p class="mt-1 max-w-2xl text-sm text-gray-800"><%= c.content %></p>
+      </div>
     </div>
     """
   end
@@ -75,9 +73,9 @@ defmodule TextServerWeb.Components do
   def select_dropdown(assigns) do
     ~H"""
     <%= select(
-      assigns[:form],
-      assigns[:name],
-      assigns[:options],
+      @form,
+      @name,
+      @options,
       class: ~w(
                 appearance-none
                 relative
@@ -94,7 +92,7 @@ defmodule TextServerWeb.Components do
                 focus:border-stone-500
                 focus:z-10
                 sm:text-sm
-                #{assigns[:classes]}
+                #{@classes}
               ),
       "phx-change": assigns[:on_change]
     ) %>
@@ -128,19 +126,16 @@ defmodule TextServerWeb.Components do
   attr :total_pages, :integer, required: true
 
   def pagination(assigns) do
-    current_page = assigns[:current_page]
-    total_pages = assigns[:total_pages]
-
     ~H"""
     <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
       <div class="sm:flex sm:justify-between mx-auto">
         <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-          <.first_page_button current_page={current_page} />
-          <.prev_button current_page={current_page} />
+          <.first_page_button current_page={@current_page} />
+          <.prev_button current_page={@current_page} />
           <!-- Current: "z-10 bg-stone-50 border-stone-500 text-stone-600", Default: "bg-white border-gray-300 text-gray-500 hover:bg-gray-50" -->
-          <.numbered_buttons current_page={current_page} total_pages={total_pages} />
-          <.next_button current_page={current_page} total_pages={total_pages} />
-          <.last_page_button current_page={current_page} total_pages={total_pages} />
+          <.numbered_buttons current_page={@current_page} total_pages={@total_pages} />
+          <.next_button current_page={@current_page} total_pages={@total_pages} />
+          <.last_page_button current_page={@current_page} total_pages={@total_pages} />
         </nav>
       </div>
     </div>
@@ -150,47 +145,24 @@ defmodule TextServerWeb.Components do
   attr :current_page, :integer, required: true
 
   defp first_page_button(assigns) do
-    current_page = assigns[:current_page]
-
-    classes =
-      if current_page == 1 do
-        ~w(
-        relative
-        inline-flex
-        items-center
-        rounded-l-md
-        border
-        border-y-gray-300
-        border-l-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-100
-        cursor-default
-      )
-      else
-        ~w(
-        relative
-        inline-flex
-        items-center
-        rounded-l-md
-        border
-        border-y-gray-300
-        border-l-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-500
-        hover:bg-gray-50
-      )
-      end
-
     ~H"""
-    <.link patch="?page=1" class={classes}>
+    <.link
+      patch="?page=1"
+      class={[
+        "relative",
+        "inline-flex",
+        "items-center",
+        "rounded-l-md",
+        "border",
+        "bg-white",
+        "px-2",
+        "py-2",
+        "text-sm",
+        "font-medium",
+        "text-gray-100",
+        if(@current_page == 1, do: "cursor-default", else: "hover:bg-gray-50")
+      ]}
+    >
       <span class="sr-only">First page</span>
       <!-- Heroicon name: mini/chevron-double-left -->
       <svg
@@ -211,48 +183,24 @@ defmodule TextServerWeb.Components do
   attr :total_pages, :integer, required: true
 
   defp last_page_button(assigns) do
-    current_page = assigns[:current_page]
-    total_pages = assigns[:total_pages]
-
-    classes =
-      if current_page == total_pages do
-        ~w(
-        relative
-        inline-flex
-        items-center
-        rounded-r-md
-        border
-        border-y-gray-300
-        border-r-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-100
-        cursor-default
-      )
-      else
-        ~w(
-        relative
-        inline-flex
-        items-center
-        rounded-r-md
-        border
-        border-y-gray-300
-        border-r-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-500
-        hover:bg-gray-50
-      )
-      end
-
     ~H"""
-    <.link patch={"?page=#{total_pages}"} class={classes}>
+    <.link
+      patch={"?page=#{@total_pages}"}
+      class={[
+        "relative",
+        "inline-flex",
+        "items-center",
+        "rounded-r-md",
+        "border",
+        "bg-white",
+        "px-2",
+        "py-2",
+        "text-sm",
+        "font-medium",
+        "text-gray-100",
+        if(@current_page == @total_pages, do: "cursor-default", else: "hover:bg-gray-50")
+      ]}
+    >
       <span class="sr-only">Last page</span>
       <!-- Heroicon name: mini/chevron-double-right -->
       <svg
@@ -273,53 +221,23 @@ defmodule TextServerWeb.Components do
   attr :total_pages, :integer, required: true
 
   defp next_button(assigns) do
-    current_page = assigns[:current_page]
-    total_pages = assigns[:total_pages]
-
-    classes =
-      if current_page == total_pages do
-        ~w(
-        relative
-        inline-flex
-        items-center
-        border
-        border-y-gray-300
-        border-r-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-100
-        cursor-default
-      )
-      else
-        ~w(
-        relative
-        inline-flex
-        items-center
-        border
-        border-y-gray-300
-        border-r-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-500
-        hover:bg-gray-50
-      )
-      end
-
-    next_page =
-      if current_page + 1 == total_pages do
-        total_pages
-      else
-        current_page + 1
-      end
-
     ~H"""
-    <.link patch={"?page=#{next_page}"} class={classes}>
+    <.link
+      patch={"?page=#{min(@current_page + 1, @total_pages)}"}
+      class={[
+        "relative",
+        "inline-flex",
+        "items-center",
+        "border",
+        "bg-white",
+        "px-2",
+        "py-2",
+        "text-sm",
+        "font-medium",
+        "text-gray-100",
+        if(@current_page == @total_pages, do: "cursor-default", else: "hover:bg-gray-50")
+      ]}
+    >
       <span class="sr-only">Next</span>
       <!-- Heroicon name: mini/chevron-right -->
       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -334,113 +252,52 @@ defmodule TextServerWeb.Components do
   end
 
   attr :current_page, :integer, required: true
-  attr :max_buttons, :integer, default: 6
+  attr :max_buttons, :integer, default: 4
   attr :total_pages, :integer, required: true
 
   defp numbered_buttons(assigns) do
-    current_page = assigns[:current_page]
-    max_buttons = assigns[:max_buttons]
-    total_pages = assigns[:total_pages]
-    halfway = Integer.floor_div(max_buttons, 2)
-
-    {start_n, end_n} =
-      cond do
-        current_page - halfway <= 0 -> {1, max_buttons}
-        current_page + halfway - 1 > total_pages -> {total_pages - max_buttons + 1, total_pages}
-        true -> {current_page - halfway, current_page + halfway - 1}
-      end
-
     ~H"""
-    <%= for i <- start_n..end_n do %>
-      <.link patch={"?page=#{i}"} aria-current="page" class={numbered_button_classes(current_page, i)}><%= i %></.link>
+    <%= for i <- max(@current_page - 1, 1)..min(@current_page + @max_buttons, @total_pages) do %>
+      <.link patch={"?page=#{i}"} aria-current="page" class={numbered_button_classes(@current_page, i)}><%= i %></.link>
     <% end %>
     """
   end
 
   defp numbered_button_classes(current_page, i) do
-    if current_page == i do
-      ~w(
-        relative
-        z-10
-        inline-flex
-        items-center
-        border
-        border-stone-500
-        bg-stone-100
-        px-4
-        py-2
-        text-sm
-        font-medium
-        text-stone-600
-        z-20
-      )
-    else
-      ~w(
-        relative
-        z-10
-        inline-flex
-        items-center
-        border
-        border-gray-300
-        bg-white
-        px-4
-        py-2
-        text-sm
-        font-medium
-        text-gray-500
-      )
-    end
+    [
+      "relative",
+      "z-10",
+      "inline-flex",
+      "items-center",
+      "border",
+      "px-4",
+      "py-2",
+      "text-sm",
+      "font-medium",
+      if(current_page == i, do: "bg-stone-100 border-stone-500 text-stone-600 z-20", else: "text-gray-500")
+    ]
   end
 
   attr :current_page, :integer, required: true
 
   defp prev_button(assigns) do
-    current_page = assigns[:current_page]
-
-    classes =
-      if current_page == 1 do
-        ~w(
-        relative
-        inline-flex
-        items-center
-        border
-        border-y-gray-300
-        border-l-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-100
-        cursor-default
-      )
-      else
-        ~w(
-        relative
-        inline-flex
-        items-center
-        border
-        border-y-gray-300
-        border-l-gray-300
-        bg-white
-        px-2
-        py-2
-        text-sm
-        font-medium
-        text-gray-500
-        hover:bg-gray-50
-      )
-      end
-
-    previous_page =
-      if current_page - 1 <= 0 do
-        1
-      else
-        current_page - 1
-      end
-
     ~H"""
-    <.link patch={"?page=#{previous_page}"} class={classes}>
+    <.link
+      patch={"?page=#{max(@current_page - 1, 1)}"}
+      class={[
+        "relative",
+        "inline-flex",
+        "items-center",
+        "border",
+        "bg-white",
+        "px-2",
+        "py-2",
+        "text-sm",
+        "font-medium",
+        "text-gray-100",
+        if(@current_page == 1, do: "cursor-default", else: "hover:bg-gray-50")
+      ]}
+    >
       <span class="sr-only">Previous</span>
       <!-- Heroicon name: mini/chevron-left -->
       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

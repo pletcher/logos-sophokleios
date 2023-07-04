@@ -16,7 +16,7 @@ module.exports = {
     },
     fontFamily: {
       // Helvetica messes up kerning when diacritics are involved
-      'sans': ["Arial", ...defaultTheme.fontFamily.sans]
+      'sans': ["Inter", "Arial", ...defaultTheme.fontFamily.sans]
     }
   },
   plugins: [require("@tailwindcss/forms")],

@@ -208,3 +208,32 @@ v = TextServer.Xml.get_version_by_urn!("urn:cts:greekLit:tlg0525.tlg001.perseus-
 
 t = TeiExplorer.get_table_of_contents(v)
 ```
+
+## Querying exist-db
+
+```elixir
+defmodule TeiExplorer.ExistAPI do
+  use Tesla
+
+  plug(Tesla.Middleware.BaseUrl, "http://localhost:8092/exist/rest/db")
+  plug(Tesla.Middleware.Query, _query: "//*:refsDecl")
+
+  def get_pausanias do
+    get("/tlg0525/tlg001/tlg0525.tlg001.perseus-grc2.xml")
+  end
+
+  @doc """
+  Returns a given passage as long as the
+  location matches one of the match patterns
+  in the refs declaration.
+  """
+  def get_passage(location) do
+  end
+end
+```
+
+```elixir
+{:ok, p} = TeiExplorer.ExistAPI.get_pausanias()
+
+Map.get(p, :body)
+```

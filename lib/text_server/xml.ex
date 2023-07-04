@@ -307,7 +307,7 @@ defmodule TextServer.Xml do
   end
 
   @doc """
-  Determine's a version's table of contents as an array of
+  Determines a version's table of contents as an array of
   xpath queries. So far, it looks like Perseus and First Thousand Years
   break documents up either as <card> elements or as <milestone unit="card">
   elements.

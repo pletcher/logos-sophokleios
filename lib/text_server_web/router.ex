@@ -95,7 +95,7 @@ defmodule TextServerWeb.Router do
 
       live "/versions", VersionLive.Index, :index
       live "/versions/:id", VersionLive.Show, :show
-      # live "/read/:urn", VersionLive.Read, :read
+      # live "/read/:urn", VersionLive.Show, :read
 
       live "/works", WorkLive.Index, :index
       live "/works/:id", WorkLive.Show, :show

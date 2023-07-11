@@ -147,6 +147,10 @@ defmodule TextServer.Xml do
     |> Repo.update()
   end
 
+  def save_versions_in_exist() do
+
+  end
+
   def get_version_reference("urn:cts:" <> _rest = urn) do
     ["urn", "cts", collection, work, passage] = String.split(urn, ":")
     passages = String.split(passage, "-")

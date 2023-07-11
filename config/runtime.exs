@@ -17,6 +17,9 @@ config :text_server,
   unsplash_access_key: System.get_env("UNSPLASH_ACCESS_KEY"),
   unsplash_secret_key: System.get_env("UNSPLASH_SECRET_KEY"),
   user_uploads_directory: System.get_env("USER_UPLOADS_DIRECTORY"),
+  exist_db_url: System.get_env("EXIST_DB_URL"),
+  exist_db_username: System.get_env("EXIST_DB_USERNAME"),
+  exist_db_password: System.get_env("EXIST_DB_PASSWORD"),
   env: config_env()
 
 # Configures AMQP for queueing Version parsing

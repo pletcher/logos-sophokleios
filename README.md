@@ -83,6 +83,8 @@ section in Pausanias).
 https://research.fas.harvard.edu/deans-competitive-fund-promising-scholarship
 
 
+## TODO: Organize comparanda by version type (edition, translation, commentary)
+
 ## TODO: Sync to Dropbox
 
 ## TODO: Tagging

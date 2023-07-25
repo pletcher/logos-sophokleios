@@ -59,7 +59,7 @@ defmodule Exist.HttpApi do
     get("#{collection}/#{text_group}/#{work}/#{text_group}.#{work}.#{version}.xml")
   end
 
-  def get_passage(collection, rest, passage) do
+  def get_passage(collection, rest, _passage) do
     [text_group, work, version] = String.split(rest, ".")
 
     get("#{collection}/#{text_group}/#{work}/#{text_group}.#{work}.#{version}.xml/?_query=")

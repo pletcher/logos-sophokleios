@@ -20,6 +20,5 @@ defmodule TextServer.TextGroups.TextGroup do
     |> cast(attrs, [:collection_id, :title, :urn])
     |> validate_required([:title, :urn])
     |> assoc_constraint(:collection)
-    |> unique_constraint([:collection_id, :urn])
   end
 end

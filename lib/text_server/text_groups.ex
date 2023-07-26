@@ -17,10 +17,15 @@ defmodule TextServer.TextGroups do
       [%TextGroup{}, ...]
 
   """
-  def list_text_groups(attrs \\ %{}) do
+  def list_text_groups(attrs) do
     TextGroup
     |> where(^filter_text_group_where(attrs))
     |> Repo.paginate()
+  end
+
+  def list_text_groups() do
+    TextGroup
+    |> Repo.all()
   end
 
   def paginate_text_groups(collection_id, params \\ []) do

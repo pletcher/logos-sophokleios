@@ -11,7 +11,7 @@ defmodule TextServer.Versions.Version do
     field :source, :string
     field :source_link, :string
     field :structure, {:array, :string}
-    field :urn, :string
+    field :urn, TextServer.Ecto.Types.CTS_URN
     field :version_type, Ecto.Enum, values: [:commentary, :edition, :translation]
 
     belongs_to :language, TextServer.Languages.Language
@@ -28,6 +28,7 @@ defmodule TextServer.Versions.Version do
   def changeset(version, attrs) do
     version
     |> cast(attrs, [
+      :cts_urn,
       :description,
       :filemd5hash,
       :filename,

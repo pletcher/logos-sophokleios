@@ -75,33 +75,32 @@ defmodule CTS.URN do
   """
 
   defstruct prefix: "urn",
-    protocol: "cts",
-    namespace: nil,
-    work_component: nil,
-    text_group: nil,
-    work: nil,
-    version: nil,
-    exemplar: nil,
-    passage_component: nil,
-    citations: nil,
-    subsections: nil,
-    indexes: nil
-
+            protocol: "cts",
+            namespace: nil,
+            work_component: nil,
+            text_group: nil,
+            work: nil,
+            version: nil,
+            exemplar: nil,
+            passage_component: nil,
+            citations: nil,
+            subsections: nil,
+            indexes: nil
 
   @type t :: %__MODULE__{
-    prefix: binary,
-    protocol: binary,
-    namespace: nil | binary,
-    work_component: nil | binary,
-    text_group: nil | binary,
-    work: nil | binary,
-    version: nil | binary,
-    exemplar: nil | binary,
-    passage_component: nil | binary,
-    citations: nil | {binary, nil | binary},
-    subsections: nil | {binary, nil | binary},
-    indexes: nil | {integer(), nil | integer()}
-  }
+          prefix: binary,
+          protocol: binary,
+          namespace: nil | binary,
+          work_component: nil | binary,
+          text_group: nil | binary,
+          work: nil | binary,
+          version: nil | binary,
+          exemplar: nil | binary,
+          passage_component: nil | binary,
+          citations: nil | {binary, nil | binary},
+          subsections: nil | {binary, nil | binary},
+          indexes: nil | {integer(), nil | integer()}
+        }
 
   @reserved_characters '%/?#:.@-[]'
   @excluded_characters '\\"&<>^`|{}~'
@@ -113,24 +112,29 @@ defmodule CTS.URN do
     components = String.split(string, ":")
 
     destructure [
-      prefix,
-      protocol,
-      namespace,
-      work_component,
-      passage_component
-    ], components
+                  prefix,
+                  protocol,
+                  namespace,
+                  work_component,
+                  passage_component
+                ],
+                components
 
     work_parts = String.split(work_component, ".")
 
     destructure [
-      text_group,
-      work,
-      version,
-      exemplar
-    ], work_parts
+                  text_group,
+                  work,
+                  version,
+                  exemplar
+                ],
+                work_parts
 
     {:ok, {passage_start, passage_end}} = parse_passage(passage_component)
-    {:ok, {citation_start, subsection_start, subsection_start_index}} = parse_citation(passage_start)
+
+    {:ok, {citation_start, subsection_start, subsection_start_index}} =
+      parse_citation(passage_start)
+
     {:ok, {citation_end, subsection_end, subsection_end_index}} = parse_citation(passage_end)
 
     %CTS.URN{
@@ -145,7 +149,7 @@ defmodule CTS.URN do
       passage_component: passage_component,
       citations: [citation_start, citation_end],
       subsections: [subsection_start, subsection_end],
-      indexes: [subsection_start_index, subsection_end_index],
+      indexes: [subsection_start_index, subsection_end_index]
     }
   end
 
@@ -179,5 +183,18 @@ defmodule CTS.URN do
     destructure([_full, token, index], subsection_parts)
 
     {:ok, {token, index}}
+  end
+
+  @spec to_string(binary | CTS.URN.t()) :: binary
+  def to_string(urn) when is_binary(urn), do: urn
+
+  def to_string(%CTS.URN{} = urn) do
+    s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}:#{urn.work_component}"
+
+    if is_nil(urn.passage_component) do
+      s
+    else
+      s <> ":#{urn.passage_component}"
+    end
   end
 end

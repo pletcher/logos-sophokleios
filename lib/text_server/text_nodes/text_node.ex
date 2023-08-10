@@ -9,6 +9,7 @@ defmodule TextServer.TextNodes.TextNode do
     field :location, {:array, :integer}
     field :normalized_text, :string
     field :text, :string
+    field :urn, TextServer.Ecto.Types.CTS_URN
     field :_search, TextServer.Ecto.Types.TsVector
 
     field :graphemes_with_tags, :any, virtual: true
@@ -25,10 +26,10 @@ defmodule TextServer.TextNodes.TextNode do
   @doc false
   def changeset(text_node, attrs) do
     text_node
-    |> cast(attrs, [:version_id, :location, :text])
-    |> validate_required([:location, :text])
+    |> cast(attrs, [:version_id, :location, :text, :urn])
+    |> validate_required([:location, :text, :urn])
     |> assoc_constraint(:version)
-    |> unique_constraint([:version_id, :location])
+    |> unique_constraint([:version_id, :location, :urn])
   end
 
   @search_types %{location: {:array, :any}, search_string: :string, urn: :string}

@@ -86,8 +86,7 @@ defmodule TextServer.TextNodes do
 
   def list_text_node_critica([%TextNode{}] = text_nodes) do
     [tn | _rest] = text_nodes
-    work_urn = get_work_urn(tn)
-    version_ids = list_versions_for_work_urn(work_urn) |> Enum.reject(&(&1 == tn.version_id))
+    version_ids = Versions.list_versions_for_urn(tn.urn) |> Enum.reject(&(&1 == tn.version_id))
     locations = Enum.map(text_nodes, & &1.location)
 
     from(
@@ -100,10 +99,8 @@ defmodule TextServer.TextNodes do
   end
 
   def list_text_node_critica(%TextNode{} = text_node) do
-    work_urn = get_work_urn(text_node)
-
     version_ids =
-      list_versions_for_work_urn(work_urn) |> Enum.reject(&(&1 == text_node.version_id))
+      Versions.list_versions_for_urn(text_node.urn) |> Enum.reject(&(&1 == text_node.version_id))
 
     from(
       t in TextNode,
@@ -112,17 +109,6 @@ defmodule TextServer.TextNodes do
       preload: :version
     )
     |> Repo.all()
-  end
-
-  def list_versions_for_work_urn(work_urn) do
-    from(v in Version, where: ilike(v.urn, ^"#{work_urn}%"), select: v.id) |> Repo.all()
-  end
-
-  def get_work_urn(%TextNode{} = text_node) do
-    version = Versions.get_version!(text_node.version_id)
-    [text_group, work, _version] = String.split(version.urn, ".")
-
-    "#{text_group}.#{work}"
   end
 
   @doc """

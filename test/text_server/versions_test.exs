@@ -70,7 +70,7 @@ defmodule TextServer.VersionsTest do
 
       assert version.source == "some source"
       assert version.source_link == "https://some.source.link"
-      assert version.urn == "urn:cts:some:urn"
+      assert CTS.URN.to_string(version.urn) == "urn:cts:some:urn"
       assert version.version_type == :commentary
     end
 
@@ -90,7 +90,7 @@ defmodule TextServer.VersionsTest do
       assert {:ok, %Version{} = version} = Versions.update_version(version, update_attrs)
       assert version.description == "some updated description"
       assert version.label == "some updated label"
-      assert version.urn == "urn:cts:some:updated_urn"
+      assert CTS.URN.to_string(version.urn) == "urn:cts:some:updated_urn"
     end
 
     test "update_version/2 with invalid data returns error changeset" do
@@ -114,7 +114,7 @@ defmodule TextServer.VersionsTest do
       version = version_fixture()
 
       for i <- 1..5 do
-        TextServer.TextNodesFixtures.version_text_node_fixture(version.id, %{
+        TextServer.TextNodesFixtures.version_text_node_fixture(version, %{
           location: [i, 1, 1]
         })
       end
@@ -133,13 +133,13 @@ defmodule TextServer.VersionsTest do
 
       for i <- 1..5 do
         for j <- 1..5 do
-          TextServer.TextNodesFixtures.version_text_node_fixture(version.id, %{
+          TextServer.TextNodesFixtures.version_text_node_fixture(version, %{
             location: [1, i, j]
           })
         end
       end
 
-      passage = Versions.get_passage_by_urn(version.urn)
+      {:ok, passage} = Versions.get_passage_by_urn(version.urn)
 
       assert Enum.count(passage) == 5
       assert List.first(passage).location == [1, 1, 1]
@@ -151,19 +151,19 @@ defmodule TextServer.VersionsTest do
 
       for i <- 1..5 do
         for j <- 1..5 do
-          TextServer.TextNodesFixtures.version_text_node_fixture(version.id, %{
+          TextServer.TextNodesFixtures.version_text_node_fixture(version, %{
             location: [1, i, j]
           })
         end
       end
 
-      passage = Versions.get_passage_by_urn("#{version.urn}:1.2.1")
+      {:ok, passage} = Versions.get_passage_by_urn("#{version.urn}:1.2.1")
 
       assert Enum.count(passage) == 5
       assert List.first(passage).location == [1, 2, 1]
       assert List.last(passage).location == [1, 2, 5]
 
-      passage = Versions.get_passage_by_urn("#{version.urn}:1.3.1")
+      {:ok, passage} = Versions.get_passage_by_urn("#{version.urn}:1.3.1")
 
       assert Enum.count(passage) == 5
       assert List.first(passage).location == [1, 3, 1]
@@ -175,13 +175,13 @@ defmodule TextServer.VersionsTest do
 
       for i <- 1..5 do
         for j <- 1..5 do
-          TextServer.TextNodesFixtures.version_text_node_fixture(version.id, %{
+          TextServer.TextNodesFixtures.version_text_node_fixture(version, %{
             location: [1, i, j]
           })
         end
       end
 
-      passage = Versions.get_passage_by_urn("#{version.urn}:1.2.2-1.2.4")
+      {:ok, passage} = Versions.get_passage_by_urn("#{version.urn}:1.2.2-1.2.4")
 
       assert Enum.count(passage) == 3
       assert List.first(passage).location == [1, 2, 2]

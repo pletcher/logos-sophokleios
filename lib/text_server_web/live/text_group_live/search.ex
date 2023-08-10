@@ -45,12 +45,13 @@ defmodule TextServerWeb.TextGroupLive.Search do
     {:noreply, socket}
   end
 
-  def render(%{label: label} = assigns) do
+  def render(assigns) do
     ~H"""
     <div clas="w-full">
       <.form
         :let={f}
-        for={:text_group_search}
+        for={%{}}
+        as={:text_group_search}
         id="text_group_search-form"
         phx-target={@myself}
         phx-change="search_text_groups"
@@ -74,7 +75,7 @@ defmodule TextServerWeb.TextGroupLive.Search do
           </a>
         <% else %>
           <div>
-            <%= label(f, :search_input, label, class: "block mb-1") %>
+            <%= label(f, :search_input, @label, class: "block mb-1") %>
             <%= text_input(
               f,
               :search_input,

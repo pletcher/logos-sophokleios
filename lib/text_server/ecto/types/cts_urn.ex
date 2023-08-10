@@ -18,7 +18,7 @@ defmodule TextServer.Ecto.Types.CTS_URN do
   def load(data) when is_map(data) do
     data =
       for {key, val} <- data do
-        {String.to_existing_atom(key), val}
+        {String.to_atom(key), val}
       end
 
     {:ok, struct!(CTS.URN, data)}

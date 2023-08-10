@@ -9,6 +9,8 @@ defmodule TextServer.TextGroupsFixtures do
   """
   def unique_text_group_slug, do: "some slug#{System.unique_integer([:positive])}"
 
+  def unique_text_group_urn, do: "urn:cts:namespace:#{System.unique_integer([:positive])}"
+
   @doc """
   Generate a text_group.
   """
@@ -18,7 +20,7 @@ defmodule TextServer.TextGroupsFixtures do
       |> Enum.into(%{
         collection_id: collection_fixture().id,
         title: "some title",
-        urn: "some urn"
+        urn: unique_text_group_urn()
       })
       |> TextServer.TextGroups.create_text_group()
 

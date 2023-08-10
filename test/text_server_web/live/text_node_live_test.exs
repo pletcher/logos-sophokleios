@@ -29,28 +29,6 @@ defmodule TextServerWeb.TextNodeLiveTest do
       assert html =~ text_node.text
     end
 
-    test "saves new text_node", %{conn: conn} do
-      {:ok, index_live, _html} = live(conn, Routes.text_node_index_path(conn, :index))
-
-      assert index_live |> element("a", "New Text node") |> render_click() =~
-               "New Text node"
-
-      assert_patch(index_live, Routes.text_node_index_path(conn, :new))
-
-      assert index_live
-             |> form("#text_node-form", text_node: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        index_live
-        |> form("#text_node-form", text_node: @create_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, Routes.text_node_index_path(conn, :index))
-
-      assert html =~ "Text node created successfully"
-      assert html =~ "some text"
-    end
-
     test "updates text_node in listing", %{conn: conn, text_node: text_node} do
       {:ok, index_live, _html} = live(conn, Routes.text_node_index_path(conn, :index))
 

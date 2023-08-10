@@ -63,7 +63,7 @@ defmodule TextServer.VersionsFixtures do
   end
 
   def text_node_fixture(version) do
-    TextServer.TextNodesFixtures.version_text_node_fixture(version.id)
+    TextServer.TextNodesFixtures.version_text_node_fixture(version)
   end
 
   def version_with_docx_fixture(attrs \\ %{}) do

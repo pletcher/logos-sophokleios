@@ -5,19 +5,6 @@ defmodule TextServerWeb.VersionLiveTest do
   import TextServer.VersionsFixtures
   import TextServer.WorksFixtures
 
-  @create_attrs %{
-    description: "some description",
-    label: "some label",
-    urn: "some urn",
-    version_type: :edition
-  }
-  @update_attrs %{
-    description: "some updated description",
-    label: "some updated label",
-    urn: "some updated urn"
-  }
-  @invalid_attrs %{description: nil, label: nil, urn: nil}
-
   defp create_version(_) do
     version = version_fixture()
     %{version: version}

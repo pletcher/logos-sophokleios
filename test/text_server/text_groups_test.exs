@@ -15,7 +15,7 @@ defmodule TextServer.TextGroupsTest do
   describe "text_groups" do
     test "list_text_groups/0 returns all text_groups" do
       text_group = text_group_fixture()
-      assert List.first(TextGroups.list_text_groups().entries).id == text_group.id
+      assert List.first(TextGroups.list_text_groups()).id == text_group.id
     end
 
     test "get_text_group!/1 returns the text_group with given id" do

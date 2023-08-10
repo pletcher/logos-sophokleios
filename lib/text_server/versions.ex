@@ -57,6 +57,16 @@ defmodule TextServer.Versions do
     |> Repo.all()
   end
 
+  def list_versions_for_urn(%CTS.URN{} = urn) do
+    from(v in Version,
+      where:
+        fragment("? ->> ? = ?", v.urn, "text_group", ^urn.text_group) and
+          fragment("? ->> ? = ?", v.urn, "work", ^urn.work),
+      select: v.id
+    )
+    |> Repo.all()
+  end
+
   @doc """
   Gets a single version.
 
@@ -73,9 +83,14 @@ defmodule TextServer.Versions do
   """
   def get_version!(id), do: Repo.get!(Version, id) |> Repo.preload(:language)
 
-  def get_version_by_urn!(urn), do: Repo.get_by!(Version, urn: urn) |> Repo.preload(:language)
+  def get_version_by_urn!(%CTS.URN{} = urn) do
+    version_urn_s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}:#{urn.work_component}"
 
-  def get_version_by_urn(urn) do
+    Repo.get_by!(Version, urn: version_urn_s)
+    |> Repo.preload(:language)
+  end
+
+  def get_version_by_urn(%CTS.URN{} = urn) do
     Repo.get_by(Version, urn: urn)
   end
 
@@ -177,28 +192,34 @@ defmodule TextServer.Versions do
     {:ok, passage}
   end
 
-  def get_passage_by_urn("urn:cts:" <> collection_work = _urn) do
-    {collection, work, passages} = case String.split(collection_work, ":") do
-      [collection, work, passage] ->
-        {collection, work, String.split(passage, "-")}
-      [collection, work] ->
-        {collection, work, nil}
+  def get_passage_by_urn(%CTS.URN{} = urn) do
+    try do
+      version = get_version_by_urn!(urn)
+      {:ok, list_version_text_nodes(version, urn.passage_component)}
+    rescue
+      e ->
+        Logger.error(Exception.format(:error, e, __STACKTRACE__))
+        {:error, e}
     end
+  end
 
-    version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
-    _text_nodes = list_version_text_nodes(version, passages)
+  def get_passage_by_urn(urn) when is_binary(urn) do
+    get_passage_by_urn(CTS.URN.parse(urn))
   end
 
   def list_version_text_nodes(%Version{} = version, passages) when is_nil(passages) do
     cardinality =
       TextNode
       |> where([t], t.version_id == ^version.id)
-      |> select(
-        fragment("max(cardinality(location))")
-      )
+      |> select(fragment("max(cardinality(location))"))
       |> Repo.one()
+
     start_location = List.duplicate(1, cardinality)
     TextNodes.list_text_nodes_by_version_from_start_location(version, start_location)
+  end
+
+  def list_version_text_nodes(%Version{} = version, passage_s) when is_binary(passage_s) do
+    list_version_text_nodes(version, String.split(passage_s, "-"))
   end
 
   def list_version_text_nodes(%Version{} = version, passages) when length(passages) == 1 do
@@ -482,7 +503,8 @@ defmodule TextServer.Versions do
           TextNodes.find_or_create_text_node(%{
             version_id: version.id,
             location: location,
-            text: text
+            text: text,
+            urn: "#{version.urn}:#{Enum.join(location, ".")}"
           })
 
         _elements_and_errors = TextElements.find_or_create_text_elements(text_node, elements)

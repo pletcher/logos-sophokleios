@@ -28,7 +28,6 @@ defmodule TextServer.Versions.Version do
   def changeset(version, attrs) do
     version
     |> cast(attrs, [
-      :cts_urn,
       :description,
       :filemd5hash,
       :filename,

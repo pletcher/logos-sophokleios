@@ -14,6 +14,8 @@ defmodule TextServer.CollectionsFixtures do
   """
   def unique_collection_slug, do: "some slug#{System.unique_integer([:positive])}"
 
+  def unique_collection_urn, do: "urn:cts:#{System.unique_integer([:positive])}"
+
   @doc """
   Generate a collection.
   """
@@ -24,7 +26,7 @@ defmodule TextServer.CollectionsFixtures do
         repository: unique_collection_repository(),
         slug: unique_collection_slug(),
         title: "some title",
-        urn: "some urn"
+        urn: unique_collection_urn()
       })
       |> TextServer.Collections.create_collection()
 

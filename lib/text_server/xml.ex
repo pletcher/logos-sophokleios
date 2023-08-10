@@ -41,14 +41,14 @@ defmodule TextServer.Xml do
   """
   def get_version!(id), do: Repo.get!(Version, id)
 
-  def get_version_by_urn(urn) do
+  def get_version_by_urn(%CTS.URN{} = urn) do
     Version
     |> where([v], v.urn == ^urn)
     |> preload(:refs_declaration)
     |> Repo.one()
   end
 
-  def get_version_by_urn!(urn) do
+  def get_version_by_urn!(%CTS.URN{} = urn) do
     Version
     |> where([v], v.urn == ^urn)
     |> preload(:refs_declaration)
@@ -151,10 +151,9 @@ defmodule TextServer.Xml do
 
   end
 
-  def get_version_reference("urn:cts:" <> _rest = urn) do
-    ["urn", "cts", collection, work, passage] = String.split(urn, ":")
-    passages = String.split(passage, "-")
-    version = get_version_by_urn!("urn:cts:#{collection}:#{work}")
+  def get_version_reference(%CTS.URN{} = urn) do
+    passages = urn.passage_component
+    version = get_version_by_urn!(urn)
 
     path =
       case get_ref_xpath(passages, version.refs_declaration) do

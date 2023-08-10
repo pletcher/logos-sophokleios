@@ -24,7 +24,8 @@ defmodule TextServer.TextNodesTest do
     test "create_text_node/1 with valid data creates a text_node" do
       valid_attrs = %{
         location: [],
-        text: "some text"
+        text: "some text",
+        urn: "urn:cts:namespace:text_group.work.version:1.1"
       }
 
       assert {:ok, %TextNode{} = text_node} = TextNodes.create_text_node(valid_attrs)
@@ -70,7 +71,7 @@ defmodule TextServer.TextNodesTest do
       version = TextServer.VersionsFixtures.version_fixture()
 
       Enum.each(1..5, fn i ->
-        text_node_fixture(%{version_id: version.id, text: "Text #{i}", location: [1, i]})
+        text_node_fixture(%{version: version, text: "Text #{i}", location: [1, i]})
       end)
 
       text_nodes =
@@ -89,7 +90,7 @@ defmodule TextServer.TextNodesTest do
       version = TextServer.VersionsFixtures.text_node_version_fixture()
 
       Enum.each(1..5, fn i ->
-        text_node_fixture(%{version_id: version.id, text: "Text #{i}", location: [1, i]})
+        text_node_fixture(%{version: version, text: "Text #{i}", location: [1, i]})
       end)
 
       locations = TextNodes.list_locations_by_version_id(version.id)

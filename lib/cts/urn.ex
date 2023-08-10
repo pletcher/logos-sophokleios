@@ -198,3 +198,11 @@ defmodule CTS.URN do
     end
   end
 end
+
+defimpl Phoenix.HTML.Safe, for: CTS.URN do
+  def to_iodata(data), do: CTS.URN.to_string(data)
+end
+
+defimpl String.Chars, for: CTS.URN do
+  def to_string(s), do: CTS.URN.to_string(s)
+end

@@ -5,7 +5,6 @@ defmodule TextServer.TextGroups.TextGroup do
   schema "text_groups" do
     field :title, :string
     field :urn, :string
-    field :urn_fragment, :string
     field :_search, TextServer.Ecto.Types.TsVector
 
     belongs_to :collection, TextServer.Collections.Collection
@@ -18,8 +17,8 @@ defmodule TextServer.TextGroups.TextGroup do
   @doc false
   def changeset(text_group, attrs) do
     text_group
-    |> cast(attrs, [:collection_id, :title, :urn, :urn_fragment])
-    |> validate_required([:title, :urn, :urn_fragment])
+    |> cast(attrs, [:collection_id, :title, :urn])
+    |> validate_required([:title, :urn])
     |> assoc_constraint(:collection)
     |> unique_constraint(:urn)
   end

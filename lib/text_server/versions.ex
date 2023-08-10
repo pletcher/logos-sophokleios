@@ -75,6 +75,10 @@ defmodule TextServer.Versions do
 
   def get_version_by_urn!(urn), do: Repo.get_by!(Version, urn: urn) |> Repo.preload(:language)
 
+  def get_version_by_urn(urn) do
+    Repo.get_by(Version, urn: urn)
+  end
+
   @doc """
   Creates a version.
 

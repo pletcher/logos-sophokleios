@@ -28,7 +28,7 @@ defmodule TextServer.TextElements.TextElement do
       :end_offset,
       :end_text_node_id,
       :start_offset,
-      :start_text_node_id
+      :start_text_node_id,
     ])
     |> validate_required([:attributes, :end_offset, :start_offset])
     |> assoc_constraint(:element_type)

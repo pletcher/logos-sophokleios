@@ -23,6 +23,16 @@ defmodule TextServer.TextElements do
     Repo.all(TextElement)
   end
 
+  def list_text_elements_by_type(element_type) do
+    case ElementTypes.get_element_type_by_name(element_type) do
+      nil -> []
+      el ->
+        type_id = el.id
+        query = from(t in TextElement, where: t.element_type_id == ^type_id)
+        Repo.all(query)
+    end
+  end
+
   @doc """
   Gets a single text_element.
 

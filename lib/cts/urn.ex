@@ -143,9 +143,9 @@ defmodule CTS.URN do
       version: version,
       exemplar: exemplar,
       passage_component: passage_component,
-      citations: {citation_start, citation_end},
-      subsections: {subsection_start, subsection_end},
-      indexes: {subsection_start_index, subsection_end_index},
+      citations: [citation_start, citation_end],
+      subsections: [subsection_start, subsection_end],
+      indexes: [subsection_start_index, subsection_end_index],
     }
   end
 

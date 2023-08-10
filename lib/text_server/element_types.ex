@@ -37,6 +37,10 @@ defmodule TextServer.ElementTypes do
   """
   def get_element_type!(id), do: Repo.get!(ElementType, id)
 
+  def get_element_type_by_name(name) do
+    find_element_type(%{name: name})
+  end
+
   @doc """
   Creates a element_type.
 

@@ -18,23 +18,18 @@
         <Components.small_card
           description={version.description}
           title={version.label}
-          url={Routes.version_show_path(@socket, :show, version)}
+          url={~p"/versions/#{version.id}"}
         />
       <% end %>
     <% end %>
 
     <%= if Map.get(assigns, :current_user) do %>
       <div class="mt-8 max-w-sm">
-        <a
-          data-phx-link="patch"
-          data-phx-link-state="push"
-          href={Routes.version_new_path(@socket, :new, @current_user, @project)}
-          class="group relative w-full flex justify-center py-4 px-4 text-md font-medium text-stone-700"
-        >
+        <.link patch={~p"/#{@current_user.id}/projects/#{@project.id}/versions/new"}>
           <span class="absolute left-0 inset-y-0 flex items-center underline">
             <Icons.version_icon /> Add a version
           </span>
-        </a>
+        </.link>
       </div>
     <% end %>
   </div>

@@ -8,7 +8,7 @@ defmodule TextServerWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {TextServerWeb.LayoutView, :root}
+    plug :put_root_layout, html: {TextServerWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
@@ -28,7 +28,7 @@ defmodule TextServerWeb.Router do
   scope "/", TextServerWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live_session :with_authenticated_user, on_mount: TextServerWeb.UserAuthLive do
+    live_session :with_authenticated_user, on_mount: [{TextServerWeb.UserAuth, :ensure_authenticated}] do
       live "/collections/new", CollectionLive.Index, :new
       live "/collections/:id/edit", CollectionLive.Index, :edit
       live "/collections/:id/show/edit", CollectionLive.Show, :edit
@@ -62,7 +62,7 @@ defmodule TextServerWeb.Router do
   scope "/", TextServerWeb do
     pipe_through [:browser, :require_authenticated_user, :require_project_admin]
 
-    live_session :project_with_admin, on_mount: TextServerWeb.UserAuthLive do
+    live_session :project_with_admin, on_mount: [{TextServerWeb.UserAuth, :mount_current_user}]  do
       live "/projects/:project_id/edit", ProjectLive.Edit, :edit
     end
   end
@@ -70,11 +70,11 @@ defmodule TextServerWeb.Router do
   scope "/", TextServerWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
 
     # these logged-out routes must come last, otherwise they
     # match on /{resource}/new
-    live_session :default, on_mount: TextServerWeb.UserAuthLive do
+    live_session :default, on_mount: [{TextServerWeb.UserAuth, :mount_current_user}] do
       live "/collections", CollectionLive.Index, :index
       live "/collections/:id", CollectionLive.Show, :show
 
@@ -95,41 +95,27 @@ defmodule TextServerWeb.Router do
 
       live "/versions", VersionLive.Index, :index
       live "/versions/:id", VersionLive.Show, :show
-      # live "/read/:urn", VersionLive.Show, :read
 
       live "/works", WorkLive.Index, :index
       live "/works/:id", WorkLive.Show, :show
+
+      live "/read", ReadLive.Index, :index
     end
   end
 
-  # Enables LiveDashboard only for development
-  #
-  # If you want to use the LiveDashboard in production, you should put
-  # it behind authentication and allow only admins to access it.
-  # If your application does not have an admins-only section yet,
-  # you can use Plug.BasicAuth to set up some basic authentication
-  # as long as you are also using SSL (which you should anyway).
-  if Mix.env() in [:dev, :test] do
+  # Enable LiveDashboard and Swoosh mailbox preview in development
+  if Application.compile_env(:components, :dev_routes) do
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
-    scope "/" do
-      pipe_through :browser
-
-      live_dashboard "/dashboard",
-        metrics: TextServerWeb.Telemetry,
-        ecto_repos: [TextServer.Repo],
-        ecto_psql_extras_options: [long_running_queries: [threshold: "200 milliseconds"]]
-    end
-  end
-
-  # Enables the Swoosh mailbox preview in development.
-  #
-  # Note that preview only shows emails that were sent by the same
-  # node running the Phoenix server.
-  if Mix.env() == :dev do
     scope "/dev" do
       pipe_through :browser
 
+      live_dashboard "/dashboard", metrics: TextServerWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
@@ -139,25 +125,25 @@ defmodule TextServerWeb.Router do
   scope "/", TextServerWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
-    get "/users/register", UserRegistrationController, :new
-    post "/users/register", UserRegistrationController, :create
-    get "/users/log_in", UserSessionController, :new
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{TextServerWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live "/users/register", AccountLive.UserRegistrationLive, :new
+      live "/users/log_in", AccountLive.UserLoginLive, :new
+      live "/users/reset_password", AccountLive.UserForgotPasswordLive, :new
+      live "/users/reset_password/:token", AccountLive.UserResetPasswordLive, :edit
+    end
+
     post "/users/log_in", UserSessionController, :create
-    get "/users/reset_password", UserResetPasswordController, :new
-    post "/users/reset_password", UserResetPasswordController, :create
-    get "/users/reset_password/:token", UserResetPasswordController, :edit
-    post "/users/reset_password/:token", UserResetPasswordController, :update
-    put "/users/reset_password/:token", UserResetPasswordController, :update
   end
 
   scope "/", TextServerWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    get "/users/settings", UserSettingsController, :edit
-    put "/users/settings", UserSettingsController, :update
-    get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+    live_session :require_authenticated_user,
+      on_mount: [{TextServerWeb.UserAuth, :ensure_authenticated}] do
+      live "/users/settings", AccountLive.UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", AccountLive.UserSettingsLive, :confirm_email
 
-    live_session :authenticated, on_mount: TextServerWeb.UserAuthLive do
       live "/:user_id/projects/new", ProjectLive.New, :new
       live "/projects/:id/exemplars/edit", ProjectLive.EditExemplars, :edit
     end
@@ -167,9 +153,11 @@ defmodule TextServerWeb.Router do
     pipe_through [:browser]
 
     delete "/users/log_out", UserSessionController, :delete
-    get "/users/confirm", UserConfirmationController, :new
-    post "/users/confirm", UserConfirmationController, :create
-    get "/users/confirm/:token", UserConfirmationController, :edit
-    post "/users/confirm/:token", UserConfirmationController, :update
+
+    live_session :current_user,
+      on_mount: [{TextServerWeb.UserAuth, :mount_current_user}] do
+      live "/users/confirm/:token", AccountLive.UserConfirmationLive, :edit
+      live "/users/confirm", AccountLive.UserConfirmationInstructionsLive, :new
+    end
   end
 end

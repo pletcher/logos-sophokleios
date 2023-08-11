@@ -57,6 +57,7 @@ defmodule TextServer.MixProject do
       {:phoenix_live_reload, "~> 1.4", only: :dev},
       {:phoenix_live_view, "~> 0.19"},
       {:phoenix_view, "~> 2.0"},
+      {:phoenix_pubsub, "~> 2.1.3"},
       {:phoenix_swoosh, "~> 1.1"},
       {:phoenix, "~> 1.7"},
       {:plug_cowboy, "~> 2.5"},

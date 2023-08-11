@@ -8,7 +8,7 @@
     <.live_title prefix="Open Commentaries - ">
       <%= assigns[:page_title] || "Home" %>
     </.live_title>
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     <link phx-track-static async rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")} />
   </head>
   <body>
@@ -19,19 +19,25 @@
             <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
               <div class="hidden sm:block sm:ml-6">
                 <div class="flex space-x-4">
-                  <%= link("Open Commentaries",
-                    to: Routes.page_path(@conn, :index),
-                    class: "text-white hover:text-gray-300 px-3 py-2 text-sm font-medium"
-                  ) %>
-                  <%= link("Projects",
-                    to: Routes.project_index_path(@conn, :index),
-                    class: "text-white hover:text-gray-300 px-3 py-2 text-sm font-medium"
-                  ) %>
+                  <.link
+                    to={Routes.page_path(@conn, :index)}
+                    class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium"
+                  >
+                    Open Commentaries
+                  </.link>
+                  <.link
+                    to={~p"/projects"}
+                    class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium"
+                  >
+                    Projects
+                  </.link>
                   <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-                    <%= link("LiveDashboard",
-                      to: Routes.live_dashboard_path(@conn, :home),
-                      class: "text-white hover:text-gray-300 px-3 py-2 text-sm font-medium"
-                    ) %>
+                    <.link
+                      to={Routes.live_dashboard_path(@conn, :home)}
+                      class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium"
+                    >
+                      LiveDashboard
+                    </.link>
                   <% end %>
                 </div>
               </div>

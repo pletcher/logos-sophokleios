@@ -3,7 +3,7 @@
   id={:new}
   action={@live_action}
   project={@project}
-  return_to={Routes.project_user_project_index_path(@socket, :index, @current_user.id)}
+  return_to={~p"/#{@current_user.id}/projects"}
   title={@page_title}
   user={@current_user}
 />

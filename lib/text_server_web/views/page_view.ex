@@ -1,3 +1,3 @@
 defmodule TextServerWeb.PageView do
-  use TextServerWeb, :view
+  use TextServerWeb, :html
 end

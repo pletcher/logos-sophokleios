@@ -1,3 +1,3 @@
 defmodule TextServerWeb.Subdomain.PageView do
-  use TextServerWeb, :view
+  use TextServerWeb, :html
 end

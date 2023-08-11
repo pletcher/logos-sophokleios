@@ -1,14 +1,14 @@
 <h1>Show Work</h1>
 
 <%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.work_show_path(@socket, :show, @work)}>
+  <.modal id="work_edit">
     <.live_component
       module={TextServerWeb.WorkLive.FormComponent}
       id={@work.id}
       title={@page_title}
       action={@live_action}
       work={@work}
-      return_to={Routes.work_show_path(@socket, :show, @work)}
+      return_to={~p"/works/#{@work.id}"}
     />
   </.modal>
 <% end %>
@@ -36,6 +36,9 @@
 </ul>
 
 <span>
-  <%= live_patch("Edit", to: Routes.work_show_path(@socket, :edit, @work), class: "button") %>
+  <.link patch={~p"/works/#{@work.id}/edit"}>Edit</.link>
 </span>
-| <span><%= live_redirect("Back", to: Routes.work_index_path(@socket, :index)) %></span>
+|
+<span>
+  <.link navigate={~p"/works"}>Back</.link>
+</span>

@@ -72,6 +72,9 @@ defmodule CTS.URN do
   ```
 
   refers to the second appearance of the token "headland" in Book 1, Chapter 1, Section 1.
+
+  @reserved_characters '%/?#:.@-[]'
+  @excluded_characters '\\"&<>^`|{}~'
   """
 
   defstruct prefix: "urn",
@@ -101,9 +104,6 @@ defmodule CTS.URN do
           subsections: nil | {binary, nil | binary},
           indexes: nil | {integer(), nil | integer()}
         }
-
-  @reserved_characters '%/?#:.@-[]'
-  @excluded_characters '\\"&<>^`|{}~'
 
   @spec parse(binary | CTS.URN.t()) :: CTS.URN.t()
   def parse(%CTS.URN{} = urn), do: urn

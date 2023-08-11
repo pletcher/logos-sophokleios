@@ -1,7 +1,5 @@
 defmodule TextServer.Accounts.UserNotifier do
-  use Phoenix.Swoosh,
-    view: TextServerWeb.UserNotifierView,
-    layout: {TextServerWeb.LayoutView, :email}
+  import Swoosh.Email
 
   alias TextServer.Mailer
 
@@ -19,9 +17,9 @@ defmodule TextServer.Accounts.UserNotifier do
     end
   end
 
-  defp unsubscribe_url(email) do
-    "https://opencommentaries.org/unsubscribe/#{email}"
-  end
+  # defp unsubscribe_url(email) do
+  #   "https://opencommentaries.org/unsubscribe/#{email}"
+  # end
 
   @doc """
   Deliver confirmation email with text fallback
@@ -32,10 +30,37 @@ defmodule TextServer.Accounts.UserNotifier do
       |> to(user.email)
       |> from({"Open Commentaries", "contact@opencommentaries.org"})
       |> subject("Please confirm your Open Commentaries email address")
-      |> render_body("user_confirmation.html", %{
-        unsubscribe_url: unsubscribe_url(user.email),
-        url: url
-      })
+      |> html_body("""
+      <tr>
+        <td class="wrapper" style="font-family: sans-serif; font-size: 14px; vertical-align: top; box-sizing: border-box; padding: 20px;" valign="top">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;" width="100%">
+                <tr>
+                    <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;" valign="top">
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Hi there,</p>
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Please confirm your email address on <a href="#{url}">Open Commentaries</a>.</p>
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; box-sizing: border-box; width: 100%;" width="100%">
+                            <tbody>
+                                <tr>
+                                    <td align="left" style="font-family: sans-serif; font-size: 14px; vertical-align: top; padding-bottom: 15px;" valign="top">
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: auto;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="font-family: sans-serif; font-size: 14px; vertical-align: top; border-radius: 5px; text-align: center; background-color: #3498db;" valign="top" align="center" bgcolor="#3498db"> <a href="<%= @url %>" target="_blank" style="border: solid 1px #3498db; border-radius: 5px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; text-transform: capitalize; background-color: #3498db; border-color: #3498db; color: #ffffff;">Confirm</a> </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">If the above link isn&apos;t working for you, you can copy-paste the following URL into your browser:</p>
+                        <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">#{url}</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+      </tr>
+      """)
       |> text_body(confirmation_instructions_text(user.email, url))
 
     with {:ok, _metadata} <- Mailer.deliver(email) do

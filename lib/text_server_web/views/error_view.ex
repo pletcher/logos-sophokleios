@@ -1,5 +1,5 @@
 defmodule TextServerWeb.ErrorView do
-  use TextServerWeb, :view
+  use TextServerWeb, :html
 
   # If you want to customize a particular status code
   # for a certain format, you may uncomment below.

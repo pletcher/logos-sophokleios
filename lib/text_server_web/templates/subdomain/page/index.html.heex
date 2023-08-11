@@ -10,7 +10,7 @@
     <div class="mt-20 max-w-lg sm:mx-auto md:max-w-none">
       <div class="grid grid-cols-1 gap-y-16 md:grid-cols-2 md:gap-x-12 md:gap-y-16">
         <%= for fc <- @featured_commentaries do %>
-          <a href={Routes.version_show_path(@conn, :show, fc)}>
+          <a href={~p"/versions/#{fc.id}"}>
             <div class="relative flex flex-col gap-6 sm:flex-row md:flex-col lg:flex-row">
               <div class="bg-pausanias bg-cover flex h-64 w-64 items-center justify-center rounded-xl bg-indigo-500 text-white sm:shrink-0" />
               <div class="sm:min-w-0 sm:flex-1">

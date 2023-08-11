@@ -1,3 +1,3 @@
 defmodule TextServerWeb.UserConfirmationView do
-  use TextServerWeb, :view
+  use TextServerWeb, :html
 end

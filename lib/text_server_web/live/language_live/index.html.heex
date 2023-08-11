@@ -1,18 +1,5 @@
 <h1>Listing Languages</h1>
 
-<%= if @live_action in [:new, :edit] do %>
-  <.modal return_to={Routes.language_index_path(@socket, :index)}>
-    <.live_component
-      module={TextServerWeb.LanguageLive.FormComponent}
-      id={@language.id || :new}
-      title={@page_title}
-      action={@live_action}
-      language={@language}
-      return_to={Routes.language_index_path(@socket, :index)}
-    />
-  </.modal>
-<% end %>
-
 <table>
   <thead>
     <tr>
@@ -30,18 +17,15 @@
 
         <td>
           <span>
-            <%= live_redirect("Show", to: Routes.language_show_path(@socket, :show, language)) %>
+          <.link navigate={~p"/languages/#{language.id}"}>Show</.link>
           </span>
           <span>
-            <%= live_patch("Edit", to: Routes.language_index_path(@socket, :edit, language)) %>
+            <.link patch={~p"/languages/#{language.id}/edit"}>Edit</.link>
           </span>
           <span>
-            <%= link("Delete",
-              to: "#",
-              phx_click: "delete",
-              phx_value_id: language.id,
-              data: [confirm: "Are you sure?"]
-            ) %>
+            <.link href="#" phx-click="delete" phx-value-id={language.id} data-confirm="Are you sure?">
+              Delete
+            </.link>
           </span>
         </td>
       </tr>
@@ -49,4 +33,4 @@
   </tbody>
 </table>
 
-<span><%= live_patch("New Language", to: Routes.language_index_path(@socket, :new)) %></span>
+<span><.link patch={~p"/languages/new"}>New Language</.link></span>

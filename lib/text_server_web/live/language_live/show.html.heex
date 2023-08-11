@@ -1,14 +1,14 @@
 <h1>Show Language</h1>
 
 <%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.language_show_path(@socket, :show, @language)}>
+  <.modal id="language_edit">
     <.live_component
       module={TextServerWeb.LanguageLive.FormComponent}
       id={@language.id}
       title={@page_title}
       action={@live_action}
       language={@language}
-      return_to={Routes.language_show_path(@socket, :show, @language)}
+      return_to={~p"/languages/#{@language.id}"}
     />
   </.modal>
 <% end %>
@@ -26,6 +26,8 @@
 </ul>
 
 <span>
-  <%= live_patch("Edit", to: Routes.language_show_path(@socket, :edit, @language), class: "button") %>
+<.link patch={~p"/languages/#{@language.id}/edit"}>Edit</.link>
 </span>
-| <span><%= live_redirect("Back", to: Routes.language_index_path(@socket, :index)) %></span>
+| <span>
+<.link navigate={~p"/languages"}>Back</.link>
+</span>

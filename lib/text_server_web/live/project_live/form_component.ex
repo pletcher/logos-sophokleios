@@ -66,7 +66,7 @@ defmodule TextServerWeb.ProjectLive.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Project created successfully")
-         |> push_redirect(to: Routes.project_show_path(socket, :show, project))}
+         |> push_redirect(to: ~p"/projects/#{project.id}")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply,

@@ -1,18 +1,5 @@
 <h1>Listing Works</h1>
 
-<%= if @live_action in [:new, :edit] do %>
-  <.modal return_to={Routes.work_index_path(@socket, :index)}>
-    <.live_component
-      module={TextServerWeb.WorkLive.FormComponent}
-      id={@work.id || :new}
-      title={@page_title}
-      action={@live_action}
-      work={@work}
-      return_to={Routes.work_index_path(@socket, :index)}
-    />
-  </.modal>
-<% end %>
-
 <table>
   <thead>
     <tr>
@@ -34,16 +21,15 @@
 
         <td>
           <span>
-            <%= live_redirect("Show", to: Routes.work_show_path(@socket, :show, work)) %>
+            <.link navigate={~p"/works/#{work.id}"}>Show</.link>
           </span>
-          <span><%= live_patch("Edit", to: Routes.work_index_path(@socket, :edit, work)) %></span>
           <span>
-            <%= link("Delete",
-              to: "#",
-              phx_click: "delete",
-              phx_value_id: work.id,
-              data: [confirm: "Are you sure?"]
-            ) %>
+            <.link navigate={~p"/works/#{work.id}/edit"}>Edit</.link>
+          </span>
+          <span>
+            <.link href="#" phx-click="delete" phx-value-id={work.id} data-confirm="Are you sure?">
+              Delete
+            </.link>
           </span>
         </td>
       </tr>
@@ -51,4 +37,4 @@
   </tbody>
 </table>
 
-<span><%= link("New Work", to: Routes.work_new_path(@socket, :new)) %></span>
+<span><.link href={"/works/new"}>New Work</.link></span>

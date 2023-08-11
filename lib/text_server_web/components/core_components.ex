@@ -547,10 +547,7 @@ defmodule TextServerWeb.CoreComponents do
   def back(assigns) do
     ~H"""
     <div class="mt-16">
-      <.link
-        navigate={@navigate}
-        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-      >
+      <.link navigate={@navigate} class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
         <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
         <%= render_slot(@inner_block) %>
       </.link>
@@ -647,9 +644,9 @@ defmodule TextServerWeb.CoreComponents do
     # with our gettext backend as first argument. Translations are
     # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
-      Gettext.dngettext(ComponentsWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(TextServerWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(ComponentsWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(TextServerWeb.Gettext, "errors", msg, opts)
     end
   end
 

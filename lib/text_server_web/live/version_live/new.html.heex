@@ -8,7 +8,7 @@
       version={@version}
       project={@project}
       work={@selected_work}
-      return_to={Routes.project_show_path(@socket, :show, @project)}
+      return_to={~p"/projects/#{@project.id}"}
     />
   </div>
 </article>

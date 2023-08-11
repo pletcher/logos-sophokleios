@@ -1,14 +1,14 @@
 <h1>Show Collection</h1>
 
 <%= if @live_action in [:edit] do %>
-  <.modal return_to={Routes.collection_show_path(@socket, :show, @collection)}>
+  <.modal id="collection_edit">
     <.live_component
       module={TextServerWeb.CollectionLive.FormComponent}
       id={@collection.id}
       title={@page_title}
       action={@live_action}
       collection={@collection}
-      return_to={Routes.collection_show_path(@socket, :show, @collection)}
+      return_to={~p"/collections/#{@collection.id}"}
     />
   </.modal>
 <% end %>
@@ -47,12 +47,10 @@
           <td><%= text_group.urn %></td>
           <td>
             <span>
-              <%= live_redirect("Show",
-                to: Routes.text_group_show_path(@socket, :show, text_group)
-              ) %>
+              <.link href={~p"/text_groups/#{text_group.id}"}>Show</.link>
             </span>
             <span>
-              <%= live_patch("Edit", to: Routes.text_group_show_path(@socket, :edit, text_group)) %>
+              <.link patch={~p"/text_groups/#{text_group.id}/edit"}>Edit</.link>
             </span>
           </td>
         </tr>
@@ -62,31 +60,22 @@
 </div>
 
 <span>
-  <%= live_patch("Edit",
-    to: Routes.collection_show_path(@socket, :edit, @collection),
-    class: "button"
-  ) %>
+  <.link patch={~p"/collections/#{@collection.id}/edit"}>Edit</.link>
 </span>
-| <span><%= live_redirect("Back", to: Routes.collection_index_path(@socket, :index)) %></span>
+| <span><.link navigate={~p"/collections"}>Back</.link></span>
 <%= if @total_pages > 1 do %>
   <nav class="border-t border-gray-200">
     <ul class="flex my-2">
       <li>
-        <%= live_redirect("Previous",
-          to: Routes.collection_show_path(@socket, :show, @collection, page: @page_number - 1)
-        ) %>
+        <.link patch={~p"/collections/#{@collection.id}?page=#{@page_number - 1}"}>Previous</.link>
       </li>
       <%= for idx <- Enum.to_list(1..@total_pages) do %>
         <li>
-          <%= live_redirect(idx,
-            to: Routes.collection_show_path(@socket, :show, @collection, page: idx)
-          ) %>
+          <.link patch={~p"/collections/#{@collection.id}?page=#{idx}"}><%= idx %></.link>
         </li>
       <% end %>
       <li>
-        <%= live_redirect("Next",
-          to: Routes.collection_show_path(@socket, :show, @collection, page: @page_number + 1)
-        ) %>
+        <.link patch={~p"/collections/#{@collection.id}?page=#{@page_number + 1}"}>Next</.link>
       </li>
     </ul>
   </nav>

@@ -18,8 +18,8 @@
       phx-submit="search"
     >
       <div>
-        <%= label(f, :search_versions, "Search for versions") %>
-        <%= text_input(f, :search_versions, phx_debounce: 1000) %>
+        <.label for={f[:search_versions]}>Search for versions</.label>
+        <.input field={f[:search_versions]} phx-debounce="1000" />
       </div>
     </.form>
   </section>

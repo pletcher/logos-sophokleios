@@ -15,7 +15,10 @@ config :text_server, TextServer.Repo, types: TextServer.Postgrex.Types
 # Configures the endpoint
 config :text_server, TextServerWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: TextServerWeb.ErrorView, accepts: ~w(html json), layout: false],
+  render_errors: [
+    formats: [html: TextServerWeb.ErrorHTML, json: TextServerWeb.ErrorJSON],
+    layout: false
+  ],
   pubsub_server: TextServer.PubSub,
   live_view: [signing_salt: "Uy4jmRfq"]
 

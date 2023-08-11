@@ -20,7 +20,7 @@ defmodule TextServerWeb.VersionLive.Read do
 
   @impl true
   def handle_params(%{"urn" => urn}, _session, socket) do
-    passage_page = get_passage_by_urn(urn)
+    {:ok, passage_page} = get_passage_by_urn(urn)
 
     if is_nil(passage_page) do
       {:noreply, socket |> put_flash(:error, "No text nodes found for the given passage.")}

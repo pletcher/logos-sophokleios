@@ -1,14 +1,4 @@
 <%= if @live_action in [:new, :edit] do %>
-  <.modal return_to={Routes.version_index_path(@socket, :index)}>
-    <.live_component
-      module={TextServerWeb.VersionLive.FormComponent}
-      id={@version.id || :new}
-      title={@page_title}
-      action={@live_action}
-      version={@version}
-      return_to={Routes.version_index_path(@socket, :index)}
-    />
-  </.modal>
 <% end %>
 
 <article class="mx-auto p-8">
@@ -30,18 +20,15 @@
 
           <td>
             <span>
-              <%= live_redirect("Show", to: Routes.version_show_path(@socket, :show, version)) %>
+              <.link navigate={~p"/versions/#{version.id}"}>Show</.link>
             </span>
             <span>
-              <%= live_patch("Edit", to: Routes.version_index_path(@socket, :edit, version)) %>
+              <.link navigate={~p"/versions/#{version.id}/edit"}>Edit</.link>
             </span>
             <span>
-              <%= link("Delete",
-                to: "#",
-                phx_click: "delete",
-                phx_value_id: version.id,
-                data: [confirm: "Are you sure?"]
-              ) %>
+            <.link href="#" phx-click="delete" phx-value-id={version.id} data-confirm="Are you sure?">
+              Delete
+            </.link>
             </span>
           </td>
         </tr>

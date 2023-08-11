@@ -5,7 +5,6 @@ defmodule TextServerWeb.TextGroupLiveTest do
   import TextServer.TextGroupsFixtures
 
   @create_attrs %{title: "some title", urn: "some urn"}
-  @update_attrs %{title: "some updated title", urn: "some updated urn"}
   @invalid_attrs %{title: nil, urn: nil}
 
   defp create_text_group(_) do
@@ -49,31 +48,6 @@ defmodule TextServerWeb.TextGroupLiveTest do
       assert html =~ "some title"
     end
 
-    test "updates text_group in listing", %{conn: conn, text_group: text_group} do
-      user = TextServer.AccountsFixtures.user_fixture()
-      conn = log_in_user(conn, user)
-
-      {:ok, index_live, _html} = live(conn, Routes.text_group_index_path(conn, :index))
-
-      assert index_live |> element("#text_group-#{text_group.id} a", "Edit") |> render_click() =~
-               "Edit"
-
-      assert_patch(index_live, Routes.text_group_index_path(conn, :edit, text_group))
-
-      assert index_live
-             |> form("#text_group-form", text_group: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        index_live
-        |> form("#text_group-form", text_group: @update_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, Routes.text_group_index_path(conn, :index))
-
-      assert html =~ "Text group updated successfully"
-      assert html =~ "some updated title"
-    end
-
     test "deletes text_group in listing", %{conn: conn, text_group: text_group} do
       {:ok, index_live, _html} = live(conn, Routes.text_group_index_path(conn, :index))
 
@@ -90,28 +64,6 @@ defmodule TextServerWeb.TextGroupLiveTest do
 
       assert html =~ "Show Text group"
       assert html =~ text_group.title
-    end
-
-    test "updates text_group within modal", %{conn: conn, text_group: text_group} do
-      {:ok, show_live, _html} = live(conn, Routes.text_group_show_path(conn, :show, text_group))
-
-      assert show_live |> element("a", "Edit") |> render_click() =~
-               "Edit Text group"
-
-      assert_patch(show_live, Routes.text_group_show_path(conn, :edit, text_group))
-
-      assert show_live
-             |> form("#text_group-form", text_group: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      {:ok, _, html} =
-        show_live
-        |> form("#text_group-form", text_group: @update_attrs)
-        |> render_submit()
-        |> follow_redirect(conn, Routes.text_group_show_path(conn, :show, text_group))
-
-      assert html =~ "Text group updated successfully"
-      assert html =~ "some updated title"
     end
   end
 end

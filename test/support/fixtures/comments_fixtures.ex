@@ -13,7 +13,7 @@ defmodule TextServer.CommentsFixtures do
       |> Enum.into(%{
         attributes: %{},
         content: "some content",
-        urn: %{}
+        urn: "urn:cts:namespace:text_group.work.version:1.1"
       })
       |> TextServer.Comments.create_comment()
 

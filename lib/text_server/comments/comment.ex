@@ -16,7 +16,9 @@ defmodule TextServer.Comments.Comment do
   @doc false
   def changeset(comment, attrs) do
     comment
-    |> cast(attrs, [:attributes, :content, :urn])
+    |> cast(attrs, [:attributes, :content, :text_node_id, :version_id, :urn])
+    |> cast_assoc(:text_node)
+    |> cast_assoc(:version)
     |> validate_required([:content, :urn])
   end
 end

@@ -12,7 +12,7 @@
         It looks like you haven't added any versions to this project yet.
       </p>
     <% else %>
-      <h2 class="text-2xl font-semibold">Exemplars</h2>
+      <h2 class="text-2xl font-semibold">Texts in this project</h2>
 
       <%= for version <- @project.project_versions do %>
         <Components.small_card
@@ -23,11 +23,11 @@
       <% end %>
     <% end %>
 
-    <%= if Map.get(assigns, :current_user) do %>
-      <div class="mt-8 max-w-sm">
+    <%= if @current_user do %>
+      <div class="mt-8">
         <.link patch={~p"/#{@current_user.id}/projects/#{@project.id}/versions/new"}>
-          <span class="absolute left-0 inset-y-0 flex items-center underline">
-            <Icons.version_icon /> Add a version
+          <span class="bg-stone-500 hover:bg-stone-400 shadow-md rounded p-4 text-white left-0 inset-y-0 flex items-center font-bold">
+            <Icons.version_icon /><span class="ml-6">Add a version</span>
           </span>
         </.link>
       </div>

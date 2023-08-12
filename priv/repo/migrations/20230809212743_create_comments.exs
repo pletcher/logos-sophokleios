@@ -30,6 +30,28 @@ defmodule TextServer.Repo.Migrations.CreateComments do
 
     flush()
 
+    TextElements.list_text_elements_by_type("comment")
+    |> Repo.preload(start_text_node: :version)
+    |> Enum.each(fn comment_el ->
+      attributes = Map.get(comment_el, :attributes)
+      text_node = comment_el.start_text_node
+      version = text_node.version
+
+      unless is_nil(Map.get(attributes, "urn")) do
+        Comments.create_comment(%{
+          attributes: comment_el.attributes,
+          content: comment_el.content,
+          urn: Map.get(attributes, "urn"),
+          version_id: version.id,
+          text_node_id: text_node.id
+        })
+
+        TextElements.delete_text_element(comment_el)
+      end
+    end)
+
+    flush()
+
     Repo.transaction(fn ->
       TextNode
       |> Repo.stream()
@@ -50,26 +72,6 @@ defmodule TextServer.Repo.Migrations.CreateComments do
     end
 
     create(unique_index(:text_nodes, :urn))
-
-    TextElements.list_text_elements_by_type("comment")
-    |> Repo.preload(start_text_node: :version)
-    |> Enum.each(fn comment_el ->
-      attributes = Map.get(comment_el, :attributes)
-      text_node = comment_el.start_text_node
-      version = text_node.version
-
-      unless is_nil(Map.get(attributes, "urn")) do
-        Comments.create_comment(%{
-          attributes: comment_el.attributes,
-          content: comment_el.content,
-          urn: Map.get(attributes, "urn"),
-          version_id: version.id,
-          text_node_id: text_node.id
-        })
-
-        TextElements.delete_text_element(comment_el)
-      end
-    end)
   end
 
   def down do

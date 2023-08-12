@@ -8,7 +8,7 @@ defmodule TextServerWeb.SubdomainRouter do
     plug :fetch_session
     plug :fetch_flash
     plug :fetch_live_flash
-    plug :put_root_layout, {TextServerWeb.LayoutView, :root}
+    plug :put_root_layout, {TextServerWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
@@ -21,7 +21,7 @@ defmodule TextServerWeb.SubdomainRouter do
   scope "/", TextServerWeb.Subdomain do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :home
   end
 
   # note that we're deferring to TextServerWeb here, not

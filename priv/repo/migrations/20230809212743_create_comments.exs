@@ -1,11 +1,14 @@
 defmodule TextServer.Repo.Migrations.CreateComments do
   use Ecto.Migration
 
+  alias CTS
   alias TextServer.Comments
   alias TextServer.Repo
   alias TextServer.TextElements
+  alias TextServer.TextNodes
+  alias TextServer.TextNodes.TextNode
 
-  def change do
+  def up do
     create table(:comments) do
       add(:attributes, :map)
       add(:content, :text, null: false)
@@ -20,6 +23,31 @@ defmodule TextServer.Repo.Migrations.CreateComments do
     create(index(:comments, [:version_id]))
 
     flush()
+
+    alter table(:text_nodes) do
+      add(:urn, :map)
+    end
+
+    flush()
+
+    Repo.transaction(fn ->
+      TextNode
+      |> Repo.stream()
+      |> Enum.each(fn text_node ->
+        text_node = text_node |> Repo.preload(:version)
+
+        urn_s =
+          "#{CTS.URN.to_string(text_node.version.urn)}:#{Enum.join(text_node.location, ".")}"
+
+        TextNodes.update_text_node(text_node, %{urn: urn_s})
+      end)
+    end)
+
+    alter table(:text_nodes) do
+      modify(:urn, :map, null: false, from: {:map, null: true})
+    end
+
+    create(unique_index(:text_nodes, :urn))
 
     TextElements.list_text_elements_by_type("comment")
     |> Repo.preload(start_text_node: :version)
@@ -40,5 +68,14 @@ defmodule TextServer.Repo.Migrations.CreateComments do
         TextElements.delete_text_element(comment_el)
       end
     end)
+  end
+
+  def down do
+    drop table(:comments)
+    drop(unique_index(:text_nodes, :urn))
+
+    alter table(:text_nodes) do
+      remove(:urn)
+    end
   end
 end

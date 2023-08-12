@@ -24,6 +24,10 @@ defmodule TextServer.Ecto.Types.CTS_URN do
     {:ok, struct!(CTS.URN, data)}
   end
 
+  def load(data) when is_binary(data) do
+    {:ok, struct!(CTS.URN, data)}
+  end
+
   @spec dump(any) :: :error | {:ok, map}
   def dump(%CTS.URN{} = urn), do: {:ok, Map.from_struct(urn)}
   def dump(_), do: :error

@@ -43,6 +43,8 @@ defmodule TextServer.Repo.Migrations.CreateComments do
       end)
     end)
 
+    flush()
+
     alter table(:text_nodes) do
       modify(:urn, :map, null: false, from: {:map, null: true})
     end

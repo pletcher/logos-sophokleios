@@ -67,11 +67,12 @@ defmodule TextServer.Repo.Migrations.CreateComments do
 
     flush()
 
-    alter table(:text_nodes) do
-      modify(:urn, :map, null: false, from: {:map, null: true})
-    end
+    # FIXME: I don't know why there are null values here
+    # alter table(:text_nodes) do
+    #   modify(:urn, :map, null: false, from: {:map, null: true})
+    # end
 
-    create(unique_index(:text_nodes, :urn))
+    # create(unique_index(:text_nodes, :urn))
   end
 
   def down do

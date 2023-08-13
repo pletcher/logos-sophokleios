@@ -7,5 +7,9 @@ defmodule TextServer.Repo.Migrations.RenameCollectionCtsUrnToUrn do
     end
 
     rename table(:collections), :cts_urn, to: :urn
+
+    alter table(:collections) do
+      modify :urn, :map, null: false, from: {:map, null: true}
+    end
   end
 end

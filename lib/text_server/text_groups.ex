@@ -29,7 +29,10 @@ defmodule TextServer.TextGroups do
   end
 
   def list_text_groups_for_namespace(namespace) do
-
+    from(t in TextGroup,
+      where: fragment("? ->> ? = ?", t.urn, "namespace", ^namespace)
+    )
+    |> Repo.all()
   end
 
   def paginate_text_groups(collection_id, params \\ []) do

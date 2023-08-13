@@ -9,7 +9,6 @@ defmodule TextServer.TextGroupsTest do
   @valid_attrs %{
     title: "some title",
     urn: "urn:cts:some:urn",
-    cts_urn: CTS.URN.parse("urn:cts:some:urn")
   }
   @invalid_attrs %{title: nil, urn: nil}
 
@@ -34,7 +33,7 @@ defmodule TextServer.TextGroupsTest do
                )
 
       assert text_group.title == "some title"
-      assert text_group.urn == "urn:cts:some:urn"
+      assert text_group.urn == CTS.URN.parse("urn:cts:some:urn")
     end
 
     test "create_text_group/1 with invalid data returns error changeset" do
@@ -47,14 +46,13 @@ defmodule TextServer.TextGroupsTest do
       update_attrs = %{
         title: "some updated title",
         urn: "urn:cts:some:updated_urn",
-        cts_urn: CTS.URN.parse("urn:cts:some:updated_urn")
       }
 
       assert {:ok, %TextGroup{} = text_group} =
                TextGroups.update_text_group(text_group, update_attrs)
 
       assert text_group.title == "some updated title"
-      assert text_group.urn == "urn:cts:some:updated_urn"
+      assert text_group.urn == CTS.URN.parse("urn:cts:some:updated_urn")
     end
 
     test "update_text_group/2 with invalid data returns error changeset" do

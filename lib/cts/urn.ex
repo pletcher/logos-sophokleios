@@ -195,12 +195,12 @@ defmodule CTS.URN do
   def to_string(urn) when is_binary(urn), do: urn
 
   def to_string(%CTS.URN{} = urn) do
-    s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}:#{urn.work_component}"
+    s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}"
 
-    if is_nil(urn.passage_component) do
-      s
-    else
-      s <> ":#{urn.passage_component}"
+    cond do
+      is_nil(urn.work_component) -> s
+      is_nil(urn.passage_component) -> s <> ":#{urn.work_component}"
+      :else -> s <> ":#{urn.work_component}:#{urn.passage_component}"
     end
   end
 end

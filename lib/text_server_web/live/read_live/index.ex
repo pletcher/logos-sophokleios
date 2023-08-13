@@ -17,7 +17,7 @@ defmodule TextServerWeb.ReadLive.Index do
 
         <ul role="list" class="divide-y divide-gray-200 sm:max-w-lg">
           <%= for collection <- @collections do %>
-            <Components.search_result_card
+            <Components.search_list_item
               description={CTS.URN.to_string(collection.urn)}
               title={collection.title}
               url={~p"/read"}

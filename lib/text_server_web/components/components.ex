@@ -68,15 +68,18 @@ defmodule TextServerWeb.Components do
   attr :title, :string, required: true
   attr :url, :string, default: "#"
 
-  def search_result_card(assigns) do
+  def search_list_item(assigns) do
     ~H"""
     <li class="px-4 py-4 sm:px-0">
-      <h3 class="font-bold text-stone-700 lg:prose-lg hover:opacity-75">
-        <.link href={@url}>
-          <%= @title %>
-        </.link>
-      </h3>
-      <p class="text-stone-700 prose lg:prose-lg"><%= @description %></p>
+      <.link href={@url} class="flex justify-between items-center hover:opacity-60">
+        <div>
+          <h3 class="font-bold lg:prose-lg">
+            <%= @title %>
+          </h3>
+          <p class="lg:prose-lg"><%= @description %></p>
+        </div>
+        <span>❯</span>
+      </.link>
     </li>
     """
   end

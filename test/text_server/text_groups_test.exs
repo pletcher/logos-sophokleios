@@ -8,7 +8,8 @@ defmodule TextServer.TextGroupsTest do
 
   @valid_attrs %{
     title: "some title",
-    urn: "urn:cts:some:urn"
+    urn: "urn:cts:some:urn",
+    cts_urn: CTS.URN.parse("urn:cts:some:urn")
   }
   @invalid_attrs %{title: nil, urn: nil}
 
@@ -45,7 +46,8 @@ defmodule TextServer.TextGroupsTest do
 
       update_attrs = %{
         title: "some updated title",
-        urn: "urn:cts:some:updated_urn"
+        urn: "urn:cts:some:updated_urn",
+        cts_urn: CTS.URN.parse("urn:cts:some:updated_urn")
       }
 
       assert {:ok, %TextGroup{} = text_group} =

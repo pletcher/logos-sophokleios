@@ -15,12 +15,14 @@ defmodule TextServer.TextGroupsFixtures do
   Generate a text_group.
   """
   def text_group_fixture(attrs \\ %{}) do
+    urn = unique_text_group_urn()
     {:ok, text_group} =
       attrs
       |> Enum.into(%{
         collection_id: collection_fixture().id,
         title: "some title",
-        urn: unique_text_group_urn()
+        cts_urn: CTS.URN.parse(urn),
+        urn: urn
       })
       |> TextServer.TextGroups.create_text_group()
 

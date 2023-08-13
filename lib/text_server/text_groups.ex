@@ -28,6 +28,10 @@ defmodule TextServer.TextGroups do
     |> Repo.all()
   end
 
+  def list_text_groups_for_namespace(namespace) do
+
+  end
+
   def paginate_text_groups(collection_id, params \\ []) do
     TextGroup
     |> where([t], t.collection_id == ^collection_id)

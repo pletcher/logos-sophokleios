@@ -20,7 +20,7 @@ defmodule TextServerWeb.ReadLive.Index do
             <Components.search_list_item
               description={CTS.URN.to_string(collection.urn)}
               title={collection.title}
-              url={~p"/read"}
+              url={~p"/read/#{collection.urn.namespace}"}
             />
           <% end %>
         </ul>

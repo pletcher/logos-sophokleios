@@ -18,7 +18,7 @@ defmodule TextServerWeb.Components do
         <div>
           <h3 class="font-bold text-gray-700">
             <a href={@url}>
-              <span aria-hidden="true" class="absolute inset-0"></span> <%= @item.title %>
+              <span aria-hidden="true" class="absolute inset-0"></span> <%= Map.get(@item, :title) %>
             </a>
           </h3>
           <p class="mt-1 text-sm text-gray-500"><%= @item.description %></p>
@@ -61,6 +61,23 @@ defmodule TextServerWeb.Components do
         <span><%= footnote.content %></span>
       </p>
     <% end %>
+    """
+  end
+
+  attr :description, :string, default: ""
+  attr :title, :string, required: true
+  attr :url, :string, default: "#"
+
+  def search_result_card(assigns) do
+    ~H"""
+    <li class="px-4 py-4 sm:px-0">
+      <h3 class="font-bold text-stone-700 lg:prose-lg hover:opacity-75">
+        <.link href={@url}>
+          <%= @title %>
+        </.link>
+      </h3>
+      <p class="text-stone-700 prose lg:prose-lg"><%= @description %></p>
+    </li>
     """
   end
 
@@ -274,7 +291,10 @@ defmodule TextServerWeb.Components do
       "py-2",
       "text-sm",
       "font-medium",
-      if(current_page == i, do: "bg-stone-100 border-stone-500 text-stone-600 z-20", else: "text-gray-500")
+      if(current_page == i,
+        do: "bg-stone-100 border-stone-500 text-stone-600 z-20",
+        else: "text-gray-500"
+      )
     ]
   end
 

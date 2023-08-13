@@ -188,9 +188,3 @@
 .\@\@oc\/user-markdown ul {
   margin-bottom: 0.9rem;
 }
-
-.menu-toggle:checked ~ .menu-toggle-checked\:block {
-  display: block;
-  max-height: 100%;
-  visibility: visible;
-}

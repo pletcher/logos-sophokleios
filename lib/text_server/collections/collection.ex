@@ -5,8 +5,7 @@ defmodule TextServer.Collections.Collection do
   schema "collections" do
     field :repository, :string
     field :title, :string
-    field :cts_urn, TextServer.Ecto.Types.CTS_URN
-    field :urn, :string
+    field :urn, TextServer.Ecto.Types.CTS_URN
 
     has_many :repositories, TextServer.Collections.Repository
     has_many :text_groups, TextServer.TextGroups.TextGroup
@@ -17,7 +16,7 @@ defmodule TextServer.Collections.Collection do
   @doc false
   def changeset(collection, attrs) do
     collection
-    |> cast(attrs, [:cts_urn, :repository, :title, :urn])
+    |> cast(attrs, [:repository, :title, :urn])
     |> validate_required([:repository, :title, :urn])
     |> unique_constraint(:repository)
   end

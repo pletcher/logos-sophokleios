@@ -20,13 +20,16 @@ defmodule TextServer.CollectionsFixtures do
   Generate a collection.
   """
   def collection_fixture(attrs \\ %{}) do
+    urn = unique_collection_urn()
+
     {:ok, collection} =
       attrs
       |> Enum.into(%{
         repository: unique_collection_repository(),
         slug: unique_collection_slug(),
         title: "some title",
-        urn: unique_collection_urn()
+        urn: urn,
+        cts_urn: CTS.URN.parse(urn)
       })
       |> TextServer.Collections.create_collection()
 

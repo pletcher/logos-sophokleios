@@ -120,7 +120,7 @@ defmodule CTS.URN do
                 ],
                 components
 
-    work_parts = String.split(work_component, ".")
+    {:ok, work_parts} = parse_work(work_component)
 
     destructure [
                   text_group,
@@ -152,6 +152,12 @@ defmodule CTS.URN do
       indexes: [subsection_start_index, subsection_end_index]
     }
   end
+
+  defp parse_work(nil), do: {:ok, nil}
+
+  defp parse_work(string) when is_binary(string), do: {:ok, String.split(string, ".")}
+
+  defp parse_work(other), do: {:ok, other}
 
   defp parse_passage(nil), do: {:ok, {nil, nil}}
 

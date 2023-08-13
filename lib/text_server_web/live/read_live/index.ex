@@ -1,26 +1,26 @@
 defmodule TextServerWeb.ReadLive.Index do
   use TextServerWeb, :live_view
 
-  alias TextServer.Versions
+  alias TextServer.Collections
 
   alias TextServerWeb.Components
 
   def mount(params, _session, socket) do
-    {:ok, assign(socket, :versions, list_versions(params))}
+    {:ok, assign(socket, :collections, list_collections(params))}
   end
 
   def render(assigns) do
     ~H"""
     <div class="bg-white">
       <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
-        <h2 class="text-xl font-bold text-stone-900">Results</h2>
+        <h2 class="text-xl font-bold text-stone-900">Collections</h2>
 
         <ul role="list" class="divide-y divide-gray-200 sm:max-w-lg">
-          <%= for version <- @versions do %>
+          <%= for collection <- @collections do %>
             <Components.search_result_card
-              description={version.description}
-              title={version.label}
-              url={~p"/versions/#{version.id}"}
+              description={CTS.URN.to_string(collection.urn)}
+              title={collection.title}
+              url={~p"/read"}
             />
           <% end %>
         </ul>
@@ -29,7 +29,7 @@ defmodule TextServerWeb.ReadLive.Index do
     """
   end
 
-  defp list_versions(_params) do
-    Versions.list_versions()
+  defp list_collections(_params) do
+    Collections.list_collections_with_repositories()
   end
 end

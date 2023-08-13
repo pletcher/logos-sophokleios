@@ -7,9 +7,10 @@ defmodule TextServer.CollectionsTest do
   import TextServer.CollectionsFixtures
 
   @valid_attrs %{
+    cts_urn: CTS.URN.parse("urn:cts:urn"),
     repository: "https://git.repository.test/collection",
     title: "some title",
-    urn: "urn:cts:some:urn"
+    urn: "urn:cts:urn"
   }
   @invalid_attrs %{repository: nil, title: nil, urn: nil}
 
@@ -28,7 +29,7 @@ defmodule TextServer.CollectionsTest do
       assert {:ok, %Collection{} = collection} = Collections.create_collection(@valid_attrs)
       assert collection.repository == "https://git.repository.test/collection"
       assert collection.title == "some title"
-      assert collection.urn == "urn:cts:some:urn"
+      assert collection.urn == "urn:cts:urn"
     end
 
     test "create_collection/1 with invalid data returns error changeset" do
@@ -39,9 +40,10 @@ defmodule TextServer.CollectionsTest do
       collection = collection_fixture()
 
       update_attrs = %{
+        cts_urn: CTS.URN.parse("urn:cts:updated_urn"),
         repository: "https://git.repository.test/some_updated_repository",
         title: "some updated title",
-        urn: "urn:cts:some:updated_urn"
+        urn: "urn:cts:updated_urn"
       }
 
       assert {:ok, %Collection{} = collection} =
@@ -49,7 +51,7 @@ defmodule TextServer.CollectionsTest do
 
       assert collection.repository == "https://git.repository.test/some_updated_repository"
       assert collection.title == "some updated title"
-      assert collection.urn == "urn:cts:some:updated_urn"
+      assert collection.urn == "urn:cts:updated_urn"
     end
 
     test "update_collection/2 with invalid data returns error changeset" do

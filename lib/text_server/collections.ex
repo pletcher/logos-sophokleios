@@ -22,6 +22,11 @@ defmodule TextServer.Collections do
     Repo.all(Collection)
   end
 
+  def list_collections_with_repositories do
+    Collection |> preload(:repositories)
+    |> Repo.all()
+  end
+
   @doc """
   Returns a paginated list of collections matching
   the given query.

@@ -3,7 +3,7 @@ defmodule TextServer.Repo.Migrations.SetCollectionsUrnToNotNull do
 
   def change do
     alter table(:collections) do
-      modify :urn, :map, null: false, from: {:map, null: true}
+      modify :urn, :jsonb, null: false, from: {:map, null: true}
     end
   end
 end

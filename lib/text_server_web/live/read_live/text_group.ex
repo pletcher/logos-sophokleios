@@ -23,12 +23,10 @@ defmodule TextServerWeb.ReadLive.TextGroup do
           <Components.search_list_item
             description={CTS.URN.to_string(work.urn)}
             title={work.title}
-            url={~p"/read/#{work.urn.namespace}/#{work.urn.text_group}"}
+            url={~p"/read/#{work.urn.namespace}/#{work.urn.text_group}/#{work.urn.work}"}
           />
         <% end %>
       </ul>
-
-      <Components.pagination current_page={@works.page_number} total_pages={@works.total_pages} />
     </div>
     """
   end

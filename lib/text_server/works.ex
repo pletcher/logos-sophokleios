@@ -16,8 +16,13 @@ defmodule TextServer.Works do
     Work |> Repo.paginate(params)
   end
 
-  def list_works_for_urn(namespace, text_group, params \\ [page: 1, page_size: 50]) do
-
+  def list_works_for_urn(namespace, text_group, _params \\ [page: 1, page_size: 50]) do
+    from(w in Work,
+      where:
+        fragment("? ->> ? = ?", w.urn, "namespace", ^namespace) and
+          fragment("? ->> ? = ?", w.urn, "text_group", ^text_group)
+    )
+    |> Repo.all()
   end
 
   def search_works(term, params \\ []) do

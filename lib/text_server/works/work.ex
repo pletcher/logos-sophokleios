@@ -7,8 +7,7 @@ defmodule TextServer.Works.Work do
     field :english_title, :string
     field :original_title, :string
     field :title, :string, source: :english_title
-    field :urn, :string
-    field :cts_urn, TextServer.Ecto.Types.CTS_URN
+    field :urn, TextServer.Ecto.Types.CTS_URN
     field :_search, TextServer.Ecto.Types.TsVector
 
     belongs_to :text_group, TextServer.TextGroups.TextGroup
@@ -27,8 +26,7 @@ defmodule TextServer.Works.Work do
       :english_title,
       :original_title,
       :text_group_id,
-      :urn,
-      :cts_urn
+      :urn
     ])
     |> validate_required(:urn)
     |> assoc_constraint(:text_group)

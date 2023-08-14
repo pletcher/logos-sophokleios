@@ -41,14 +41,15 @@ defmodule TextServer.WorksTest do
         english_title: "some english_title",
         original_title: "some original_title",
         text_group_id: text_group_fixture().id,
-        urn: "some urn"
+        urn: "urn:cts:namespace:text_group.work",
+        cts_urn: CTS.URN.parse("urn:cts:namespace:text_group.work")
       }
 
       assert {:ok, %Work{} = work} = Works.create_work(valid_attrs)
       assert work.description == "some description"
       assert work.english_title == "some english_title"
       assert work.original_title == "some original_title"
-      assert work.urn == "some urn"
+      assert work.urn == "urn:cts:namespace:text_group.work"
     end
 
     test "create_work/1 with invalid data returns error changeset" do
@@ -63,14 +64,15 @@ defmodule TextServer.WorksTest do
         english_title: "some updated english_title",
         original_title: "some updated original_title",
         text_group_id: text_group_fixture().id,
-        urn: "some updated urn"
+        urn: "urn:cts:ns:text_group.updated_work",
+        cts_urn: CTS.URN.parse("urn:cts:ns:text_group.updated_work")
       }
 
       assert {:ok, %Work{} = work} = Works.update_work(work, update_attrs)
       assert work.description == "some updated description"
       assert work.english_title == "some updated english_title"
       assert work.original_title == "some updated original_title"
-      assert work.urn == "some updated urn"
+      assert work.urn == "urn:cts:ns:text_group.updated_work"
     end
 
     test "update_work/2 with invalid data returns error changeset" do

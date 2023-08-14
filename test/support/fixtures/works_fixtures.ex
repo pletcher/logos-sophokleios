@@ -15,7 +15,8 @@ defmodule TextServer.WorksFixtures do
         english_title: "some english_title",
         original_title: "some original_title",
         text_group_id: text_group_fixture().id,
-        urn: "some urn"
+        urn: "urn:cts:namespace:text_group.work",
+        cts_urn: CTS.URN.parse("urn:cts:namespace:text_group.work")
       })
       |> TextServer.Works.create_work()
 

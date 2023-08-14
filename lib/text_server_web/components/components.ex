@@ -147,7 +147,7 @@ defmodule TextServerWeb.Components do
 
   def pagination(assigns) do
     ~H"""
-    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+    <div class="flex items-center justify-between border-t border-stone-200 bg-white px-4 py-3 sm:px-6">
       <div class="sm:flex sm:justify-between mx-auto">
         <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
           <.first_page_button current_page={@current_page} />
@@ -179,8 +179,8 @@ defmodule TextServerWeb.Components do
         "py-2",
         "text-sm",
         "font-medium",
-        "text-gray-100",
-        if(@current_page == 1, do: "cursor-default", else: "hover:bg-gray-50")
+        "text-stone-100",
+        if(@current_page == 1, do: "cursor-default", else: "hover:bg-gray-50 text-stone-700")
       ]}
     >
       <span class="sr-only">First page</span>
@@ -218,7 +218,7 @@ defmodule TextServerWeb.Components do
         "text-sm",
         "font-medium",
         "text-gray-100",
-        if(@current_page == @total_pages, do: "cursor-default", else: "hover:bg-gray-50")
+        if(@current_page == @total_pages, do: "cursor-default", else: "hover:bg-gray-50 text-stone-700")
       ]}
     >
       <span class="sr-only">Last page</span>
@@ -255,7 +255,7 @@ defmodule TextServerWeb.Components do
         "text-sm",
         "font-medium",
         "text-gray-100",
-        if(@current_page == @total_pages, do: "cursor-default", else: "hover:bg-gray-50")
+        if(@current_page == @total_pages, do: "cursor-default", else: "hover:bg-gray-50 text-stone-700")
       ]}
     >
       <span class="sr-only">Next</span>
@@ -296,7 +296,7 @@ defmodule TextServerWeb.Components do
       "font-medium",
       if(current_page == i,
         do: "bg-stone-100 border-stone-500 text-stone-600 z-20",
-        else: "text-gray-500"
+        else: "text-gray-500 hover:bg-gray-50"
       )
     ]
   end
@@ -318,7 +318,7 @@ defmodule TextServerWeb.Components do
         "text-sm",
         "font-medium",
         "text-gray-100",
-        if(@current_page == 1, do: "cursor-default", else: "hover:bg-gray-50")
+        if(@current_page == 1, do: "cursor-default", else: "hover:bg-gray-50 text-stone-700")
       ]}
     >
       <span class="sr-only">Previous</span>

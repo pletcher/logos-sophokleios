@@ -8,8 +8,16 @@ defmodule TextServer.Works do
   alias TextServer.Repo
   alias TextServer.Works.Work
 
-  def list_works(params \\ []) do
+  def list_works do
+    Work |> Repo.all()
+  end
+
+  def list_works(params) do
     Work |> Repo.paginate(params)
+  end
+
+  def list_works_for_urn(namespace, text_group, params \\ [page: 1, page_size: 50]) do
+
   end
 
   def search_works(term, params \\ []) do

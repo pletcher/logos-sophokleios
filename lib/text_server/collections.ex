@@ -22,9 +22,9 @@ defmodule TextServer.Collections do
     Repo.all(Collection)
   end
 
-  def list_collections_with_repositories do
+  def list_collections_with_repositories(params \\ [page: 1, page_size: 20]) do
     Collection |> preload(:repositories)
-    |> Repo.all()
+    |> Repo.paginate(params)
   end
 
   @doc """

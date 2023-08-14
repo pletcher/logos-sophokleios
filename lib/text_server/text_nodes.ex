@@ -100,7 +100,9 @@ defmodule TextServer.TextNodes do
 
   def list_text_node_critica(%TextNode{} = text_node) do
     version_ids =
-      Versions.list_versions_for_urn(text_node.urn) |> Enum.reject(&(&1 == text_node.version_id))
+      Versions.list_versions_for_urn(text_node.urn)
+      |> Enum.reject(&(&1.id == text_node.version_id))
+      |> Enum.map(& &1.id)
 
     from(
       t in TextNode,

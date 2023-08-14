@@ -100,8 +100,9 @@ defmodule TextServerWeb.Router do
       live "/works/:id", WorkLive.Show, :show
 
       live "/read", ReadLive.Index, :index
-      live "/read/:namespace", ReadLive.Collection, :index
-      live "/read/:namespace/:text_group", ReadLive.TextGroup, :index
+      live "/read/:namespace", ReadLive.Index, :collection
+      live "/read/:namespace/:text_group", ReadLive.Index, :text_group
+      live "/read/:namespace/:text_group/:work", ReadLive.Index, :work
     end
   end
 

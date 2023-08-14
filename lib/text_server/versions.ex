@@ -60,9 +60,9 @@ defmodule TextServer.Versions do
   def list_versions_for_urn(%CTS.URN{} = urn) do
     from(v in Version,
       where:
-        fragment("? ->> ? = ?", v.urn, "text_group", ^urn.text_group) and
-          fragment("? ->> ? = ?", v.urn, "work", ^urn.work),
-      select: v.id
+        fragment("? ->> ? = ?", v.urn, "namespace", ^urn.namespace) and
+          fragment("? ->> ? = ?", v.urn, "text_group", ^urn.text_group) and
+          fragment("? ->> ? = ?", v.urn, "work", ^urn.work)
     )
     |> Repo.all()
   end

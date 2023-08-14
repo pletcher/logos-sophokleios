@@ -64,6 +64,19 @@ defmodule TextServerWeb.Components do
     """
   end
 
+  slot :inner_block, required: true
+  attr :items, Scrivener.Page, default: %Scrivener.Page{}
+
+  def search_list(assigns) do
+    ~H"""
+    <ul role="list" class="divide-y divide-gray-200 sm:max-w-lg">
+      <%= for item <- @items do %>
+        <%= render_slot(@inner_block, item) %>
+      <% end %>
+    </ul>
+    """
+  end
+
   attr :description, :string, default: ""
   attr :title, :string, required: true
   attr :url, :string, default: "#"

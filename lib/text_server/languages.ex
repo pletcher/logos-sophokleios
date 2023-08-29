@@ -37,10 +37,15 @@ defmodule TextServer.Languages do
   """
   def get_language!(id), do: Repo.get!(Language, id)
 
+  # should probably rename this column to iso_code or something
   def get_language_by_slug(slug) do
     query = from(l in Language, where: l.slug == ^slug)
 
     Repo.one(query)
+  end
+
+  def get_language_by_iso_code(iso_code) do
+    get_language_by_slug(iso_code)
   end
 
   @doc """

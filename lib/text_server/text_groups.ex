@@ -28,6 +28,15 @@ defmodule TextServer.TextGroups do
     |> Repo.all()
   end
 
+  def list_text_group_files(%TextGroup{} = text_group) do
+    text_group_cts_file = CTS.base_cts_dir() <> "/#{text_group.urn.text_group}/__cts__.xml"
+
+    work_cts_files =
+      Path.wildcard(CTS.base_cts_dir() <> "/#{text_group.urn.text_group}/*/__cts__.xml")
+
+    [text_group_cts_file | work_cts_files]
+  end
+
   def list_text_groups_for_namespace(namespace, opts \\ [page: 1, page_size: 50]) do
     from(t in TextGroup,
       where: fragment("? ->> ? = ?", t.urn, "namespace", ^namespace)

@@ -206,28 +206,114 @@ end
 ## Create a version from CTS-compliant docs
 
 ```elixir
+defmodule XPathAccessor do
+  @behaviour DataSchema.DataAccessBehaviour
+
+  import SweetXml, only: [sigil_x: 2]
+
+  @impl true
+  def field(data, path) do
+    SweetXml.xpath(data, ~x"#{path}"s)
+  end
+
+  @impl true
+  def list_of(data, path) do
+    SweetXml.xpath(data, ~x"#{path}"l)
+  end
+
+  @impl true
+  def has_one(data, path) do
+    SweetXml.xpath(data, ~x"#{path}")
+  end
+
+  @impl true
+  def has_many(data, path) do
+    SweetXml.xpath(data, ~x"#{path}"l)
+  end
+end
+
+defmodule DataSchemata.Work.CTSDocument.VersionFragment do
+  import DataSchema, only: [data_schema: 1]
+
+  @data_accessor XPathAccessor
+  data_schema(
+    field: {:description, "./ti:description/text()", &{:ok, String.trim(to_string(&1))}},
+    field: {:label, "./ti:label/text()", &{:ok, String.trim(to_string(&1))}},
+    field: {:language, "./@xml:lang", &{:ok, to_string(&1)}},
+    field: {:urn, "./@urn", &{:ok, to_string(&1)}}
+  )
+end
+
+defmodule DataSchemata.Work.CTSDocument do
+  import DataSchema, only: [data_schema: 1]
+
+  @data_accessor XPathAccessor
+  data_schema(
+    field: {:language, "/ti:work/@xml:lang", &{:ok, to_string(&1)}},
+    field: {:title, "/ti:work/ti:title/text()", &{:ok, String.trim(to_string(&1))}},
+    field: {:urn, "/ti:work/@urn", &{:ok, to_string(&1)}},
+    has_many:
+      {:commentaries, "/ti:work/ti:commentary", DataSchemata.Work.CTSDocument.VersionFragment},
+    has_many: {:editions, "/ti:work/ti:edition", DataSchemata.Work.CTSDocument.VersionFragment},
+    has_many:
+      {:translations, "/ti:work/ti:translation", DataSchemata.Work.CTSDocument.VersionFragment}
+  )
+end
+
 defmodule TextServer.Livebook.CTSVersions do
+  alias TextServer.Languages
   alias TextServer.TextGroups.TextGroup
-  alias TextServer.Versions.Version
+  alias TextServer.Versions
   alias TextServer.Works.Work
-  
+
   def base_cts_dir do
     "tmp/canonical-greekLit/data"
   end
 
-  def create_version(%Work{} = work) do
-    cts_file = get_work_cts_file(work)
-    cts_data = 
-  end
-  
-  def list_text_group_files(%TextGroup{} = text_group) do
-    text_group_cts_file = base_cts_dir() <> "/#{text_group.urn.text_group}/__cts__.xml"
-    work_cts_files = Path.wildcard(base_cts_dir() <> "/#{text_group.urn.text_group}/*/__cts__.xml")
-    [text_group_cts_file | work_cts_files]
+  def create_commentary(work, version_data) do
+    create_version(work, version_data, :commentary)
   end
 
-  def get_work_cts_file(work) do
-    path = base_cts_dir() <> "/#{work.urn.text_group}/#{work.urn.work}/__cts__.xml"
+  def create_edition(work, version_data) do
+    create_version(work, version_data, :edition)
+  end
+
+  def create_translation(work, version_data) do
+    create_version(work, version_data, :translation)
+  end
+
+  def create_version(work, version_data, version_type) do
+    urn = Map.get(version_data, :urn) |> CTS.URN.parse()
+    file = get_version_file(urn)
+    xml_raw = File.read!(file)
+    md5 = :crypto.hash(:md5, xml_raw) |> Base.encode16(case: :lower)
+    language = Languages.get_language_by_slug(version_data.language)
+
+    {:ok, version} =
+      Map.take(version_data, [:description, :label])
+      |> Map.merge(%{
+        filename: file,
+        filemd5hash: md5,
+        language_id: language.id,
+        urn: urn,
+        version_type: version_type,
+        work_id: work.id
+      })
+      |> Versions.find_or_create_version()
+
+    Versions.create_xml_document!(version, %{document: xml_raw})
+  end
+
+  def create_version_of_work(%Work{} = work) do
+    {:ok, work_cts_data} = get_work_cts_data(work)
+
+    Map.get(work_cts_data, :commentaries) |> Enum.each(&create_commentary(work, &1))
+    Map.get(work_cts_data, :editions) |> Enum.each(&create_edition(work, &1))
+    Map.get(work_cts_data, :translations) |> Enum.each(&create_translation(work, &1))
+  end
+
+  def get_version_file(urn) do
+    path = base_cts_dir() <> "/" <> get_work_dir(urn) <> "/#{urn.work_component}.xml"
 
     if File.exists?(path) do
       path
@@ -235,8 +321,37 @@ defmodule TextServer.Livebook.CTSVersions do
       :enoent
     end
   end
+
+  def get_work_cts_data(%Work{} = work) do
+    cts_file = get_work_cts_file(work)
+    cts_data_raw = File.read!(cts_file)
+    DataSchema.to_struct(cts_data_raw, DataSchemata.Work.CTSDocument)
+  end
+
+  def get_work_cts_file(work) do
+    path = base_cts_dir() <> "/#{get_work_dir(work.urn)}/__cts__.xml"
+
+    if File.exists?(path) do
+      path
+    else
+      :enoent
+    end
+  end
+
+  def get_work_dir(%CTS.URN{} = urn) do
+    "#{urn.text_group}/#{urn.work}"
+  end
+
+  def list_text_group_files(%TextGroup{} = text_group) do
+    text_group_cts_file = base_cts_dir() <> "/#{text_group.urn.text_group}/__cts__.xml"
+
+    work_cts_files =
+      Path.wildcard(base_cts_dir() <> "/#{text_group.urn.text_group}/*/__cts__.xml")
+
+    [text_group_cts_file | work_cts_files]
+  end
 end
 
 pausanias_work = TextServer.Works.get_work_by_urn("urn:cts:greekLit:tlg0525.tlg001")
-TextServer.Livebook.CTSVersions.create_version(pausanias_work)
+TextServer.Livebook.CTSVersions.create_version_of_work(pausanias_work)
 ```

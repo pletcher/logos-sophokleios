@@ -14,7 +14,7 @@ defmodule Xml.Versions.Version do
 
   @cref_xpath_regex ~r/#xpath\((?<xpath>[^)]+)\)/su
 
-  @data_accessor Xml.XPathAccessor
+  @data_accessor DataSchemata.XPathAccessor
   data_schema(
     list_of:
       {:cref_patterns, "/TEI/teiHeader/encodingDesc/refsDecl/cRefPattern/@replacementPattern",

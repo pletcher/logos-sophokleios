@@ -74,6 +74,26 @@ defmodule TextServer.Works do
     Work |> where([w], w.urn == ^urn) |> Repo.one()
   end
 
+  def get_work_cts_data(%Work{} = work) do
+    cts_file = get_work_cts_file(work)
+    cts_data_raw = File.read!(cts_file)
+    DataSchema.to_struct(cts_data_raw, DataSchemata.Work.CTSDocument)
+  end
+
+  def get_work_cts_file(%Work{} = work) do
+    path = CTS.base_cts_dir() <> "/#{get_work_dir(work.urn)}/__cts__.xml"
+
+    if File.exists?(path) do
+      path
+    else
+      :enoent
+    end
+  end
+
+  def get_work_dir(%CTS.URN{} = urn) do
+    "#{urn.text_group}/#{urn.work}"
+  end
+
   @doc """
   Creates a work.
 

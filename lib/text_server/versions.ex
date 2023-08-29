@@ -19,6 +19,7 @@ defmodule TextServer.Versions do
   alias TextServer.Versions.Version
   alias TextServer.Versions.XmlDocument
   alias TextServer.Works
+  alias TextServer.Works.Work
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
 
@@ -30,6 +31,58 @@ defmodule TextServer.Versions do
 
   defmodule VersionPassage do
     defstruct [:version_id, :passage, :passage_number, :text_nodes, :total_passages]
+  end
+
+  def create_commentary(work, version_data) do
+    create_version(work, version_data, :commentary)
+  end
+
+  def create_edition(work, version_data) do
+    create_version(work, version_data, :edition)
+  end
+
+  def create_translation(work, version_data) do
+    create_version(work, version_data, :translation)
+  end
+
+  def create_version(work, version_data, version_type) do
+    urn = Map.get(version_data, :urn) |> CTS.URN.parse()
+    file = get_version_file(urn)
+    xml_raw = File.read!(file)
+    md5 = :crypto.hash(:md5, xml_raw) |> Base.encode16(case: :lower)
+    language = Languages.get_language_by_slug(version_data.language)
+
+    {:ok, version} =
+      Map.take(version_data, [:description, :label])
+      |> Map.merge(%{
+        filename: file,
+        filemd5hash: md5,
+        language_id: language.id,
+        urn: urn,
+        version_type: version_type,
+        work_id: work.id,
+      })
+      |> Versions.find_or_create_version()
+
+      create_xml_document!(version, %{document: xml_raw})
+  end
+
+  def create_version_of_work(%Work{} = work) do
+    {:ok, work_cts_data} = Works.get_work_cts_data(work)
+
+    Map.get(work_cts_data, :commentaries) |> Enum.each(&(create_commentary(work, &1)))
+    Map.get(work_cts_data, :editions) |> Enum.each(&(create_edition(work, &1)))
+    Map.get(work_cts_data, :translations) |> Enum.each(&(create_translation(work, &1)))
+  end
+
+  def get_version_file(urn) do
+    path = CTS.base_cts_dir() <> "/" <> Works.get_work_dir(urn) <> "/#{urn.work_component}.xml"
+
+    if File.exists?(path) do
+      path
+    else
+      :enoent
+    end
   end
 
   @spec list_versions(keyword | map) :: Scrivener.Page.t()
@@ -113,6 +166,12 @@ defmodule TextServer.Versions do
     %Version{}
     |> Version.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def create_version!(attrs \\ %{}) do
+    %Version{}
+    |> Version.changeset(attrs)
+    |> Repo.insert!()
   end
 
   def find_or_create_version(attrs \\ %{}) do

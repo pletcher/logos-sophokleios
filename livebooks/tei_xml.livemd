@@ -1,4 +1,4 @@
-<!-- livebook:{"app_settings":{"slug":"tei"}} -->
+<!-- livebook:{"app_settings":{"access_type":"public","slug":"tei"}} -->
 
 # TEI XML Explorations
 
@@ -203,37 +203,40 @@ defmodule TeiExplorer.TableOfContents do
 end
 ```
 
-```elixir
-v = TextServer.Xml.get_version_by_urn!("urn:cts:greekLit:tlg0525.tlg001.perseus-grc2")
-
-t = TeiExplorer.get_table_of_contents(v)
-```
-
-## Querying exist-db
+## Create a version from CTS-compliant docs
 
 ```elixir
-defmodule TeiExplorer.ExistAPI do
-  use Tesla
-
-  plug(Tesla.Middleware.BaseUrl, "http://localhost:8092/exist/rest/db")
-  plug(Tesla.Middleware.Query, _query: "//*:refsDecl")
-
-  def get_pausanias do
-    get("/tlg0525/tlg001/tlg0525.tlg001.perseus-grc2.xml")
+defmodule TextServer.Livebook.CTSVersions do
+  alias TextServer.TextGroups.TextGroup
+  alias TextServer.Versions.Version
+  alias TextServer.Works.Work
+  
+  def base_cts_dir do
+    "tmp/canonical-greekLit/data"
   end
 
-  @doc """
-  Returns a given passage as long as the
-  location matches one of the match patterns
-  in the refs declaration.
-  """
-  def get_passage(location) do
+  def create_version(%Work{} = work) do
+    cts_file = get_work_cts_file(work)
+    cts_data = 
+  end
+  
+  def list_text_group_files(%TextGroup{} = text_group) do
+    text_group_cts_file = base_cts_dir() <> "/#{text_group.urn.text_group}/__cts__.xml"
+    work_cts_files = Path.wildcard(base_cts_dir() <> "/#{text_group.urn.text_group}/*/__cts__.xml")
+    [text_group_cts_file | work_cts_files]
+  end
+
+  def get_work_cts_file(work) do
+    path = base_cts_dir() <> "/#{work.urn.text_group}/#{work.urn.work}/__cts__.xml"
+
+    if File.exists?(path) do
+      path
+    else
+      :enoent
+    end
   end
 end
-```
 
-```elixir
-{:ok, p} = TeiExplorer.ExistAPI.get_pausanias()
-
-Map.get(p, :body)
+pausanias_work = TextServer.Works.get_work_by_urn("urn:cts:greekLit:tlg0525.tlg001")
+TextServer.Livebook.CTSVersions.create_version(pausanias_work)
 ```

@@ -33,7 +33,7 @@ defmodule TextServer.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:amqp, "~> 3.2"},
+      {:amqp, "~> 3.3"},
       {:bcrypt_elixir, "~> 3.0"},
       {:data_schema, "~> 0.5.0"},
       {:earmark, "~> 1.4.34"},
@@ -84,7 +84,13 @@ defmodule TextServer.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
+      # See https://elixirforum.com/t/squashing-schema-migrations/26184/15 for
+      # guidance on squashing migrations
+      "ecto.setup": [
+        "ecto.create",
+        "ecto.load -d priv/repo/20230828_schema.sql -f --skip-if-loaded",
+        "ecto.migrate",
+      ],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]

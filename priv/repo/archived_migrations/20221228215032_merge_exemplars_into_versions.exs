@@ -3,8 +3,8 @@ defmodule TextServer.Repo.Migrations.MergeExemplarsIntoVersions do
 
   import Ecto.Query
 
-  alias TextServer.Exemplars
-  alias TextServer.Exemplars.Page
+  # alias TextServer.Exemplars
+  # alias TextServer.Exemplars.Page
   alias TextServer.Languages
   alias TextServer.Repo
   alias TextServer.Projects
@@ -50,10 +50,10 @@ defmodule TextServer.Repo.Migrations.MergeExemplarsIntoVersions do
 
     flush()
 
-    change_project_exemplars_to_versions()
-    merge_exemplars_and_versions()
-    move_exemplar_pages_to_version_passages()
-    delete_versions_with_no_files()
+    # change_project_exemplars_to_versions()
+    # merge_exemplars_and_versions()
+    # move_exemplar_pages_to_version_passages()
+    # delete_versions_with_no_files()
 
     alter table(:text_nodes) do
       remove(:exemplar_id)
@@ -64,9 +64,9 @@ defmodule TextServer.Repo.Migrations.MergeExemplarsIntoVersions do
       modify(:filename, :string, null: false)
     end
 
-    drop(table(:exemplar_pages))
-    drop(table(:project_exemplars))
-    drop(table(:exemplars))
+    # drop(table(:exemplar_pages))
+    # drop(table(:project_exemplars))
+    # drop(table(:exemplars))
   end
 
   defp change_project_exemplars_to_versions do

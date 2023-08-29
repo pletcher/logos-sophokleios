@@ -147,10 +147,6 @@ defmodule TextServer.Xml do
     |> Repo.update()
   end
 
-  def save_versions_in_exist() do
-
-  end
-
   def get_version_reference(%CTS.URN{} = urn) do
     passages = urn.passage_component
     version = get_version_by_urn!(urn)

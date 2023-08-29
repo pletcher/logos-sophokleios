@@ -18,6 +18,7 @@ defmodule TextServer.Versions.Version do
     belongs_to :work, TextServer.Works.Work
 
     has_many :text_nodes, TextServer.TextNodes.TextNode
+    has_one :xml_document, TextServer.Versions.XmlDocument
 
     embeds_one :tei_header, TextServer.Versions.TeiHeader
 

@@ -7,6 +7,8 @@ defmodule TextServer.Versions do
 
   require Logger
 
+  alias Ecto
+
   alias TextServer.Repo
 
   alias TextServer.Projects.Version, as: ProjectVersion
@@ -15,6 +17,7 @@ defmodule TextServer.Versions do
   alias TextServer.TextNodes.TextNode
   alias TextServer.Versions.Passage
   alias TextServer.Versions.Version
+  alias TextServer.Versions.XmlDocument
   alias TextServer.Works
 
   @location_regex ~r/\{\d+\.\d+\.\d+\}/
@@ -283,7 +286,7 @@ defmodule TextServer.Versions do
          )
          |> Repo.one() do
       nil ->
-        Logger.warn("No text_nodes found.")
+        Logger.warning("No text_nodes found.")
         nil
 
       passage ->
@@ -445,6 +448,15 @@ defmodule TextServer.Versions do
   def change_version(%Version{} = version, attrs \\ %{}) do
     Version.changeset(version, attrs)
   end
+
+  def create_xml_document!(%Version{} = version, attrs \\ %{}) do
+    version
+    |> Ecto.build_assoc(:xml_document)
+    |> XmlDocument.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+  # Processing functions begin here
 
   def clear_text_nodes(%Version{} = version) do
     TextNodes.delete_text_nodes_by_version_id(version.id)

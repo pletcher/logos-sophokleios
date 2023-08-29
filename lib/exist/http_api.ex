@@ -1,5 +1,12 @@
 defmodule Exist.HttpApi do
+  @moduledoc """
+  It's not clear that we'll end up using this at all. For now,
+  this module should be considered a house of dragons.
+  """
+
   use Tesla
+
+  alias Tesla.Multipart
 
   # NOTE: (charles) For now, the base URL should include the "cts"
   # scheme identifier.
@@ -57,6 +64,18 @@ defmodule Exist.HttpApi do
 
   def get_version(collection, text_group, work, version) do
     get("#{collection}/#{text_group}/#{work}/#{text_group}.#{work}.#{version}.xml")
+  end
+
+  # This doesn't work for some reason. It always returns a 401, but I can't
+  # find any additional detail in the logs. A simple request using
+  # a different library works fine, however, so it appears to be an issue
+  # with how Tesla handles file uploads?
+  def put_version(collection, text_group, work, version, filepath) do
+    mp =
+      Multipart.new()
+      |> Multipart.add_file(filepath, headers: [{"content-type", "application/xml"}])
+
+    put("#{collection}/#{text_group}/#{work}/#{text_group}.#{work}.#{version}_TEST.xml", mp)
   end
 
   def get_passage(collection, rest, _passage) do

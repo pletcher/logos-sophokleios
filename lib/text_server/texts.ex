@@ -5,7 +5,6 @@ defmodule TextServer.Texts do
 
   import Ecto.Query, warn: false
 
-  alias TextServer.Versions
   alias TextServer.Works
 
   def clone_repo(repo) do
@@ -391,9 +390,9 @@ defmodule TextServer.Texts do
                 }
               )
 
-            {:ok, version} = TextServer.Versions.upsert_version(version_data)
+            {:ok, _version} = TextServer.Versions.upsert_version(version_data)
 
-            Versions.upload_version_to_exist_db(version)
+            # Versions.upload_version_to_exist_db(version)
 
             # TextServer.Workers.VersionWorker.new(%{id: version.id})
             # |> Oban.insert()

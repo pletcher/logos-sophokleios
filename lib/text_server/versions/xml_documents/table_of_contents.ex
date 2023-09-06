@@ -1,10 +1,10 @@
-defmodule TextServer.Xml.TableOfContents do
+defmodule TextServer.Versions.XmlDocuments.TableOfContents do
   @moduledoc """
   This module helps to generate tables of contents based on a list
   of lists of possible citation levels, starting from the deepest
   level of citation. (So if a reference goes Book.Chapter.Line, the first
   array is a list of lines --- it normally repeats.) E.g., for Pausanias,
-  that list looks something like:any()
+  that list looks something like
 
   ```elixir
   [

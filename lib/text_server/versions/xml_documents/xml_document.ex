@@ -1,4 +1,4 @@
-defmodule TextServer.Versions.XmlDocument do
+defmodule TextServer.Versions.XmlDocuments.XmlDocument do
   use Ecto.Schema
   import Ecto.Changeset
 

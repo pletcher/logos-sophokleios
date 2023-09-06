@@ -11,13 +11,14 @@ defmodule TextServer.Versions do
 
   alias TextServer.Repo
 
+  alias TextServer.Languages
   alias TextServer.Projects.Version, as: ProjectVersion
   alias TextServer.TextElements
   alias TextServer.TextNodes
   alias TextServer.TextNodes.TextNode
   alias TextServer.Versions.Passage
   alias TextServer.Versions.Version
-  alias TextServer.Versions.XmlDocument
+  alias TextServer.Versions.XmlDocuments.XmlDocument
   alias TextServer.Works
   alias TextServer.Works.Work
 
@@ -50,7 +51,7 @@ defmodule TextServer.Versions do
     file = get_version_file(urn)
     xml_raw = File.read!(file)
     md5 = :crypto.hash(:md5, xml_raw) |> Base.encode16(case: :lower)
-    language = Languages.get_language_by_slug(version_data.language)
+    language = Languages.get_language_by_iso_code!(version_data.language)
 
     {:ok, version} =
       Map.take(version_data, [:description, :label])
@@ -62,12 +63,12 @@ defmodule TextServer.Versions do
         version_type: version_type,
         work_id: work.id,
       })
-      |> Versions.find_or_create_version()
+      |> find_or_create_version()
 
       create_xml_document!(version, %{document: xml_raw})
   end
 
-  def create_version_of_work(%Work{} = work) do
+  def create_versions_of_work(%Work{} = work) do
     {:ok, work_cts_data} = Works.get_work_cts_data(work)
 
     Map.get(work_cts_data, :commentaries) |> Enum.each(&(create_commentary(work, &1)))
@@ -113,14 +114,14 @@ defmodule TextServer.Versions do
     |> Repo.all()
   end
 
-  def list_versions_for_urn(%CTS.URN{} = urn) do
+  def list_versions_for_urn(%CTS.URN{} = urn, opts \\ []) do
     from(v in Version,
       where:
         fragment("? ->> ? = ?", v.urn, "namespace", ^urn.namespace) and
           fragment("? ->> ? = ?", v.urn, "text_group", ^urn.text_group) and
           fragment("? ->> ? = ?", v.urn, "work", ^urn.work)
     )
-    |> Repo.all()
+    |> Repo.all(opts)
   end
 
   @doc """
@@ -544,6 +545,7 @@ defmodule TextServer.Versions do
     )
   end
 
+  # pandoc: /app/data/user_uploads/exemplar_files/GN_A Pausanias reader in progress, restarted 2020.05.01(1)-Gipson-6-18-2022.docx
   def parse_version_docx(%Version{} = version) do
     # `track_changes: "all"` catches comments; see example below
     {:ok, ast} =
@@ -607,10 +609,15 @@ defmodule TextServer.Versions do
 
     current_fragments = Map.get(grouped_frags, loc, [])
 
-    {loc, Map.put(grouped_frags, loc, current_fragments ++ frags)}
+    # As far as I can tell, the call to List.flatten/1, although
+    # it seems redundant, is necessary to esnure that we can
+    # concatenate the lists successfully.
+    updated_frags = current_fragments ++ List.flatten([frags])
+
+    {loc, Map.put(grouped_frags, loc, updated_frags)}
   end
 
-  def set_location(prev_location, list) do
+  def set_location(prev_location, list) when is_list(list) do
     [maybe_location_fragment | rest] = list
 
     maybe_location_string = get_maybe_location_string(maybe_location_fragment) || ""
@@ -631,6 +638,12 @@ defmodule TextServer.Versions do
     else
       [location | rest]
     end
+  end
+
+  # FIXME: This is a cludge for handling bulleted lists -- it won't
+  # end up displaying the lists correctly.
+  def set_location(prev_location, non_list) do
+    [prev_location | [flatten_string(non_list)]]
   end
 
   def get_maybe_location_string(fragment) do
@@ -672,6 +685,9 @@ defmodule TextServer.Versions do
         fragments
       end
 
+    # Rather than using numeric offsets, why not pass in the urn and location,
+    # building a URN with a subreference to the token(s) to which the element
+    # is applied?
     {text_elements, _final_offset} = fragments |> Enum.reduce({[], 0}, &tag_elements/2)
 
     {location, text, text_elements}
@@ -729,6 +745,11 @@ defmodule TextServer.Versions do
     s = emph |> Enum.reduce("", &flatten_string/2)
     end_offset = offset + String.length(s)
 
+    # token = String.slice(s, offset..end_offset)
+
+    # THIS COULD HAVE ALL BEEN SO MUCH SIMPLER?
+    IO.puts("token: #{s}")
+
     {elements ++
        [
          %{
@@ -758,6 +779,10 @@ defmodule TextServer.Versions do
     s = link |> Enum.reduce("", &flatten_string/2)
     end_offset = offset + String.length(s)
 
+    token = String.slice(s, offset..end_offset)
+
+    IO.puts("token: #{token}")
+
     {elements ++
        [
          %{
@@ -784,6 +809,10 @@ defmodule TextServer.Versions do
     s = strong |> Enum.reduce("", &flatten_string/2)
     end_offset = offset + String.length(s)
 
+    token = String.slice(s, offset..end_offset)
+
+    IO.puts("token: #{token}")
+
     {elements ++
        [
          %{
@@ -797,8 +826,11 @@ defmodule TextServer.Versions do
 
   def tag_elements({:superscript, superscript}, {elements, offset}) do
     s = superscript |> Enum.reduce("", &flatten_string/2)
-
     end_offset = offset + String.length(s)
+
+    token = String.slice(s, offset..end_offset)
+
+    IO.puts("token: #{token}")
 
     {elements ++
        [
@@ -814,6 +846,10 @@ defmodule TextServer.Versions do
   def tag_elements({:underline, underline}, {elements, offset}) do
     s = underline |> Enum.reduce("", &flatten_string/2)
     end_offset = offset + String.length(s)
+
+    token = String.slice(s, offset..end_offset)
+
+    IO.puts("token: #{token}")
 
     {elements ++
        [
@@ -859,6 +895,10 @@ defmodule TextServer.Versions do
 
   def collect_fragments(node, attr) do
     Map.get(node, attr, []) |> Enum.map(&handle_fragment/1) |> List.flatten()
+  end
+
+  def handle_fragment(%Panpipe.AST.BulletList{} = fragment) do
+    {:bullet_list, %{content: collect_fragments(fragment)}}
   end
 
   def handle_fragment(%Panpipe.AST.Emph{} = fragment),

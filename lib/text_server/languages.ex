@@ -48,6 +48,12 @@ defmodule TextServer.Languages do
     get_language_by_slug(iso_code)
   end
 
+  def get_language_by_iso_code!(iso_code) do
+    query = from(l in Language, where: l.slug == ^iso_code)
+
+    Repo.one!(query)
+  end
+
   @doc """
   Creates a language.
 

@@ -54,36 +54,36 @@ defmodule TextServerWeb.ReadLive.Index do
     |> assign(:items, list_collections(params))
   end
 
-  defp apply_action(socket, :collection, %{"namespace" => namespace} = assigns) do
+  defp apply_action(socket, :collection, %{"collection" => collection} = assigns) do
     page_number = Map.get(assigns, "page", 1)
 
     socket
     |> assign(:heading, "Text Groups")
-    |> assign(:items, list_text_groups(namespace, page: page_number))
+    |> assign(:items, list_text_groups(collection, page: page_number))
   end
 
   defp apply_action(
          socket,
          :text_group,
-         %{"namespace" => namespace, "text_group" => text_group} = assigns
+         %{"collection" => collection, "text_group" => text_group} = assigns
        ) do
     page_number = Map.get(assigns, "page", 1)
 
     socket
     |> assign(:heading, "Works")
-    |> assign(:items, list_works(namespace, text_group, page: page_number))
+    |> assign(:items, list_works(collection, text_group, page: page_number))
   end
 
   defp apply_action(
          socket,
          :work,
-         %{"namespace" => namespace, "text_group" => text_group, "work" => work} = assigns
+         %{"collection" => collection, "text_group" => text_group, "work" => work} = assigns
        ) do
     page_number = Map.get(assigns, "page", 1)
 
     socket
     |> assign(:heading, "Versions")
-    |> assign(:items, list_versions(namespace, text_group, work, page: page_number))
+    |> assign(:items, list_versions(collection, text_group, work, page: page_number))
   end
 
   defp get_description(%Collection{} = item), do: CTS.URN.to_string(item.urn)
@@ -110,15 +110,15 @@ defmodule TextServerWeb.ReadLive.Index do
     Collections.list_collections_with_repositories()
   end
 
-  defp list_text_groups(namespace, opts) do
-    TextGroups.list_text_groups_for_namespace(namespace, opts)
+  defp list_text_groups(collection, opts) do
+    TextGroups.list_text_groups_for_namespace(collection, opts)
   end
 
-  defp list_works(namespace, text_group, opts) do
-    Works.list_works_for_urn(namespace, text_group, opts)
+  defp list_works(collection, text_group, opts) do
+    Works.list_works_for_urn(collection, text_group, opts)
   end
 
-  defp list_versions(namespace, text_group, work, opts) do
-    Versions.list_versions_for_urn(CTS.URN.parse("urn:cts:#{namespace}:#{text_group}.#{work}"))
+  defp list_versions(collection, text_group, work, opts) do
+    Versions.list_versions_for_urn(CTS.URN.parse("urn:cts:#{collection}:#{text_group}.#{work}"), opts)
   end
 end

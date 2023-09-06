@@ -33,6 +33,85 @@ work = TextServer.Works.get_work_by_urn("greekLit:tlg0525.tlg001")
 ## What do we need from the document?
 
 ```elixir
+defmodule TeiExplorer.TableOfContents do
+  def collect_citations(passage_refs) when length(passage_refs) == 1 do
+    passage_refs |> List.first() |> Enum.map(&String.to_integer/1)
+  end
+
+  def collect_citations(passage_refs, grouped \\ [])
+
+  def collect_citations([], grouped), do: grouped
+
+  def collect_citations(passage_refs, grouped) when length(passage_refs) == 3 do
+    [sections, chapters, books] = passage_refs
+
+    current_sections = get_current_level(sections)
+    [current_chapter | rest_chapters] = chapters
+    [current_book | rest_books] = books
+
+    citations =
+      for section <- current_sections do
+        {current_book, current_chapter, section}
+      end
+
+    rest_sections = sections -- current_sections
+
+    if Enum.count(rest_sections) == 0 do
+      [citations | grouped] |> List.flatten()
+    else
+      next_books =
+        if is_greater(current_chapter, List.first(rest_chapters)) do
+          rest_books
+        else
+          books
+        end
+
+      collect_citations([rest_sections, rest_chapters, next_books], [citations | grouped])
+    end
+  end
+
+  def collect_citations(passage_refs, grouped) when length(passage_refs) == 2 do
+    [lines, books] = passage_refs
+
+    current_lines = get_current_level(lines)
+    [current_book | rest_books] = books
+
+    citations =
+      for line <- lines do
+        {current_book, line}
+      end
+
+    rest_lines = lines -- current_lines
+
+    if Enum.count(rest_lines) == 0 do
+      [citations | grouped] |> List.flatten()
+    else
+      collect_citations([rest_lines, rest_books], [citations | grouped])
+    end
+  end
+
+  defp get_current_level(sections) do
+    sections
+    |> Enum.reduce_while([], fn section, acc ->
+      if is_greater(section, List.first(acc)) do
+        {:cont, [section | acc]}
+      else
+        {:halt, acc}
+      end
+    end)
+  end
+
+  defp is_greater(x, y) do
+    to_comparable(x) > to_comparable(y)
+  end
+
+  defp to_comparable(x) when is_nil(x), do: 0
+  defp to_comparable(x) when is_binary(x), do: String.to_integer(x, 10)
+  defp to_comparable(x) when is_integer(x), do: x
+end
+```
+
+```elixir
 defmodule TeiExplorer do
   alias TextServer.Repo
   alias TextServer.Xml.Version
@@ -124,142 +203,9 @@ defmodule TeiExplorer do
 end
 ```
 
-```elixir
-defmodule TeiExplorer.TableOfContents do
-  def collect_citations(passage_refs) when length(passage_refs) == 1 do
-    passage_refs |> List.first() |> Enum.map(&String.to_integer/1)
-  end
-
-  def collect_citations(passage_refs, grouped \\ [])
-
-  def collect_citations([], grouped), do: grouped
-
-  def collect_citations(passage_refs, grouped) when length(passage_refs) == 3 do
-    [sections, chapters, books] = passage_refs
-
-    current_sections = get_current_level(sections)
-    [current_chapter | rest_chapters] = chapters
-    [current_book | rest_books] = books
-
-    citations =
-      for section <- current_sections do
-        {current_book, current_chapter, section}
-      end
-
-    rest_sections = sections -- current_sections
-
-    if Enum.count(rest_sections) == 0 do
-      [citations | grouped] |> List.flatten()
-    else
-      next_books =
-        if is_greater(current_chapter, List.first(rest_chapters)) do
-          rest_books
-        else
-          books
-        end
-
-      collect_citations([rest_sections, rest_chapters, next_books], [citations | grouped])
-    end
-  end
-
-  def collect_citations(passage_refs, grouped) when length(passage_refs) == 2 do
-    [lines, books] = passage_refs
-
-    current_lines = get_current_level(lines)
-    [current_book | rest_books] = books
-
-    citations =
-      for line <- lines do
-        {current_book, line}
-      end
-
-    rest_lines = lines -- current_lines
-
-    if Enum.count(rest_lines) == 0 do
-      [citations | grouped] |> List.flatten()
-    else
-      collect_citations([rest_lines, rest_books], [citations | grouped])
-    end
-  end
-
-  defp get_current_level(sections) do
-    sections
-    |> Enum.reduce_while([], fn section, acc ->
-      if is_greater(section, List.first(acc)) do
-        {:cont, [section | acc]}
-      else
-        {:halt, acc}
-      end
-    end)
-  end
-
-  defp is_greater(x, y) do
-    to_comparable(x) > to_comparable(y)
-  end
-
-  defp to_comparable(x) when is_nil(x), do: 0
-  defp to_comparable(x) when is_binary(x), do: String.to_integer(x, 10)
-  defp to_comparable(x) when is_integer(x), do: x
-end
-```
-
 ## Create a version from CTS-compliant docs
 
 ```elixir
-defmodule XPathAccessor do
-  @behaviour DataSchema.DataAccessBehaviour
-
-  import SweetXml, only: [sigil_x: 2]
-
-  @impl true
-  def field(data, path) do
-    SweetXml.xpath(data, ~x"#{path}"s)
-  end
-
-  @impl true
-  def list_of(data, path) do
-    SweetXml.xpath(data, ~x"#{path}"l)
-  end
-
-  @impl true
-  def has_one(data, path) do
-    SweetXml.xpath(data, ~x"#{path}")
-  end
-
-  @impl true
-  def has_many(data, path) do
-    SweetXml.xpath(data, ~x"#{path}"l)
-  end
-end
-
-defmodule DataSchemata.Work.CTSDocument.VersionFragment do
-  import DataSchema, only: [data_schema: 1]
-
-  @data_accessor XPathAccessor
-  data_schema(
-    field: {:description, "./ti:description/text()", &{:ok, String.trim(to_string(&1))}},
-    field: {:label, "./ti:label/text()", &{:ok, String.trim(to_string(&1))}},
-    field: {:language, "./@xml:lang", &{:ok, to_string(&1)}},
-    field: {:urn, "./@urn", &{:ok, to_string(&1)}}
-  )
-end
-
-defmodule DataSchemata.Work.CTSDocument do
-  import DataSchema, only: [data_schema: 1]
-
-  @data_accessor XPathAccessor
-  data_schema(
-    field: {:language, "/ti:work/@xml:lang", &{:ok, to_string(&1)}},
-    field: {:title, "/ti:work/ti:title/text()", &{:ok, String.trim(to_string(&1))}},
-    field: {:urn, "/ti:work/@urn", &{:ok, to_string(&1)}},
-    has_many:
-      {:commentaries, "/ti:work/ti:commentary", DataSchemata.Work.CTSDocument.VersionFragment},
-    has_many: {:editions, "/ti:work/ti:edition", DataSchemata.Work.CTSDocument.VersionFragment},
-    has_many:
-      {:translations, "/ti:work/ti:translation", DataSchemata.Work.CTSDocument.VersionFragment}
-  )
-end
-
 defmodule TextServer.Livebook.CTSVersions do
   alias TextServer.Languages
   alias TextServer.TextGroups.TextGroup
@@ -304,7 +250,7 @@ defmodule TextServer.Livebook.CTSVersions do
     Versions.create_xml_document!(version, %{document: xml_raw})
   end
 
-  def create_version_of_work(%Work{} = work) do
+  def create_versions_of_work(%Work{} = work) do
     {:ok, work_cts_data} = get_work_cts_data(work)
 
     Map.get(work_cts_data, :commentaries) |> Enum.each(&create_commentary(work, &1))
@@ -351,7 +297,19 @@ defmodule TextServer.Livebook.CTSVersions do
     [text_group_cts_file | work_cts_files]
   end
 end
+```
 
+```elixir
 pausanias_work = TextServer.Works.get_work_by_urn("urn:cts:greekLit:tlg0525.tlg001")
-TextServer.Livebook.CTSVersions.create_version_of_work(pausanias_work)
+TextServer.Livebook.CTSVersions.get_work_cts_data(pausanias_work)
+```
+
+```elixir
+version =
+  TextServer.Versions.get_version_by_urn!(
+    CTS.URN.parse("urn:cts:greekLit:tlg0525.tlg001.perseus-grc2")
+  )
+  |> TextServer.Repo.preload(:xml_document)
+
+TextServer.Versions.XmlDocuments.get_refs_decl(version.xml_document)
 ```

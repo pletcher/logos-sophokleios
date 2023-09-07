@@ -39,9 +39,13 @@ defmodule TextServer.Versions.Passages do
   Page 5 is indicatd by the 4th tuple, {"1", "5"}, and can be used to look up
   all passages for 1.5 in the table of contents.
   """
-  def list_passages(%XmlDocument{} = document) do
+  def list_passage_refs(%XmlDocument{} = document) do
     {:ok, toc} = XmlDocuments.get_table_of_contents(document)
 
+    list_passage_refs(toc)
+  end
+
+  def list_passage_refs(toc) when is_list(toc) do
     passages =
       toc
       |> Enum.group_by(fn ref ->

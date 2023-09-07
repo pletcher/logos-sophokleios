@@ -19,5 +19,5 @@ module.exports = {
       'sans': ["Inter", "Arial", ...defaultTheme.fontFamily.sans]
     }
   },
-  plugins: [require("@tailwindcss/forms"), require('@tailwindcss/typography')],
+  plugins: [require("@tailwindcss/forms"), require('@tailwindcss/typography'), require('daisyui')],
 };

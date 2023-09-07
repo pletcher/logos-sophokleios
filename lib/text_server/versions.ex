@@ -61,19 +61,19 @@ defmodule TextServer.Versions do
         language_id: language.id,
         urn: urn,
         version_type: version_type,
-        work_id: work.id,
+        work_id: work.id
       })
       |> find_or_create_version()
 
-      create_xml_document!(version, %{document: xml_raw})
+    create_xml_document!(version, %{document: xml_raw})
   end
 
   def create_versions_of_work(%Work{} = work) do
     {:ok, work_cts_data} = Works.get_work_cts_data(work)
 
-    Map.get(work_cts_data, :commentaries) |> Enum.each(&(create_commentary(work, &1)))
-    Map.get(work_cts_data, :editions) |> Enum.each(&(create_edition(work, &1)))
-    Map.get(work_cts_data, :translations) |> Enum.each(&(create_translation(work, &1)))
+    Map.get(work_cts_data, :commentaries) |> Enum.each(&create_commentary(work, &1))
+    Map.get(work_cts_data, :editions) |> Enum.each(&create_edition(work, &1))
+    Map.get(work_cts_data, :translations) |> Enum.each(&create_translation(work, &1))
   end
 
   def get_version_file(urn) do
@@ -140,15 +140,20 @@ defmodule TextServer.Versions do
   """
   def get_version!(id), do: Repo.get!(Version, id) |> Repo.preload(:language)
 
-  def get_version_by_urn!(%CTS.URN{} = urn) do
-    version_urn_s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}:#{urn.work_component}"
+  def get_version_by_urn!(urn) when is_binary(urn) do
+    get_version_by_urn!(CTS.URN.parse(urn))
+  end
 
-    Repo.get_by!(Version, urn: version_urn_s)
-    |> Repo.preload(:language)
+  def get_version_by_urn!(%CTS.URN{} = urn) do
+    case get_version_by_urn(urn) do
+      version -> version
+      nil -> raise "No version found for #{urn}"
+    end
   end
 
   def get_version_by_urn(%CTS.URN{} = urn) do
-    Repo.get_by(Version, urn: urn)
+    version_urn_s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}:#{urn.work_component}"
+    Repo.get_by(Version, urn: version_urn_s)
   end
 
   @doc """
@@ -255,19 +260,15 @@ defmodule TextServer.Versions do
     {:ok, passage}
   end
 
-  def get_passage_by_urn(%CTS.URN{} = urn) do
+  def get_passage_by_urn(urn) do
     try do
       version = get_version_by_urn!(urn)
-      {:ok, list_version_text_nodes(version, urn.passage_component)}
+      {:ok, list_version_text_nodes(version, CTS.URN.parse(urn).passage_component)}
     rescue
       e ->
         Logger.error(Exception.format(:error, e, __STACKTRACE__))
         {:error, e}
     end
-  end
-
-  def get_passage_by_urn(urn) when is_binary(urn) do
-    get_passage_by_urn(CTS.URN.parse(urn))
   end
 
   def list_version_text_nodes(%Version{} = version, passages) when is_nil(passages) do

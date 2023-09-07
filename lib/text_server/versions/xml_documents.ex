@@ -2,13 +2,39 @@ defmodule TextServer.Versions.XmlDocuments do
   import Ecto.Query, warn: false
 
   alias TextServer.Repo
+  alias DataSchemata.Version.EncodingDescription
+  alias DataSchemata.Version.RefsDeclaration
   alias TextServer.Versions.XmlDocuments.XmlDocument
 
-  def get_refs_decls(%XmlDocument{} = document) do
-    refs_decls = get_xpath_result(document, refs_decl_xpath())
+  def get_passage(%XmlDocument{} = document, passage_ref) do
+    {:ok, refs_decl} = get_refs_decl(document)
+    get_passage(document, refs_decl, passage_ref)
+  end
+
+  def get_passage(%XmlDocument{} = document, %RefsDeclaration{} = refs_decl, passage_ref) do
+    c_ref_pattern_idx = max(length(refs_decl.unit_labels) - 2, 0)
+    c_ref_pattern = Enum.at(refs_decl.c_ref_patterns, c_ref_pattern_idx)
+    replacement_pattern = Map.get(c_ref_pattern, :replacement_pattern)
+
+    replacements =
+      Tuple.to_list(passage_ref)
+      |> Enum.with_index(1)
+      |> Map.new(fn {k, idx} -> {"$#{idx}", k} end)
+
+    lookup_pattern =
+     replacement_pattern
+      |> String.replace(Map.keys(replacements), fn match ->
+        Map.get(replacements, match)
+      end)
+
+    {:ok, get_xpath_result(document, lookup_pattern)}
+  end
+
+  def get_refs_decl(%XmlDocument{} = document) do
+    refs_decl = get_xpath_result(document, refs_decl_xpath())
 
     {:ok, encoding_desc} =
-      DataSchema.to_struct(List.first(refs_decls), DataSchemata.Version.EncodingDescription)
+      DataSchema.to_struct(List.first(refs_decl), EncodingDescription)
 
     base_refs =
       encoding_desc.refs_declarations |> Enum.find(fn ref -> length(ref.c_ref_patterns) > 0 end)
@@ -22,9 +48,12 @@ defmodule TextServer.Versions.XmlDocuments do
   end
 
   def get_table_of_contents(%XmlDocument{} = document) do
-    {:ok, refs_decls} = get_refs_decls(document)
+    {:ok, refs_decl} = get_refs_decl(document)
+    get_table_of_contents(document, refs_decl)
+  end
 
-    paths = Enum.map(refs_decls.c_ref_patterns, & &1.reference_path)
+  def get_table_of_contents(%XmlDocument{} = document, %RefsDeclaration{} = refs_decl) do
+    paths = Enum.map(refs_decl.c_ref_patterns, & &1.reference_path)
 
     refs =
       paths

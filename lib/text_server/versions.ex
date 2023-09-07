@@ -145,9 +145,12 @@ defmodule TextServer.Versions do
   end
 
   def get_version_by_urn!(%CTS.URN{} = urn) do
-    case get_version_by_urn(urn) do
-      version -> version
-      nil -> raise "No version found for #{urn}"
+    version = get_version_by_urn(urn)
+
+    if is_nil(version) do
+      raise "No version found for urn #{urn}"
+    else
+      version
     end
   end
 

@@ -25,23 +25,23 @@ import hooks from './hooks';
 import uploaders from './uploaders';
 
 let csrfToken = document
-  .querySelector("meta[name='csrf-token']")
-  .getAttribute("content");
+	.querySelector("meta[name='csrf-token']")
+	.getAttribute("content");
 let liveSocket = new LiveSocket("/live", Socket, {
-  params: { _csrf_token: csrfToken },
-  hooks,
-  metadata: {
-    click(e, _el) {
-      return {
-        altKey: e.altKey,
-        ctrlKey: e.ctrlKey,
-        metaKey: e.metaKey,
-        pageX: e.pageX,
-        pageY: e.pageY
-      };
-    }
-  },
-  uploaders,
+	params: { _csrf_token: csrfToken },
+	hooks,
+	metadata: {
+		click(e, _el) {
+			return {
+				altKey: e.altKey,
+				ctrlKey: e.ctrlKey,
+				metaKey: e.metaKey,
+				pageX: e.pageX,
+				pageY: e.pageY
+			};
+		}
+	},
+	uploaders,
 });
 
 // Show progress bar on live navigation and form submits

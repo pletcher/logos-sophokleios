@@ -7,6 +7,7 @@ defmodule TextServerWeb.ReadLive.Reader do
   alias TextServer.Versions.XmlDocuments
 
   alias TextServerWeb.ReadLive.Reader.Navigation
+  alias TextServerWeb.ReadLive.Reader.Passage
 
   def mount(
         %{
@@ -31,11 +32,6 @@ defmodule TextServerWeb.ReadLive.Reader do
     passage_ref = Enum.at(passage_refs, page_number - 1)
     {:ok, passage} = XmlDocuments.get_passage(document, refs_decl, passage_ref)
 
-    # TODO: Create a navigation component at TextServerWeb.ReadLive.Reader.Navigation
-    # that takes the refs_decl
-    # and the toc, applying the unit_labels as appropriate (to the depth
-    # of the toc) to each of the links in a collapsible menu nave
-
     {:ok,
      socket
      |> assign(
@@ -54,7 +50,7 @@ defmodule TextServerWeb.ReadLive.Reader do
     <div class="flex grow gap-y-5 overflow-y-auto px-6">
       <Navigation.navigation_menu passage_refs={@passage_refs} unit_labels={@unit_labels} />
       <div class="px-6">
-        <%= raw @passage %>
+        <.live_component id={:reader_passage} module={Passage} passage={@passage} />
       </div>
     </div>
     """

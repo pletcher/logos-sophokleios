@@ -1,15 +1,11 @@
+import CETEI from 'CETEIcean';
+
 const DRAG_ATTRIBUTE_NAME = 'phx-drop-target';
 const DROP_TARGET_BG = 'bg-slate-50';
-const EXEMPLAR_FILE_INPUT_ID = 'exemplar-file-input'
+
+const teiTransformer = new CETEI();
 
 export const DragHook = {
-	// handleDrop(event) {
-	// 	const files = event.dataTransfer.files;
-	// 	const fileInputDiv = document.getElementById(`${EXEMPLAR_FILE_INPUT_ID}`);
-	// 	const fileInput = fileInputDiv.querySelector('input');
-	// 	this.uploadTo(fileInput, "exemplar_file", files);
-	// },
-
 	isDropTarget(event) {
 		const target = event.target;
 		return target.getAttribute(DRAG_ATTRIBUTE_NAME) !== null;
@@ -30,6 +26,33 @@ export const DragHook = {
 	}
 };
 
+export async function transformTei(raw) {
+	if (!raw) {
+		return Promise.resolve('');
+	}
+
+	return new Promise((resolve, _reject) =>
+		teiTransformer.makeHTML5(raw, (data) => resolve(data))
+	);
+}
+
+async function replaceRawTei(el) {
+	const html = await transformTei(el.innerHTML);
+
+	el.replaceChildren(html);
+}
+
+export const TEIHook = {
+	async mounted() {
+		return replaceRawTei(this.el);
+	},
+
+	async updated() {
+		return replaceRawTei(this.el);
+	}
+}
+
 export default {
-	DragHook
+	DragHook,
+	TEIHook,
 };

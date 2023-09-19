@@ -13,11 +13,11 @@ module.exports = {
         pausanias:
           "url('/images/Pausanias_Description_of_Greece.jpg')",
       },
+      fontFamily: {
+        // Helvetica messes up kerning when diacritics are involved
+        'sans': ["Inter", "Arial", ...defaultTheme.fontFamily.sans]
+      }
     },
-    fontFamily: {
-      // Helvetica messes up kerning when diacritics are involved
-      'sans': ["Inter", "Arial", ...defaultTheme.fontFamily.sans]
-    }
   },
   plugins: [require("@tailwindcss/forms"), require('@tailwindcss/typography'), require('daisyui')],
 };

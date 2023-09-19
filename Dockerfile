@@ -52,6 +52,10 @@ COPY lib lib
 
 COPY assets assets
 
+RUN curl -sL https://deb.nodesource.com/setup_19.x | bash
+RUN apt-get update -y && apt-get install -y nodejs npm
+RUN cd assets && npm install && cd ..
+
 # compile assets
 RUN mix assets.deploy
 

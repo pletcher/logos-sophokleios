@@ -68,7 +68,7 @@ defmodule TextServer.MixProject do
       {:scrivener_ecto, "~> 2.7"},
       {:sweet_xml, "~> 0.7.1"},
       {:swoosh, "~> 1.3"},
-      {:tailwind, "~> 0.1.6", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:tesla, "~> 1.4"}

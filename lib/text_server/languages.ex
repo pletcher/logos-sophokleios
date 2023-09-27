@@ -4,6 +4,7 @@ defmodule TextServer.Languages do
   """
 
   import Ecto.Query, warn: false
+  require Logger
   alias TextServer.Repo
 
   alias TextServer.Languages.Language
@@ -72,10 +73,25 @@ defmodule TextServer.Languages do
     |> Repo.insert()
   end
 
+  def find_or_create_language_by_iso_code(iso_code) do
+    case get_language_by_iso_code(iso_code) do
+      nil ->
+        title = get_title_by_iso_code(iso_code)
+        case create_language(%{slug: iso_code, title: title}) do
+          {:ok, language} -> language
+          {:error, _reason} ->
+            Logger.warning("Unable to create language")
+            nil
+        end
+      language ->
+        language
+    end
+  end
+
   def find_or_create_language(%{slug: slug, title: _title}) do
     case get_by_slug(slug) do
       nil ->
-        title = get_title_by_slug(slug)
+        title = get_title_by_iso_code(slug)
         create_language(%{slug: slug, title: title})
 
       language ->
@@ -112,8 +128,8 @@ defmodule TextServer.Languages do
     Repo.get_by(Language, slug: "en")
   end
 
-  def get_title_by_slug(slug) do
-    case String.downcase(slug) do
+  def get_title_by_iso_code(iso_code) do
+    case String.downcase(iso_code) do
       "arc" -> "Aramaic"
       "cop" -> "Coptic"
       "en" -> "English"
@@ -121,13 +137,14 @@ defmodule TextServer.Languages do
       "fr" -> "French"
       "frm" -> "Middle French"
       "fro" -> "Old French"
+      "ger" -> "German"
       "grc" -> "Greek"
       "gre" -> "Modern Greek"
       "he" -> "Hebrew"
       "heb" -> "Hebrew"
       "it" -> "Italian"
       "lat" -> "Latin"
-      _ -> Recase.to_sentence(slug)
+      _ -> Recase.to_sentence(iso_code)
     end
   end
 

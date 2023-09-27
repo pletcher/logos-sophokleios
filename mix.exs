@@ -64,7 +64,6 @@ defmodule TextServer.MixProject do
       {:postgrex, "~> 0.16.3"},
       {:rambo, "~> 0.3.4"},
       {:recase, "~> 0.5"},
-      {:saxy, "~> 1.3"},
       {:scrivener_ecto, "~> 2.7"},
       {:sweet_xml, "~> 0.7.1"},
       {:swoosh, "~> 1.3"},

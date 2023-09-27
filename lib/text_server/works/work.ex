@@ -13,7 +13,6 @@ defmodule TextServer.Works.Work do
     belongs_to :text_group, TextServer.TextGroups.TextGroup
 
     has_many :versions, TextServer.Versions.Version
-    has_many :xml_versions, TextServer.Xml.Version
 
     timestamps()
   end

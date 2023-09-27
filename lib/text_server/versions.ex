@@ -532,7 +532,7 @@ defmodule TextServer.Versions do
     case Path.extname(version.filename) do
       ".docx" -> parse_version_docx(version)
       ".xml" -> queue_version_for_external_parsing(version)
-      _ -> raise Xml.ParseError, version.filename
+      _ -> raise "Unable to parse version #{version.filename}"
     end
 
     update_version(version, %{parsed_at: NaiveDateTime.utc_now()})

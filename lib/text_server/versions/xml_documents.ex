@@ -12,7 +12,8 @@ defmodule TextServer.Versions.XmlDocuments do
   end
 
   def get_passage(%XmlDocument{} = document, %RefsDeclaration{} = refs_decl, passage_ref) do
-    c_ref_pattern_idx = max(length(refs_decl.unit_labels) - 2, 0)
+    IO.inspect(refs_decl)
+    c_ref_pattern_idx = max(length(refs_decl.unit_labels) - 2, 1)
     c_ref_pattern = Enum.at(refs_decl.c_ref_patterns, c_ref_pattern_idx)
     replacement_pattern = Map.get(c_ref_pattern, :replacement_pattern)
 

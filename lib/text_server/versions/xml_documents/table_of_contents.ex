@@ -66,8 +66,6 @@ defmodule TextServer.Versions.XmlDocuments.TableOfContents do
   Right now, we only support hierarchies up to three levels deep. Support could be
   added for additional depths as needed. (The algorithm should probably
   be generalized to handle inputs of arbitrary levels.)
-
-  TODO: Can xpath 1.0 accomplish this more easily?
   """
   def collect_citations(passage_refs) when length(passage_refs) == 1 do
     passage_refs |> List.first() |> Enum.map(&String.to_integer/1)

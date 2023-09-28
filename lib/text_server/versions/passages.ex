@@ -19,24 +19,20 @@ defmodule TextServer.Versions.Passages do
   So, for example, for Pausanias, this function returns a list like
 
       [
-        {"1", "1"},
-        {"1", "2"},
-        {"1", "3"},
-        {"1", "4"},
-        {"1", "5"},
-        {"1", "6"},
-        {"1", "7"},
-        {"1", "8"},
-        {"1", "9"},
-        {"1", "10"},
-        {"1", ...},
+        {{"1", "1"}, 1},
+        {{"1", "2"}, 2},
+        {{"1", "3"}, 3},
+        {{"1", "4"}, 4},
+        {{"1", "5"}, 5},
+        {{"1", "6"}, 6},
+        {{"1", "7"}, ...},
         {...},
         ...
       ]
 
-  Page 1 is indicated by the 0th tuple, {"1", "1"}, which can be used to look up all
+  Page 1 is indicated by the 0th tuple, {{"1", "1"}, 1}, which can be used to look up all
   of the passages for 1.1 in the table (map) of contents. Similarly,
-  Page 5 is indicatd by the 4th tuple, {"1", "5"}, and can be used to look up
+  Page 5 is indicatd by the 4th tuple, {{"1", "5"}, 5}, and can be used to look up
   all passages for 1.5 in the table of contents.
   """
   def list_passage_refs(%XmlDocument{} = document) do

@@ -110,7 +110,7 @@ defmodule TextServer.Versions do
 
   def list_sibling_versions(version) do
     Version
-    |> where([v], v.work_id == ^version.work_id)
+    |> where([v], v.work_id == ^version.work_id and v.id != ^version.id)
     |> Repo.all()
   end
 

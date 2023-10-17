@@ -113,13 +113,13 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
         {tn.location, tn}
       end)
 
-    send self(), {:version_command_palette_open, false}
+    send(self(), {:version_command_palette_open, false})
 
     {:noreply, socket |> assign(sibling_nodes: new_siblings)}
   end
 
   def handle_event("show-version-command-palette", _, socket) do
-    send self(), {:version_command_palette_open, true}
+    send(self(), {:version_command_palette_open, true})
     {:noreply, socket}
   end
 

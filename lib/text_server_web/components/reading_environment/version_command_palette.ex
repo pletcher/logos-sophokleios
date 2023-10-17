@@ -30,6 +30,7 @@ defmodule TextServerWeb.ReadingEnvironment.VersionCommandPalette do
   end
 
   attr :changeset, :any
+  attr :id, :any, required: true
   attr :is_open, :boolean, default: false
   attr :search_results, :list, default: []
   attr :urn, :string, required: true
@@ -63,7 +64,9 @@ defmodule TextServerWeb.ReadingEnvironment.VersionCommandPalette do
               From: "opacity-100 scale-100"
               To: "opacity-0 scale-95"
           -->
-          <div class={~w(
+          <.focus_wrap
+            id={"##{@id}-container"}
+            class={~w(
               mx-auto
               max-w-3xl
               transform
@@ -77,7 +80,12 @@ defmodule TextServerWeb.ReadingEnvironment.VersionCommandPalette do
               ring-black
               ring-opacity-5
               transition-all
-            )} phx-click-away="hide-version-command-palette" phx-target={@myself}>
+            )}
+            phx-click-away="hide-version-command-palette"
+            phx-target={@myself}
+            phx-key="escape"
+            phx-window-keydown="hide-version-command-palette"
+          >
             <div class="relative">
               <Icons.search_icon />
               <.form for={@changeset} phx-change="search" phx-target={@myself}>
@@ -89,6 +97,7 @@ defmodule TextServerWeb.ReadingEnvironment.VersionCommandPalette do
                   role="combobox"
                   aria-expanded="false"
                   aria-controls="options"
+                  disabled="true"
                 />
               </.form>
             </div>
@@ -117,7 +126,7 @@ defmodule TextServerWeb.ReadingEnvironment.VersionCommandPalette do
                 end)
               } />
             </div>
-          </div>
+          </.focus_wrap>
         </div>
       </div>
     </div>
@@ -200,7 +209,7 @@ defmodule TextServerWeb.ReadingEnvironment.VersionCommandPalette do
   end
 
   def handle_event("hide-version-command-palette", _, socket) do
-    send self(), {:version_command_palette_open, false}
+    send(self(), {:version_command_palette_open, false})
     {:noreply, socket}
   end
 end

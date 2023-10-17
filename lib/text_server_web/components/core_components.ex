@@ -225,7 +225,7 @@ defmodule TextServerWeb.CoreComponents do
   end
 
   attr :field, Phoenix.HTML.FormField
-  attr :rest, :global, include: ~w(class type)
+  attr :rest, :global, include: ~w(class disabled type)
 
   def basic_input(assigns) do
     ~H"""

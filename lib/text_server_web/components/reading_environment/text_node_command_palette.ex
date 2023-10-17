@@ -36,6 +36,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNodeCommandPalette do
   end
 
   attr :changeset, :any
+  attr :id, :any, required: true
   attr :is_open, :boolean, default: false
   attr :search_results, :list, default: []
   attr :text_node, TextServer.TextNodes.TextNode
@@ -69,7 +70,9 @@ defmodule TextServerWeb.ReadingEnvironment.TextNodeCommandPalette do
               From: "opacity-100 scale-100"
               To: "opacity-0 scale-95"
           -->
-          <div class={~w(
+          <.focus_wrap
+            id={"##{@id}-container"}
+            class={~w(
               mx-auto
               max-w-3xl
               transform
@@ -83,7 +86,12 @@ defmodule TextServerWeb.ReadingEnvironment.TextNodeCommandPalette do
               ring-black
               ring-opacity-5
               transition-all
-            )} phx-click-away="command-palette-click-away" phx-target={@myself}>
+            )}
+            phx-click-away="command-palette-click-away"
+            phx-target={@myself}
+            phx-key="escape"
+            phx-window-keydown="command-palette-click-away"
+          >
             <div class="relative">
               <Icons.search_icon />
               <.form for={@changeset} phx-change="search" phx-target={@myself}>
@@ -123,7 +131,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNodeCommandPalette do
                 end)
               } />
             </div>
-          </div>
+          </.focus_wrap>
         </div>
       </div>
     </div>

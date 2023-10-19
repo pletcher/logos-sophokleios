@@ -1,8 +1,10 @@
 defmodule TextServerWeb.ReadLive.Reader do
+  require Logger
   use TextServerWeb, :live_view
 
   alias TextServer.Repo
   alias TextServer.Versions
+  alias TextServer.Versions.Version
   alias TextServer.Versions.Passages
   alias TextServer.Versions.XmlDocuments
 
@@ -20,11 +22,20 @@ defmodule TextServerWeb.ReadLive.Reader do
         socket
       ) do
     current_page = Map.get(params, "page", "1") |> String.to_integer()
+    socket = assign(socket, :current_page, current_page)
 
     version =
       get_version_by_urn!("urn:cts:#{collection_s}:#{text_group_s}.#{work_s}.#{version_s}")
 
-    document = version.xml_document
+    if is_nil(version.xml_document) do
+      mount_docx_version(socket, version)
+    else
+      mount_xml_version(socket, version)
+    end
+  end
+
+  defp mount_xml_version(socket, %Version{xml_document: document} = version) do
+    current_page = Map.get(socket, :assigns) |> Map.get(:current_page, 1)
     {:ok, refs_decl} = XmlDocuments.get_refs_decl(document)
     {:ok, toc} = XmlDocuments.get_table_of_contents(document, refs_decl)
     {:ok, passage_refs} = Passages.list_passage_refs(toc)
@@ -35,13 +46,25 @@ defmodule TextServerWeb.ReadLive.Reader do
     {:ok,
      socket
      |> assign(
-       current_page: current_page,
        passage: passage |> Enum.join(""),
        passage_refs:
          passage_refs |> Enum.with_index(1) |> Enum.chunk_by(&(elem(&1, 0) |> elem(0))),
        refs_decl: refs_decl,
        toc: toc,
        unit_labels: refs_decl.unit_labels,
+       version: version
+     )}
+  end
+
+  defp mount_docx_version(socket, %Version{} = version) do
+    Logger.warning("Cannot render a non-XML-based passage.")
+
+    {:ok,
+     socket
+     |> assign(
+       passage_refs: [],
+       unit_labels: [],
+       passage: "<p>Unable to render commentary</p>",
        version: version
      )}
   end

@@ -7,7 +7,8 @@ defmodule TextServerWeb.ReadingEnvironment.TextNodeCommandPalette do
   alias TextServerWeb.Icons
 
   @moduledoc """
-  TODO: - Show all for entire page
+  TODO:
+  - Show all for entire page
   - Fix clicking on text elements
   - Show box on mouseover
   - Make refs declaration clearer

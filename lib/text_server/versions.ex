@@ -68,6 +68,79 @@ defmodule TextServer.Versions do
     create_xml_document!(version, %{document: xml_raw})
   end
 
+  @doc """
+  Creates a version.
+
+  ## Examples
+
+      iex> create_version(%{field: value})
+      {:ok, %Version{}}
+
+      iex> create_version(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_version(attrs \\ %{}) do
+    %Version{}
+    |> Version.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def create_version!(attrs \\ %{}) do
+    %Version{}
+    |> Version.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+  def find_or_create_version(attrs \\ %{}) do
+    urn = Map.get(attrs, :urn, Map.get(attrs, "urn"))
+    query = from(v in Version, where: v.urn == ^urn)
+
+    case Repo.one(query) do
+      nil ->
+        create_version(attrs)
+
+      version ->
+        {:ok, version}
+    end
+  end
+
+  def upsert_version(attrs) do
+    urn = Map.get(attrs, :urn, Map.get(attrs, "urn"))
+    query = from(v in Version, where: v.urn == ^urn)
+
+    case Repo.one(query) do
+      nil -> create_version(attrs)
+      version -> update_version(version, attrs)
+    end
+  end
+
+  @doc """
+  This create_version/2 is for creating a version from a docx file.
+  """
+  def create_version(attrs, project) do
+    urn = make_version_urn(attrs, project)
+
+    {:ok, version} =
+      Repo.transaction(fn ->
+        {:ok, version} =
+          %Version{}
+          |> Version.changeset(attrs |> Map.put("urn", urn))
+          |> Repo.insert()
+
+        {:ok, _project_version} =
+          %ProjectVersion{}
+          |> ProjectVersion.changeset(%{version_id: version.id, project_id: project.id})
+          |> Repo.insert()
+
+        version
+      end)
+
+    %{id: version.id}
+    |> TextServer.Workers.VersionWorker.new()
+    |> Oban.insert()
+  end
+
   def create_versions_of_work(%Work{} = work) do
     {:ok, work_cts_data} = Works.get_work_cts_data(work)
 
@@ -157,76 +230,6 @@ defmodule TextServer.Versions do
   def get_version_by_urn(%CTS.URN{} = urn) do
     version_urn_s = "#{urn.prefix}:#{urn.protocol}:#{urn.namespace}:#{urn.work_component}"
     Repo.get_by(Version, urn: version_urn_s)
-  end
-
-  @doc """
-  Creates a version.
-
-  ## Examples
-
-      iex> create_version(%{field: value})
-      {:ok, %Version{}}
-
-      iex> create_version(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_version(attrs \\ %{}) do
-    %Version{}
-    |> Version.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  def create_version!(attrs \\ %{}) do
-    %Version{}
-    |> Version.changeset(attrs)
-    |> Repo.insert!()
-  end
-
-  def find_or_create_version(attrs \\ %{}) do
-    urn = Map.get(attrs, :urn, Map.get(attrs, "urn"))
-    query = from(v in Version, where: v.urn == ^urn)
-
-    case Repo.one(query) do
-      nil ->
-        create_version(attrs)
-
-      version ->
-        {:ok, version}
-    end
-  end
-
-  def upsert_version(attrs) do
-    urn = Map.get(attrs, :urn, Map.get(attrs, "urn"))
-    query = from(v in Version, where: v.urn == ^urn)
-
-    case Repo.one(query) do
-      nil -> create_version(attrs)
-      version -> update_version(version, attrs)
-    end
-  end
-
-  def create_version(attrs, project) do
-    urn = make_version_urn(attrs, project)
-
-    {:ok, version} =
-      Repo.transaction(fn ->
-        {:ok, version} =
-          %Version{}
-          |> Version.changeset(attrs |> Map.put("urn", urn))
-          |> Repo.insert()
-
-        {:ok, _project_version} =
-          %ProjectVersion{}
-          |> ProjectVersion.changeset(%{version_id: version.id, project_id: project.id})
-          |> Repo.insert()
-
-        version
-      end)
-
-    %{id: version.id}
-    |> TextServer.Workers.VersionWorker.new()
-    |> Oban.insert()
   end
 
   defp make_version_urn(version_params, project) do

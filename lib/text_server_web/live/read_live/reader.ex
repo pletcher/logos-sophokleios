@@ -4,7 +4,6 @@ defmodule TextServerWeb.ReadLive.Reader do
 
   alias TextServer.Repo
   alias TextServer.Versions
-  alias TextServer.Versions.Version
   alias TextServer.Versions.Passages
   alias TextServer.Versions.XmlDocuments
 
@@ -22,51 +21,60 @@ defmodule TextServerWeb.ReadLive.Reader do
         socket
       ) do
     current_page = Map.get(params, "page", "1") |> String.to_integer()
-    socket = assign(socket, :current_page, current_page)
 
     version =
       get_version_by_urn!("urn:cts:#{collection_s}:#{text_group_s}.#{work_s}.#{version_s}")
 
+    {:ok,
+     socket
+     |> assign(
+       current_page: current_page,
+       version: version
+     )}
+  end
+
+  def handle_params(params, _uri, socket) do
+    assigns = Map.get(socket, :assigns)
+    version = Map.get(assigns, :version)
+    current_page = Map.get(assigns, :current_page)
+
     if is_nil(version.xml_document) do
-      mount_docx_version(socket, version)
+      version =
+        Versions.list_sibling_versions(version)
+        |> Repo.preload(:xml_document)
+        |> Enum.find(fn v -> !is_nil(v.xml_document) end)
+
+      collection_s = Map.get(params, "collection")
+      text_group_s = Map.get(params, "text_group")
+      work_s = Map.get(params, "work")
+
+      {:noreply,
+       push_patch(
+         socket |> assign(:version, version),
+         to:
+           ~p"/read/#{collection_s}/#{text_group_s}/#{work_s}/#{version.urn.version}?page=#{current_page}"
+       )}
     else
-      mount_xml_version(socket, version)
+      document = version.xml_document
+
+      {:ok, refs_decl} = XmlDocuments.get_refs_decl(document)
+      {:ok, toc} = XmlDocuments.get_table_of_contents(document, refs_decl)
+      {:ok, passage_refs} = Passages.list_passage_refs(toc)
+
+      passage_ref = Enum.at(passage_refs, current_page - 1)
+      {:ok, passage} = XmlDocuments.get_passage(document, refs_decl, passage_ref)
+
+      {:noreply,
+       socket
+       |> assign(
+         passage: passage |> Enum.join(""),
+         passage_refs:
+           passage_refs |> Enum.with_index(1) |> Enum.chunk_by(&(elem(&1, 0) |> elem(0))),
+         refs_decl: refs_decl,
+         toc: toc,
+         unit_labels: refs_decl.unit_labels
+       )}
     end
-  end
-
-  defp mount_xml_version(socket, %Version{xml_document: document} = version) do
-    current_page = Map.get(socket, :assigns) |> Map.get(:current_page, 1)
-    {:ok, refs_decl} = XmlDocuments.get_refs_decl(document)
-    {:ok, toc} = XmlDocuments.get_table_of_contents(document, refs_decl)
-    {:ok, passage_refs} = Passages.list_passage_refs(toc)
-
-    passage_ref = Enum.at(passage_refs, current_page - 1)
-    {:ok, passage} = XmlDocuments.get_passage(document, refs_decl, passage_ref)
-
-    {:ok,
-     socket
-     |> assign(
-       passage: passage |> Enum.join(""),
-       passage_refs:
-         passage_refs |> Enum.with_index(1) |> Enum.chunk_by(&(elem(&1, 0) |> elem(0))),
-       refs_decl: refs_decl,
-       toc: toc,
-       unit_labels: refs_decl.unit_labels,
-       version: version
-     )}
-  end
-
-  defp mount_docx_version(socket, %Version{} = version) do
-    Logger.warning("Cannot render a non-XML-based passage.")
-
-    {:ok,
-     socket
-     |> assign(
-       passage_refs: [],
-       unit_labels: [],
-       passage: "<p>Unable to render commentary</p>",
-       version: version
-     )}
   end
 
   def render(assigns) do

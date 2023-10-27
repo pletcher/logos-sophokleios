@@ -1,7 +1,7 @@
-defmodule DataSchemata.Version.RefsDeclaration.CRefPattern do
+defmodule DataSchemas.Version.RefsDeclaration.CRefPattern do
   import DataSchema, only: [data_schema: 1]
 
-  @data_accessor DataSchemata.XPathAccessor
+  @data_accessor DataSchemas.XPathAccessor
 
   @tei_ref_regex ~r/\[@n='\$\d+'\]/
   @tei_xpath_regex ~r/xpath\((?<path>.*)\)/

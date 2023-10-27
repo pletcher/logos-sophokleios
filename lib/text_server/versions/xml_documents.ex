@@ -2,8 +2,8 @@ defmodule TextServer.Versions.XmlDocuments do
   import Ecto.Query, warn: false
 
   alias TextServer.Repo
-  alias DataSchemata.Version.EncodingDescription
-  alias DataSchemata.Version.RefsDeclaration
+  alias DataSchemas.Version.EncodingDescription
+  alias DataSchemas.Version.RefsDeclaration
   alias TextServer.Versions.XmlDocuments.XmlDocument
 
   def get_passage(%XmlDocument{} = document, passage_ref) do

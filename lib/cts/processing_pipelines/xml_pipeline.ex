@@ -76,7 +76,7 @@ defmodule CTS.ProcessingPipelines.XmlPipeline do
         {:error, "Could not find file for #{work.english_title}."}
       cts_file ->
         cts_data_raw = File.read!(cts_file)
-        DataSchema.to_struct(cts_data_raw, DataSchemata.Work.CTSDocument)
+        DataSchema.to_struct(cts_data_raw, DataSchemas.Work.CTSDocument)
     end
   end
 

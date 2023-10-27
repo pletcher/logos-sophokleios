@@ -18,9 +18,18 @@ defmodule Panpipe.TextServer.Transform do
             |> String.split(".")
 
           div = %Panpipe.AST.Div{children: Map.get(node, :children)}
-          %{div | attr: %Panpipe.AST.Attr{identifier: location, key_value_pairs: %{"location" => location}}}
+
+          %{
+            div
+            | attr: %Panpipe.AST.Attr{
+                identifier: location,
+                key_value_pairs: %{"location" => location}
+              }
+          }
         end
-      _ -> node
+
+      _ ->
+        node
     end
   end
 

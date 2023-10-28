@@ -35,6 +35,7 @@ defmodule TextServer.MixProject do
     [
       {:amqp, "~> 3.3"},
       {:bcrypt_elixir, "~> 3.0"},
+      {:bumblebee, "~> 0.4.2"},
       {:data_schema, "~> 0.5.0"},
       {:earmark, "~> 1.4.34"},
       {:ecto_psql_extras, "~> 0.6"},
@@ -42,6 +43,7 @@ defmodule TextServer.MixProject do
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:ex_aws_s3, "~> 2.0"},
       {:ex_aws, "~> 2.0"},
+      {:exla, "~> 0.6.1"},
       {:floki, ">= 0.30.0", only: :test},
       {:gen_smtp, "~> 1.2.0"},
       {:gettext, "~> 0.18"},
@@ -49,6 +51,7 @@ defmodule TextServer.MixProject do
       {:html_sanitize_ex, "~> 1.4"},
       {:iteraptor, "~> 1.12.0"},
       {:jason, "~> 1.3"},
+      {:nx, "~> 0.6.2"},
       {:oban, "~> 2.13"},
       {:panpipe, "~> 0.3"},
       {:phoenix_ecto, "~> 4.4"},
@@ -88,7 +91,7 @@ defmodule TextServer.MixProject do
       "ecto.setup": [
         "ecto.create",
         "ecto.load -d priv/repo/20230828_schema.sql -f --skip-if-loaded",
-        "ecto.migrate",
+        "ecto.migrate"
       ],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],

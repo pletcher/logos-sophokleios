@@ -1,0 +1,3 @@
+[submodule "priv/language_models/dslim/bert-base-NER"]
+	path = priv/language_models/dslim/bert-base-NER
+	url = https://huggingface.co/dslim/bert-base-NER

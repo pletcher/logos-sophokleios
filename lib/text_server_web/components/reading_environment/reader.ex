@@ -48,14 +48,16 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   def render(assigns) do
     ~H"""
     <article id="reading-environment-reader">
-      <button
-        type="button"
-        class="rounded bg-stone-600 text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-stone-500"
-        phx-click="show-version-command-palette"
-        phx-target={@myself}
-      >
-        Select comparanda for entire page
-      </button>
+      <div class="mt-8">
+        <button
+          type="button"
+          class="rounded bg-stone-600 text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-stone-500"
+          phx-click="show-version-command-palette"
+          phx-target={@myself}
+        >
+          Select comparanda for entire page
+        </button>
+      </div>
       <section class="whitespace-break-spaces">
         <.live_component
           :for={text_node <- @text_nodes}

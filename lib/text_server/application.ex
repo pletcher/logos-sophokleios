@@ -20,8 +20,7 @@ defmodule TextServer.Application do
       # {TextServer.Worker, arg}
       {Oban, Application.fetch_env!(:text_server, Oban)},
       # Start the named entity recognition serving
-      {Nx.Serving,
-       serving: NamedEntities.PausaniasEng.serving(), name: NamedEntities.PausaniasEng}
+      {Nx.Serving, serving: TextServer.NamedEntities.serving(:eng), name: :english_ner}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -4,6 +4,7 @@ defmodule TextServerWeb.ReadingEnvironment.LocationForm do
   alias TextServerWeb.Components
 
   attr :second_level_toc, :list
+  attr :selected, :any, default: nil
   attr :versions, :list, required: true
   attr :top_level_toc, :list, required: true
 
@@ -16,20 +17,13 @@ defmodule TextServerWeb.ReadingEnvironment.LocationForm do
           form={f}
           name={:version_select}
           options={@versions}
+          selected={@selected}
         />
         <section class="flex">
-          <Components.select_dropdown
-            form={f}
-            name={:top_level_location}
-            options={@top_level_toc}
-          />
+          <Components.select_dropdown form={f} name={:top_level_location} options={@top_level_toc} />
           <%= unless is_nil(@second_level_toc) do %>
             <div class="mr-2" />
-            <Components.select_dropdown
-              form={f}
-              name={:second_level_location}
-              options={@second_level_toc}
-            />
+            <Components.select_dropdown form={f} name={:second_level_location} options={@second_level_toc} />
           <% end %>
 
           <%= submit("Go", class: ~w(

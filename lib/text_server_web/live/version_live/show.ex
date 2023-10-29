@@ -45,9 +45,9 @@ defmodule TextServerWeb.VersionLive.Show do
     version = Versions.get_version!(version_id)
 
     sibling_versions =
-      Versions.list_sibling_versions(version)
+      [version | Versions.list_sibling_versions(version)]
       |> Enum.map(fn v ->
-        [key: v.label, value: Integer.to_string(v.id), selected: version.id == v.id]
+        [key: v.label, value: Integer.to_string(v.id)]
       end)
 
     text_nodes = passage.text_nodes

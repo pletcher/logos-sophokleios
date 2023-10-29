@@ -102,6 +102,7 @@ defmodule TextServerWeb.Components do
   attr :name, :atom, required: true
   attr :on_change, :string
   attr :options, :list, default: []
+  attr :selected, :any, default: nil
 
   def select_dropdown(assigns) do
     ~H"""
@@ -109,6 +110,7 @@ defmodule TextServerWeb.Components do
       @form,
       @name,
       @options,
+      selected: @selected,
       class: ~w(
                 appearance-none
                 relative

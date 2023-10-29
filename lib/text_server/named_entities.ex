@@ -33,23 +33,13 @@ defmodule TextServer.NamedEntities do
 
     {:ok, tokenizer} =
       Bumblebee.load_tokenizer(
-        {:local, to_string(:code.priv_dir(:text_server)) <> "bert-base-cased"}
+        {:local, to_string(:code.priv_dir(:text_server)) <> "/language_models/bert-base-cased"}
       )
 
     Bumblebee.Text.token_classification(model_info, tokenizer, aggregation: :same)
   end
 
-  def serving(:grc) do
-    {:ok, model_info} =
-      Bumblebee.load_model(
-        {:local,
-         to_string(:code.priv_dir(:text_server)) <> "/language_models/dslim/bert-base-NER"}
-      )
-
-    {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "bert-base-cased"})
-
-    Bumblebee.Text.token_classification(model_info, tokenizer, aggregation: :same)
-  end
+  def serving(:grc), do: {:error, "Not implemented yet."}
 
   def serving(iso_code) do
     {:error, "Unknown ISO language code: #{iso_code}. Supported codes are :eng and :grc."}

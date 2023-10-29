@@ -6,7 +6,9 @@ defmodule Panpipe.TextServer.Transform do
   end
 
   def transform_node(%Panpipe.AST.Para{} = node) do
-    case List.first(Map.get(node, :children)) do
+    [h | rest] = Map.get(node, :children)
+
+    case h do
       %Panpipe.AST.Str{string: string} ->
         matches = Regex.run(@location_regex, string)
 
@@ -17,7 +19,11 @@ defmodule Panpipe.TextServer.Transform do
             |> String.replace("}", "")
             |> String.split(".")
 
-          div = %Panpipe.AST.Div{children: Map.get(node, :children)}
+          # The text node now begins with an empty space,
+          # so we remove it
+          [children | _rest] = rest
+
+          div = %Panpipe.AST.Div{children: children}
 
           %{
             div

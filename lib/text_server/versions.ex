@@ -562,6 +562,15 @@ defmodule TextServer.Versions do
         track_changes: "all"
       )
 
+    # We should be able to transform the AST into a collection
+    # of text nodes, even when we have paragraphs (like
+    # poetry or bulleted lists) that break our assumptions about
+    # how to locate elements.
+    # Why not use the AST transformation to tag locations, as well as:
+    # - TODO: join "orphaned" nodes to the previously seen location
+    #   - could we use ETS for this? https://elixir-lang.org/getting-started/mix-otp/ets.html
+    # - TODO: convert to markdown with locations stored in text_nodes
+
     fragments = collect_fragments(ast)
     # we need to keep track of location fragments that have been seen and use
     # the last-seen fragment in cases where the location gets zeroed out
@@ -677,6 +686,17 @@ defmodule TextServer.Versions do
     |> Enum.map(&String.to_integer/1)
   end
 
+  @doc """
+  FIXME: (charles) There are some bugs with this approach,
+  and it's a bit suboptimal for the ways that it reinvents
+  the wheel.
+
+  Bugs:
+  - bullet_lists are not handled properly
+  - poetry is not handled properly
+
+  For examples, see especially Pausanias 5.10
+  """
   def serialize_fragments(location, fragments) do
     text = fragments |> Enum.reduce("", &flatten_string/2)
 

@@ -91,6 +91,12 @@ defmodule TextServer.NamedEntities do
     urn
     |> Map.from_struct()
     |> Enum.reduce(dynamic(true), fn
+      # If the value of a URN component is nil,
+      # don't add it to the query. This is important,
+      # because we might want to get all entities
+      # for a given work, version, or examplar, in which
+      # case the reference URN will have nil fragments,
+      # but the entities will not.
       {_k, nil}, dynamic ->
         dynamic
 

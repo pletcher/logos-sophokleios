@@ -5,6 +5,21 @@ defmodule TextServer.NamedEntities do
   alias TextServer.Repo
   alias TextServer.NamedEntities.NamedEntity
 
+  @moduledoc """
+  This module provides the database interface for named entities.
+  The entities themselves should be produced by running the
+  appropriate serving over a given version, exemplar, or list
+  of text nodes.
+
+  Entity references have a foreign key constraint on entities,
+  but the references and entities themselves are not
+  constrained by version, exemplar, text node, etc.
+
+  The thinking behind this is that entities will most often
+  be looked up by URN, so we'd just be creating extra hassle
+  and difficulty by imposing additional constraints.
+  """
+
   @doc """
   Returns an Nx serving for named entity recognition/token classification in
   English-language texts.

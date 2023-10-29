@@ -31,7 +31,10 @@ defmodule TextServer.NamedEntities do
          to_string(:code.priv_dir(:text_server)) <> "/language_models/dslim/bert-base-NER"}
       )
 
-    {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "bert-base-cased"})
+    {:ok, tokenizer} =
+      Bumblebee.load_tokenizer(
+        {:local, to_string(:code.priv_dir(:text_server)) <> "bert-base-cased"}
+      )
 
     Bumblebee.Text.token_classification(model_info, tokenizer, aggregation: :same)
   end

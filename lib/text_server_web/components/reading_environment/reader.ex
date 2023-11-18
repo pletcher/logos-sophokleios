@@ -58,7 +58,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
           Select comparanda for entire page
         </button>
       </div>
-      <section class="whitespace-break-spaces">
+      <section>
         <.live_component
           :for={text_node <- @text_nodes}
           module={TextServerWeb.ReadingEnvironment.TextNode}

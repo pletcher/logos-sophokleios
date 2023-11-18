@@ -6,6 +6,67 @@ defmodule TextServerWeb.VersionLive.Show do
   alias TextServer.TextNodes
   alias TextServer.Versions
 
+  attr :comments, :list
+  attr :current_user, TextServer.Accounts.User
+  attr :focused_text_node, TextServer.TextNodes.TextNode
+  attr :footnotes, :list
+  attr :highlighted_comments, :list
+  attr :location, :list
+  attr :second_level_toc, :list
+  attr :text_nodes, :list
+  attr :top_level_toc, :list
+  attr :version, TextServer.Versions.Version, required: true
+  attr :version_command_palette_open, :boolean
+  attr :versions, :list
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <article class="container mx-auto p-4">
+      <h1 class="text-2xl font-bold"><%= @version.label %></h1>
+      <%= if @current_user do %>
+        <.link href={~p"/versions/#{@version.id}/edit"}>Edit</.link>
+      <% end %>
+
+      <p><%= @version.description %></p>
+
+      <p class="mb-4"><%= @version.urn %></p>
+
+      <hr class="mb-4" />
+
+      <div class="flex">
+        <div class="pr-4 text-justify">
+          <.live_component
+            id={:location}
+            module={TextServerWeb.ReadingEnvironment.LocationForm}
+            second_level_toc={@second_level_toc}
+            top_level_toc={@top_level_toc}
+            versions={@versions}
+            selected={@version.id}
+          />
+          <div class="flex">
+            <.live_component
+              id={:reader}
+              module={TextServerWeb.ReadingEnvironment.Reader}
+              focused_text_node={@focused_text_node}
+              footnotes={@footnotes}
+              location={@location}
+              version_command_palette_open={@version_command_palette_open}
+              text_nodes={@text_nodes}
+              text_node_command_palette_open={@focused_text_node != nil}
+              top_level_toc={@top_level_toc}
+              second_level_toc={@second_level_toc}
+              version_urn={@version.urn}
+            />
+            <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
+          </div>
+          <Components.pagination current_page={@passage.passage_number} total_pages={@passage.total_passages} />
+        </div>
+      </div>
+    </article>
+    """
+  end
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok,

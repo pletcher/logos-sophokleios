@@ -10,6 +10,11 @@ We have canonical texts that have been digitized, and we have people who have be
 
 Digital preservation and presentation.
 
+## Named Entity Recognition TODOs
+
+- Smith's dictionaries for authority list for entities
+- Loeb identifiers for Pausanias
+
 ## About the schema
 
 We follow the [CTS URN spec](http://cite-architecture.github.io/ctsurn_spec/),

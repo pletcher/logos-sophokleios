@@ -15,9 +15,18 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
     # NOTE: (charles) It's important, unfortunately, for the `for` statement
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
-    <div class="flex w-full">
+    <div class="flex">
       <p
-        class={["cursor-pointer", "max-w-prose", "mb-4", "px-4", "rounded", text_node_classes(@is_focused)]}
+        class={[
+          "cursor-pointer",
+          "max-w-prose",
+          "mb-4",
+          "mr-4",
+          "px-2",
+          "rounded",
+          "whitespace-break-spaces",
+          text_node_classes(@is_focused)
+        ]}
         phx-click="text-node-click"
         phx-target={@myself}
       >
@@ -29,7 +38,11 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
       <div :if={@sibling_node != nil} class="max-w-prose">
         <p class="mb-4 px-4" alt={@sibling_node.version.label}>
-          <.text_element :for={{graphemes, tags} <- @sibling_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
+          <.text_element
+            :for={{graphemes, tags} <- @sibling_node.graphemes_with_tags}
+            tags={tags}
+            text={Enum.join(graphemes)}
+          />
         </p>
       </div>
     </div>
@@ -114,7 +127,9 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
         # NOTE: This element must be on a single line because we're preserving paragraph breaks from the original docx.
         ~H"""
-        <span class={@classes}><%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a></span>
+        <span class={@classes}>
+          <%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a>
+        </span>
         """
 
       true ->

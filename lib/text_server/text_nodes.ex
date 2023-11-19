@@ -136,7 +136,7 @@ defmodule TextServer.TextNodes do
             t.location >= ^start_location and
             t.location <= ^end_location,
         order_by: [asc: t.location],
-        preload: [:version, text_elements: [:element_type, :text_element_users]]
+        preload: [:version, :text_tokens, text_elements: [:element_type, :text_element_users]]
       )
 
     Repo.all(query)

@@ -38,11 +38,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
       <div :if={@sibling_node != nil} class="max-w-prose">
         <p class="mb-4 px-4" alt={@sibling_node.version.label}>
-          <.text_element
-            :for={{graphemes, tags} <- @sibling_node.graphemes_with_tags}
-            tags={tags}
-            text={Enum.join(graphemes)}
-          />
+          <.text_element :for={{gs, ts} <- @sibling_node.graphemes_with_tags} tags={ts} text={Enum.join(gs)} />
         </p>
       </div>
     </div>
@@ -127,9 +123,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
         # NOTE: This element must be on a single line because we're preserving paragraph breaks from the original docx.
         ~H"""
-        <span class={@classes}>
-          <%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a>
-        </span>
+        <a class={@classes} href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"} onclick="event.stopPropagation();"><%= @text %><sup>*</sup></a>
         """
 
       true ->

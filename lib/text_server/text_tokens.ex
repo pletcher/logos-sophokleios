@@ -7,6 +7,7 @@ defmodule TextServer.TextTokens do
   alias TextServer.Repo
 
   alias TextServer.TextTokens.TextToken
+  alias TextServer.TextTokens.TextElement, as: TextTokenTextElement
 
   @doc """
   Returns the list of text_tokens.
@@ -52,6 +53,16 @@ defmodule TextServer.TextTokens do
   def create_text_token(attrs \\ %{}) do
     %TextToken{}
     |> TextToken.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Creates a text_token_text_element --- a join table mapping
+  text elements that should be applied to a given text_token.
+  """
+  def create_text_token_text_element(attrs) do
+    %TextTokenTextElement{}
+    |> TextTokenTextElement.changeset(attrs)
     |> Repo.insert()
   end
 

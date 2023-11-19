@@ -20,6 +20,8 @@ defmodule TextServer.TextNodes.TextNode do
       foreign_key: :start_text_node_id,
       preload_order: [asc: :start_offset]
 
+    has_many :text_tokens, TextServer.TextTokens.TextToken
+
     timestamps()
   end
 
@@ -36,7 +38,7 @@ defmodule TextServer.TextNodes.TextNode do
 
   def search_changeset(attrs \\ %{}) do
     cast({%{}, @search_types}, attrs, [:location, :search_string, :urn])
-    |> validate_required([:search_string,])
+    |> validate_required([:search_string])
     |> update_change(:search_string, &String.trim/1)
     |> validate_length(:search_string, min: 2)
   end
@@ -86,7 +88,7 @@ defmodule TextServer.TextNodes.TextNode do
       end)
       |> Enum.reverse()
 
-      %{text_node | graphemes_with_tags: grouped_graphemes}
+    %{text_node | graphemes_with_tags: grouped_graphemes}
   end
 
   defp apply_tags(elements, graphemes) do

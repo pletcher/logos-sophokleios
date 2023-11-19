@@ -189,6 +189,54 @@ defmodule TextServer.TextNodes do
   end
 
   @doc """
+  "Tokenizes" a TextNode's `text` attribute by splitting on
+  whitespace. For convenience, also returns a "cleaned"
+  version of the token (without punctuation). We don't actually need a 
+  full-fledged tokenizer here, as we're mainly interested in 
+  getting the word-like components of a TextNode's `text`. 
+  We can tokenize/lemmatize more robustly --- and accurately --- 
+  later.
+
+  One inaccuracy that we're just going to accept for the moment
+  has to do with dashes. For example, there is a line in the Nagy
+  translation of Pausanias that goes, "Xenophon among others has 
+  written a history of the whole war—the taking of the ...".
+
+  This "tokenization" method will treat "war—the" as a single token.
+  This minor bug shouldn't ultimately matter for the moment, since
+  we can still attach TextElements to tokens based on their offsets.
+  But we should be aware of this issue in case it causes problems
+  in the future.
+
+  Returns a list of `{token, word, offset}` tuples in document
+  order.
+
+  ## Examples
+      iex> tokenize_text_node(%TextNode{text: "a b c"})
+      [{"a", "a", 0}, {"b", "b", 2}, {"c", "c", 3}]
+
+      iex> tokenize_text_node(%TextNode{text: "abc· [def]"})
+      [{"abc·", "abc", 0}, {"[def]", "def", 5}]
+  """
+  def tokenize_text_node(%TextNode{} = text_node) do
+    text = text_node.text
+
+    {_last_offset, _leftover_text, tokens} =
+      Regex.split(~r/[[:space:]]/u, text)
+      |> Enum.reduce({0, text, []}, fn token, {current_offset, remaining_text, tokens} ->
+        [before, aft] = String.split(remaining_text, token, parts: 2)
+        offset = String.length(before) + current_offset
+        word = Regex.replace(~r/[[:punct:]]/u, token, "")
+
+        # We only retain the substring `aft`er the split in the accumulator
+        # in order to handle potential repeated words.
+        {offset + String.length(token), aft, [{token, word, offset} | tokens]}
+      end)
+
+    tokens |> Enum.reverse()
+  end
+
+  @doc """
   Gets a single text_node.
 
   Raises `Ecto.NoResultsError` if the Text node does not exist.

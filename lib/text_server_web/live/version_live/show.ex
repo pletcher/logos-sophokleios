@@ -34,11 +34,12 @@ defmodule TextServerWeb.VersionLive.Show do
           footnotes={@footnotes}
           location={@location}
           passage={@passage}
-          version_command_palette_open={@version_command_palette_open}
+          speaker_insertions={@speaker_insertions}
           text_nodes={@text_nodes}
           text_node_command_palette_open={@focused_text_node != nil}
           top_level_toc={@top_level_toc}
           second_level_toc={@second_level_toc}
+          version_command_palette_open={@version_command_palette_open}
           version_urn={@version.urn}
         />
         <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
@@ -105,6 +106,26 @@ defmodule TextServerWeb.VersionLive.Show do
         format_toc(toc, top_level_location)
       end
 
+    speaker_insertions =
+      text_nodes
+      |> Enum.chunk_by(fn tn ->
+        tn.text_elements
+        |> Enum.find(fn te -> te.element_type.name == "speaker" end)
+        |> Map.get(:attributes)
+        |> Map.get(:name)
+      end)
+      |> Enum.reduce(%{}, fn chunk, acc ->
+        [node | _rest] = chunk
+
+        speaker_name =
+          node.text_elements
+          |> Enum.find(fn te -> te.element_type.name == "speaker" end)
+          |> Map.get(:attributes)
+          |> Map.get("name")
+
+        Map.put(acc, node.n, speaker_name)
+      end)
+
     {:noreply,
      socket
      |> assign(
@@ -118,6 +139,7 @@ defmodule TextServerWeb.VersionLive.Show do
        passage: Map.delete(passage, :text_nodes),
        page_title: version.label,
        versions: sibling_versions,
+       speaker_insertions: speaker_insertions,
        text_nodes: text_nodes |> TextNodes.tag_text_nodes(),
        top_level_location: top_level_location,
        top_level_toc: top_level_toc,
@@ -136,9 +158,6 @@ defmodule TextServerWeb.VersionLive.Show do
     {format_top_level_toc(toc, top_level_location), nil}
   end
 
-  @spec format_second_level_toc(map(), pos_integer(), pos_integer()) :: [
-          [key: String.t(), value: String.t(), selected: boolean()]
-        ]
   def format_second_level_toc(toc, top_level_location, location \\ 1) do
     Map.get(toc, top_level_location)
     |> Map.keys()
@@ -146,9 +165,6 @@ defmodule TextServerWeb.VersionLive.Show do
     |> Enum.map(&[key: "Chapter #{&1}", value: &1, selected: &1 == location])
   end
 
-  @spec format_top_level_toc(map(), pos_integer()) :: [
-          [key: String.t(), value: String.t(), selected: boolean()]
-        ]
   def format_top_level_toc(toc, location \\ 1) do
     Map.keys(toc)
     |> Enum.sort()

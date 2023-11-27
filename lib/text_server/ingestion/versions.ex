@@ -12,20 +12,27 @@ defmodule TextServer.Ingestion.Versions do
   require Logger
 
   def create_versions do
+    TextServer.Repo.delete_all(TextElements.TextElement)
+    TextServer.Repo.delete_all(TextTokens.TextToken)
+    TextServer.Repo.delete_all(TextNodes.TextNode)
+    TextServer.Repo.delete_all(Versions.Version)
+    TextServer.Repo.delete_all(Works.Work)
+
     {:ok, collection} = create_collection()
     {:ok, text_group} = create_text_group(collection)
-    {:ok, work} = create_work(text_group)
     {:ok, language} = create_language()
 
-    for xml_file <- xml_files() do
-      xml = File.read!(xml_file)
+    for urn_fragment <- work_urn_fragments() do
+      f = xml_file(urn_fragment)
+      urn = "urn:cts:greekLit:#{urn_fragment}"
 
-      {:ok, version} = create_version(work, language, xml)
+      {:ok, work} = create_work(text_group, urn)
+      {:ok, version} = create_version(work, language, f)
 
       version = TextServer.Repo.preload(version, :xml_document)
 
       if is_nil(version.xml_document) do
-        Versions.create_xml_document!(version, %{document: xml})
+        Versions.create_xml_document!(version, %{document: File.read!(f)})
       end
 
       create_text_nodes(version)
@@ -64,7 +71,16 @@ defmodule TextServer.Ingestion.Versions do
     %{word_count: _word_count, lines: lines} =
       data.body.lines
       |> Enum.reduce(%{word_count: 0, lines: []}, fn line, acc ->
-        text = line.text |> String.trim()
+        text =
+          if String.trim(line.text) == "" do
+            # Some lines are empty because they've been
+            # lost, but we need something here to add
+            # the annotations indicating their status
+            "[lacuna]"
+          else
+            String.trim(line.text)
+          end
+
         word_count = acc.word_count
 
         words =
@@ -84,7 +100,23 @@ defmodule TextServer.Ingestion.Versions do
             }
           end)
 
-        new_line = %{elements: line.elements, location: [line.n], text: text, words: words}
+        speaker =
+          data.body.speakers |> Enum.find(fn speaker -> Enum.member?(speaker.lines, line.n) end)
+
+        new_line = %{
+          elements: [
+            %{
+              attributes: %{name: speaker.name},
+              start_offset: 0,
+              end_offset: String.length(text),
+              name: "speaker"
+            }
+            | line.elements
+          ],
+          location: [line.n],
+          text: text,
+          words: words
+        }
 
         %{word_count: word_count + length(words), lines: [new_line | acc.lines]}
       end)
@@ -165,31 +197,46 @@ defmodule TextServer.Ingestion.Versions do
     end)
   end
 
-  defp create_version(%Works.Work{} = work, %Languages.Language{} = language, xml) do
+  defp create_version(%Works.Work{} = work, %Languages.Language{} = language, filename) do
+    xml = File.read!(filename)
+
     Versions.find_or_create_version(%{
       description: "edited by Hugh Lloyd-Jones",
-      filename: "lloyd-jones1994/tlg0011.tlg003.ajmc-lj.xml",
+      filename: filename,
       filemd5hash: :crypto.hash(:md5, xml) |> Base.encode16(case: :lower),
       label: "Sophocles' <i>Ajax</i>",
       language_id: language.id,
-      urn: "urn:cts:greekLit:tlg0011.tlg003.ajmc-lj",
+      urn: "#{CTS.URN.to_string(work.urn)}.ajmc-lj",
       version_type: :edition,
       work_id: work.id
     })
   end
 
-  defp create_work(%TextGroups.TextGroup{} = text_group) do
+  defp create_work(%TextGroups.TextGroup{} = text_group, urn) do
     Works.find_or_create_work(%{
       description: "",
-      english_title: "Ajax",
-      original_title: "Αἶας",
-      urn: "urn:cts:greekLit:tlg0011.tlg003",
+      english_title: urn,
+      original_title: urn,
+      urn: urn,
       text_group_id: text_group.id
     })
   end
 
-  defp xml_files do
-    Path.wildcard("priv/source_texts/xml/*.xml")
+  defp work_urn_fragments do
+    [
+      "tlg0011.tlg001",
+      "tlg0011.tlg002",
+      "tlg0011.tlg003",
+      "tlg0011.tlg004",
+      "tlg0011.tlg005",
+      "tlg0011.tlg006",
+      "tlg0011.tlg007"
+    ]
+  end
+
+  defp xml_file(urn) do
+    Path.wildcard("priv/source_texts/xml/#{urn}*.xml")
     |> Enum.map(&Application.app_dir(:text_server, &1))
+    |> List.first()
   end
 end

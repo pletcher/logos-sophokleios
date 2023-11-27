@@ -41,6 +41,7 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   attr :focused_text_node, :any, default: nil
   attr :version_command_palette_open, :boolean, default: false
   attr :sibling_nodes, :map, default: %{}
+  attr :speaker_insertions, :map, default: %{}
   attr :text_nodes, :list, required: true
   attr :text_node_command_palette_open, :boolean, default: false
   attr :version_urn, :string, required: true
@@ -48,25 +49,19 @@ defmodule TextServerWeb.ReadingEnvironment.Reader do
   def render(assigns) do
     ~H"""
     <article id="reading-environment-reader">
-      <div class="mt-8">
-        <button
-          type="button"
-          class="rounded bg-stone-600 text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-stone-500"
-          phx-click="show-version-command-palette"
-          phx-target={@myself}
-        >
-          Select comparanda for entire page
-        </button>
-      </div>
       <section>
-        <.live_component
-          :for={text_node <- @text_nodes}
-          module={TextServerWeb.ReadingEnvironment.TextNode}
-          id={text_node.id}
-          is_focused={is_focused(@focused_text_node, text_node)}
-          sibling_node={@sibling_nodes |> Map.get(text_node.location)}
-          text_node={text_node}
-        />
+        <%= for text_node <- @text_nodes do %>
+          <%= unless is_nil(Map.get(@speaker_insertions, text_node.n)) do %>
+            <h3 class="font-bold"><%= Map.get(@speaker_insertions, text_node.n) %></h3>
+          <% end %>
+          <.live_component
+            module={TextServerWeb.ReadingEnvironment.TextNode}
+            id={text_node.id}
+            is_focused={is_focused(@focused_text_node, text_node)}
+            sibling_node={@sibling_nodes |> Map.get(text_node.location)}
+            text_node={text_node}
+          />
+        <% end %>
       </section>
       <.live_component
         module={TextServerWeb.ReadingEnvironment.TextNodeCommandPalette}

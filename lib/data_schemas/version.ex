@@ -134,13 +134,6 @@ end
 defmodule DataSchemas.Version.Body.Speaker do
   import DataSchema, only: [data_schema: 1]
 
-  @moduledoc """
-  DataSchema for `speaker`s in TEI XML. Should we
-  unwrap the `has_many` below and instead treat it
-  as an aggregate that collects all of the @n attributes
-  for lines under a given speaker in the XML?
-  """
-
   @derive {Jason.Encoder, only: [:lines, :name]}
 
   @data_accessor DataSchemas.XPathAccessor

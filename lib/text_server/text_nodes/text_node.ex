@@ -27,7 +27,7 @@ defmodule TextServer.TextNodes.TextNode do
   def changeset(text_node, attrs) do
     text_node
     |> cast(attrs, [:version_id, :location, :n, :text, :urn])
-    |> validate_required([:location, :n, :text, :urn])
+    |> validate_required([:location, :n, :urn])
     |> assoc_constraint(:version)
     |> unique_constraint([:version_id, :location, :urn])
   end

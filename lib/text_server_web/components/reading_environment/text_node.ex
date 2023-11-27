@@ -16,42 +16,17 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
     # to be on one line so that we don't get extra spaces around elements.
     ~H"""
     <div class="flex">
-      <p
-        class={[
-          "cursor-pointer",
-          "max-w-prose",
-          "mb-4",
-          "mr-4",
-          "px-2",
-          "rounded",
-          "whitespace-break-spaces",
-          text_node_classes(@is_focused)
-        ]}
-        phx-click="text-node-click"
-        phx-target={@myself}
-      >
-        <span class="text-slate-500" title={"Location: #{@text_node.location |> Enum.join(".")}"}>
-          <%= @text_node.location |> Enum.join(".") %>
-        </span>
+      <p class="max-w-prose px-4 text-node" data-location={Enum.join(@text_node.location, ".")} phx-click="text-node-click" phx-target={@myself}>
         <.text_element :for={{graphemes, tags} <- @text_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
       </p>
 
       <div :if={@sibling_node != nil} class="max-w-prose">
         <p class="mb-4 px-4" alt={@sibling_node.version.label}>
-          <.text_element :for={{gs, ts} <- @sibling_node.graphemes_with_tags} tags={ts} text={Enum.join(gs)} />
+          <.text_element :for={{graphemes, tags} <- @sibling_node.graphemes_with_tags} tags={tags} text={Enum.join(graphemes)} />
         </p>
       </div>
     </div>
     """
-  end
-
-  @spec text_node_classes(boolean()) :: String.t()
-  defp text_node_classes(is_focused) do
-    if is_focused do
-      "ring-4"
-    else
-      "hover:ring-4"
-    end
   end
 
   @impl true
@@ -83,7 +58,7 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
             :comments,
             tags
             |> Enum.filter(&(&1.name == "comment"))
-            |> Enum.map(& &1.metadata[:id])
+            |> Enum.map(& &1.metadata.id)
             |> Jason.encode!()
           )
 
@@ -121,9 +96,10 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
             tags |> Enum.find(&(&1.name == "note")) |> Map.get(:metadata, %{})
           )
 
-        # NOTE: This element must be on a single line because we're preserving paragraph breaks from the original docx.
         ~H"""
-        <a class={@classes} href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"} onclick="event.stopPropagation();"><%= @text %><sup>*</sup></a>
+        <span class={@classes}>
+          <%= @text %><a href={"#_fn-#{@footnote[:id]}"} id={"_fn-ref-#{@footnote[:id]}"}><sup>*</sup></a>
+        </span>
         """
 
       true ->
@@ -133,7 +109,9 @@ defmodule TextServerWeb.ReadingEnvironment.TextNode do
 
   defp tag_classes(tag) do
     case tag.name do
+      "add" -> "bg-sky-400"
       "comment" -> "bg-blue-200 cursor-pointer"
+      "del" -> "line-through"
       "emph" -> "italic"
       "image" -> "image mt-10"
       "link" -> "link font-bold underline hover:opacity-75 visited:opacity-60"

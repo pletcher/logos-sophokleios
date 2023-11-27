@@ -3,10 +3,8 @@ defmodule TextServer.TextNodes.TextNode do
   import Ecto.Changeset
 
   schema "text_nodes" do
-    # FIXME: (charles) Eventually, location will need to
-    # be an array of strings, not integers. Consider citations for
-    # Plato, Aristotle, etc.
-    field :location, {:array, :integer}
+    field :location, {:array, :string}
+    field :n, :integer
     field :normalized_text, :string
     field :text, :string
     field :urn, TextServer.Ecto.Types.CTS_URN
@@ -28,8 +26,8 @@ defmodule TextServer.TextNodes.TextNode do
   @doc false
   def changeset(text_node, attrs) do
     text_node
-    |> cast(attrs, [:version_id, :location, :text, :urn])
-    |> validate_required([:location, :text, :urn])
+    |> cast(attrs, [:version_id, :location, :n, :text, :urn])
+    |> validate_required([:location, :n, :text, :urn])
     |> assoc_constraint(:version)
     |> unique_constraint([:version_id, :location, :urn])
   end

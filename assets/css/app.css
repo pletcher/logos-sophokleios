@@ -153,6 +153,15 @@
 	}
 }
 
+/* OpenSeadragon requires that its
+ * viewer have width and height set.
+ */
+.openseadragon-iiif-viewer {
+	height: 800px;
+	width: 600px;
+}
+
+
 /* Styles for markdown copy (on project homepages)
  * Note that these styles must be descended from a node
  * with the .@@oc/user-markdown class, otherwise they will override
@@ -222,6 +231,17 @@
 	margin-bottom: 0.9rem;
 }
 
+.text-node::before {
+	content: attr(data-location);
+	color: lightgray;
+	display: inline-block;
+	width: 2em;
+}
+
+.text-node:hover::before {
+	color: lightslategray;
+}
+
 /** Begin tei.css --- based on work by Luke Hollis and the IIP Project */
 
 /* 2023-03-22 CR editing multiple elements */
@@ -247,40 +267,15 @@ tei-l {
 	margin-left: 3em;
 }
 
-tei-p {
-	counter-reset: line_breaks;
-	counter-increment: line_breaks;
+tei-l::before {
+	content: attr(n);
+	display: inline;
+	padding-right: 1em;
+	color: lightgray;
 }
 
-tei-lb {
-	counter-increment: line_breaks 1;
-}
-
-tei-div:hover tei-lb::after {
-	display: block;
-	float: left;
-	opacity: 0.5;
-	content: counter(line_breaks);
-	margin-left: -3em;
-}
-
-tei-p tei-lb:nth-of-type(5n-1)::after {
-	display: block;
-	float: left;
-	content: counter(line_breaks);
-	margin-left: -3em;
-}
-
-tei-l {
-	counter-increment: lines 1;
-}
-
-tei-l:hover::after {
-	display: block;
-	float: right;
-	opacity: 0.5;
-	content: counter(lines);
-	margin-right: -5em;
+tei-l:hover::before {
+	color: lightslategray;
 }
 
 tei-q {

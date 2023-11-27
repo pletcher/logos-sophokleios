@@ -1,20 +1,14 @@
 defmodule Mix.Tasks.Texts.Ingest do
   use Mix.Task
 
-  @shortdoc "Ingests cloned repositories of XML and JSON texts."
-
-  @moduledoc """
-  This task ingests the following repositories:
-
-  #{TextServer.Texts.repositories() |> Enum.map_join("\n", & &1[:url])}
-  """
+  @shortdoc "Ingests TEI XML texts."
 
   def run(_args) do
     Mix.Task.run("app.start")
 
     Mix.shell().info("... Ingesting repositories ... \n")
 
-    TextServer.Texts.ingest_repos()
+    TextServer.Ingestion.Versions.create_versions()
 
     Mix.shell().info("... Finished ingesting repositories ... ")
   end

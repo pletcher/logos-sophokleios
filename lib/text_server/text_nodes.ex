@@ -160,6 +160,23 @@ defmodule TextServer.TextNodes do
     )
   end
 
+  def list_text_nodes_from_location(%Version{} = version, start_location, limit \\ 50) do
+    start_node = get_by(%{version_id: version.id, location: start_location})
+
+    query =
+      from(
+        t in TextNode,
+        where:
+          t.version_id == ^version.id and
+            t.n >= ^start_node.n,
+        order_by: [asc: t.n],
+        preload: [:version, :text_tokens, text_elements: [:element_type, :text_element_users]],
+        limit: ^limit
+      )
+
+    Repo.all(query)
+  end
+
   @spec list_text_nodes_by_version_from_start_location(%Version{}, [...]) :: [%TextNode{}]
   def list_text_nodes_by_version_from_start_location(%Version{} = version, start_location) do
     cardinality = Enum.count(start_location)
@@ -191,15 +208,15 @@ defmodule TextServer.TextNodes do
   @doc """
   "Tokenizes" a TextNode's `text` attribute by splitting on
   whitespace. For convenience, also returns a "cleaned"
-  version of the token (without punctuation). We don't actually need a 
-  full-fledged tokenizer here, as we're mainly interested in 
-  getting the word-like components of a TextNode's `text`. 
-  We can tokenize/lemmatize more robustly --- and accurately --- 
+  version of the token (without punctuation). We don't actually need a
+  full-fledged tokenizer here, as we're mainly interested in
+  getting the word-like components of a TextNode's `text`.
+  We can tokenize/lemmatize more robustly --- and accurately ---
   later.
 
   One inaccuracy that we're just going to accept for the moment
   has to do with dashes. For example, there is a line in the Nagy
-  translation of Pausanias that goes, "Xenophon among others has 
+  translation of Pausanias that goes, "Xenophon among others has
   written a history of the whole war—the taking of the ...".
 
   This "tokenization" method will treat "war—the" as a single token.

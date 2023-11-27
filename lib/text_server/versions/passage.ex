@@ -4,8 +4,8 @@ defmodule TextServer.Versions.Passage do
 
   schema "version_passages" do
     field :passage_number, :integer
-    field :end_location, {:array, :integer}
-    field :start_location, {:array, :integer}
+    field :end_location, {:array, :string}
+    field :start_location, {:array, :string}
 
     belongs_to :version, TextServer.Versions.Version
 

@@ -299,8 +299,7 @@ defmodule TextServer.Versions do
 
   def list_version_text_nodes(%Version{} = version, passages) when length(passages) == 2 do
     start_location = List.first(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
-    end_location = List.last(passages) |> String.split(".") |> Enum.map(&String.to_integer/1)
-    TextNodes.list_text_nodes_by_version_between_locations(version, start_location, end_location)
+    TextNodes.list_text_nodes_from_location(version, start_location)
   end
 
   def get_version_passage(version_id, passage_number \\ 1) do
@@ -327,10 +326,9 @@ defmodule TextServer.Versions do
       end
     else
       text_nodes =
-        TextNodes.list_text_nodes_by_version_between_locations(
-          version_id,
-          passage.start_location,
-          passage.end_location
+        TextNodes.list_text_nodes_from_location(
+          %Version{id: version_id},
+          passage.start_location
         )
 
       %VersionPassage{
@@ -358,10 +356,9 @@ defmodule TextServer.Versions do
 
       passage ->
         text_nodes =
-          TextNodes.list_text_nodes_by_version_between_locations(
-            version_id,
-            passage.start_location,
-            passage.end_location
+          TextNodes.list_text_nodes_from_location(
+            %Version{id: version_id},
+            passage.start_location
           )
 
         %VersionPassage{
@@ -440,7 +437,7 @@ defmodule TextServer.Versions do
       from(
         t in TextNode,
         where: t.version_id == ^version_id,
-        order_by: [asc: t.location]
+        order_by: [asc: t.n]
       )
 
     text_nodes = Repo.all(q)
@@ -452,29 +449,15 @@ defmodule TextServer.Versions do
   end
 
   defp group_and_paginate_text_nodes(version_id, text_nodes) do
-    grouped_text_nodes =
+    chunked_text_nodes =
       text_nodes
-      |> Enum.filter(fn tn -> tn.location != [0] end)
-      |> Enum.group_by(fn tn ->
-        location = tn.location
+      |> Enum.chunk_every(50)
 
-        if length(location) > 1 do
-          Enum.take(location, length(tn.location) - 1)
-        else
-          line = List.first(location)
-
-          Integer.floor_div(line, 20)
-        end
-      end)
-
-    keys = Map.keys(grouped_text_nodes) |> Enum.sort()
-
-    keys
+    chunked_text_nodes
     |> Enum.with_index()
-    |> Enum.each(fn {k, i} ->
-      text_nodes = Map.get(grouped_text_nodes, k)
-      first_node = List.first(text_nodes)
-      last_node = List.last(text_nodes)
+    |> Enum.each(fn {chunk, i} ->
+      first_node = List.first(chunk)
+      last_node = List.last(chunk)
 
       create_passage(%{
         end_location: last_node.location,
@@ -484,7 +467,7 @@ defmodule TextServer.Versions do
       })
     end)
 
-    {:ok, length(keys)}
+    {:ok, length(chunked_text_nodes)}
   end
 
   @doc """

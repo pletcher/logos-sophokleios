@@ -5,7 +5,7 @@ config :text_server, TextServer.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "text_server_dev",
+  database: "logos_sophokleios_dev",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
@@ -22,7 +22,7 @@ config :text_server, TextServerWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "FBRhIZ/PB+k5zCtl2hcIxU/bpL4ZAs53MDbBobyNFdMlzy29LZhxsdlw4qKA3Suy",
+  secret_key_base: "jv+5G2pvAbuGUFWCahELrzJrerSXQBhfmDPk3u16bLgs6iIdUbq4TvipbQPJ279k",
   watchers: [
     # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},

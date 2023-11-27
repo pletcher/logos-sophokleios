@@ -4,7 +4,6 @@ defmodule TextServer.Repo.Migrations.CreateXmlDocuments do
   alias TextServer.Repo
   alias TextServer.Versions
   alias TextServer.Versions.Version
-  alias TextServer.Versions.XmlDocument
 
   def up do
     create table(:xml_documents) do
@@ -15,8 +14,6 @@ defmodule TextServer.Repo.Migrations.CreateXmlDocuments do
     end
 
     flush()
-
-    cwd = File.cwd!()
 
     Repo.transaction(fn ->
       Version

@@ -16,8 +16,8 @@ config :text_server, TextServerWeb.Endpoint,
 config :logger, level: :info
 
 config :text_server, TextServerWeb.Endpoint,
-  url: [host: "opencommentaries.org", port: 443],
-  check_origin: ["//opencommentaries.org", "//*.opencommentaries.org"],
+  url: [host: "logos-sophokleios.org", port: 443],
+  check_origin: ["//logos-sophokleios.org", "//*.logos-sophokleios.org"],
   force_ssl: [
     host: nil,
     rewrite_on: [:x_forwarded_port, :x_forwarded_proto],

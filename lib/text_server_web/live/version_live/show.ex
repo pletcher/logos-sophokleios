@@ -6,23 +6,15 @@ defmodule TextServerWeb.VersionLive.Show do
   alias TextServer.TextNodes
   alias TextServer.Versions
 
-  attr :comments, :list
-  attr :current_user, TextServer.Accounts.User
-  attr :focused_text_node, TextServer.TextNodes.TextNode
-  attr :footnotes, :list
-  attr :highlighted_comments, :list
-  attr :location, :list
   attr :second_level_toc, :list
-  attr :text_nodes, :list
-  attr :top_level_toc, :list
+  attr :top_level_toc, :list, required: true
   attr :version, TextServer.Versions.Version, required: true
-  attr :version_command_palette_open, :boolean
-  attr :versions, :list
+  attr :versions, :list, required: true
 
   @impl true
   def render(assigns) do
     ~H"""
-    <article class="container mx-auto p-4">
+    <article class="mx-auto">
       <h1 class="text-2xl font-bold"><%= @version.label %></h1>
       <%= if @current_user do %>
         <.link href={~p"/versions/#{@version.id}/edit"}>Edit</.link>
@@ -34,35 +26,24 @@ defmodule TextServerWeb.VersionLive.Show do
 
       <hr class="mb-4" />
 
-      <div class="flex">
-        <div class="pr-4 text-justify">
-          <.live_component
-            id={:location}
-            module={TextServerWeb.ReadingEnvironment.LocationForm}
-            second_level_toc={@second_level_toc}
-            top_level_toc={@top_level_toc}
-            versions={@versions}
-            selected={@version.id}
-          />
-          <div class="flex">
-            <.live_component
-              id={:reader}
-              module={TextServerWeb.ReadingEnvironment.Reader}
-              focused_text_node={@focused_text_node}
-              footnotes={@footnotes}
-              location={@location}
-              version_command_palette_open={@version_command_palette_open}
-              text_nodes={@text_nodes}
-              text_node_command_palette_open={@focused_text_node != nil}
-              top_level_toc={@top_level_toc}
-              second_level_toc={@second_level_toc}
-              version_urn={@version.urn}
-            />
-            <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
-          </div>
-          <Components.pagination current_page={@passage.passage_number} total_pages={@passage.total_passages} />
-        </div>
+      <div class="grid grid-cols-3">
+        <.live_component
+          id={:reader}
+          module={TextServerWeb.ReadingEnvironment.Reader}
+          focused_text_node={@focused_text_node}
+          footnotes={@footnotes}
+          location={@location}
+          passage={@passage}
+          version_command_palette_open={@version_command_palette_open}
+          text_nodes={@text_nodes}
+          text_node_command_palette_open={@focused_text_node != nil}
+          top_level_toc={@top_level_toc}
+          second_level_toc={@second_level_toc}
+          version_urn={@version.urn}
+        />
+        <Components.floating_comments comments={@comments} highlighted_comments={@highlighted_comments} />
       </div>
+      <Components.pagination current_page={@passage.passage_number} total_pages={@passage.total_passages} />
     </article>
     """
   end
@@ -106,9 +87,9 @@ defmodule TextServerWeb.VersionLive.Show do
     version = Versions.get_version!(version_id)
 
     sibling_versions =
-      [version | Versions.list_sibling_versions(version)]
+      Versions.list_sibling_versions(version)
       |> Enum.map(fn v ->
-        [key: v.label, value: Integer.to_string(v.id)]
+        [key: v.label, value: Integer.to_string(v.id), selected: version.id == v.id]
       end)
 
     text_nodes = passage.text_nodes
@@ -179,7 +160,6 @@ defmodule TextServerWeb.VersionLive.Show do
     ids =
       comment_ids
       |> Jason.decode!()
-      |> Enum.map(&String.to_integer/1)
 
     {:noreply, socket |> assign(highlighted_comments: ids)}
   end
@@ -261,7 +241,7 @@ defmodule TextServerWeb.VersionLive.Show do
     comments =
       elements
       |> Enum.filter(fn te ->
-        te.element_type.name == "comment" && !is_nil(te.content)
+        te.element_type.name == "comment"
       end)
       |> Enum.map(fn c ->
         Map.merge(c, %{
